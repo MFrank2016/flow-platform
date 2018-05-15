@@ -34,7 +34,6 @@ public final class Node {
      * Name of node
      */
     @Getter
-    @Setter
     private String name;
 
     /**
@@ -67,11 +66,31 @@ public final class Node {
      */
     @Getter
     @Setter
-    private boolean failure;
+    private boolean allowFailure;
+
+    @Getter
+    @Setter
+    private Node parent;
 
     /**
      * Children nodes
      */
     @Getter
     private List<Node> children = new LinkedList<>();
+
+    /**
+     * Create node with name
+     */
+    public Node(String name) {
+        this.name = name;
+        this.path = NodePath.create(name);
+    }
+
+    /**
+     * Create node with path
+     */
+    public Node(NodePath path) {
+        this.name = path.name();
+        this.path = path;
+    }
 }

@@ -21,13 +21,11 @@ import com.google.common.collect.Range;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.EqualsAndHashCode;
-import lombok.ToString;
 
 /**
  * @author yang
  */
 @EqualsAndHashCode(of = {"pathInStr"})
-@ToString(of = {"pathInStr"})
 public class NodePath {
 
     private final static String PATH_SEPARATOR = "/";
@@ -97,12 +95,21 @@ public class NodePath {
         return paths.get(0);
     }
 
+    public String name() {
+        return paths.get(paths.size() - 1);
+    }
+
     public String name(int level) {
         if (level >= paths.size()) {
             throw new IllegalArgumentException("The input level is out of path range");
         }
 
         return paths.get(level);
+    }
+
+    @Override
+    public String toString() {
+        return pathInStr;
     }
 
     private void validateNodeName(String name) throws IllegalArgumentException {
