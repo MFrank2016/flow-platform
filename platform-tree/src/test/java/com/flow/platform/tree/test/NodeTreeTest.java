@@ -38,24 +38,51 @@ public class NodeTreeTest {
         Assert.assertEquals("root", root.getPath().toString());
 
         Node childFirst = new Node("child-1");
+        childFirst.getChildren().add(new Node("child-1-1"));
+
         Node childSecond = new Node("child-2");
 
         root.getChildren().add(childFirst);
         root.getChildren().add(childSecond);
 
         tree = NodeTree.create(root);
+
         Assert.assertEquals(root, childFirst.getParent());
         Assert.assertEquals(root, childSecond.getParent());
     }
 
     @Test
-    public void should_find_next_node_from_tree() {
-        Node secondChild = tree.get(NodePath.create("root/child-2"));
+    public void should_find_node_relation_for_parent() {
+        Assert.assertNull(tree.parent(tree.getRoot().getPath()));
+
+        Assert.assertEquals(
+            tree.get(NodePath.create("root/child-1")),
+            tree.parent(NodePath.create("root/child-1/child-1-1")));
+
+        Assert.assertEquals(tree.getRoot(), tree.parent(NodePath.create("root/child-2")));
+    }
+
+    @Test
+    public void should_find_node_relation_for_next() {
+        Node nextOfRoot = tree.next(tree.getRoot().getPath());
+        Assert.assertEquals(tree.get(NodePath.create("root/child-1/child-1-1")), nextOfRoot);
+
         Node nextOfFirstChild = tree.next(NodePath.create("root", "child-1"));
-        Assert.assertEquals(secondChild, nextOfFirstChild);
+        Assert.assertEquals(tree.get(NodePath.create("root/child-2")), nextOfFirstChild);
 
         Node nextOfSecondChild = tree.next(NodePath.create("root/child-2"));
         Assert.assertNull(nextOfSecondChild);
     }
 
+    @Test
+    public void should_find_node_relation_for_prev() {
+        Node prevOfRoot = tree.prev(tree.getRoot().getPath());
+        Assert.assertNull(prevOfRoot);
+
+        Node prevOfFirstChild = tree.prev(NodePath.create("root", "child-1"));
+        Assert.assertEquals(tree.get(NodePath.create("root/child-1/child-1-1")), prevOfFirstChild);
+
+        Node prevOfSecondChild = tree.prev(NodePath.create("root/child-2"));
+        Assert.assertEquals(tree.get(NodePath.create("root/child-1")), prevOfSecondChild);
+    }
 }

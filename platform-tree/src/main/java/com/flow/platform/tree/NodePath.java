@@ -19,6 +19,7 @@ package com.flow.platform.tree;
 import com.google.common.base.Strings;
 import com.google.common.collect.Range;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import lombok.EqualsAndHashCode;
 
@@ -39,10 +40,17 @@ public class NodePath {
     private final String pathInStr;
 
     public static NodePath create(String... nameOrPaths) {
-        return new NodePath(nameOrPaths);
+        return new NodePath(Arrays.asList(nameOrPaths));
     }
 
-    private NodePath(String... nameOrPaths) {
+    public static NodePath create(NodePath parentPath, String... nameOrPaths) {
+        ArrayList<String> paths = new ArrayList<>(parentPath.paths.size() + nameOrPaths.length);
+        paths.addAll(parentPath.paths);
+        paths.addAll(Arrays.asList(nameOrPaths));
+        return new NodePath(paths);
+    }
+
+    private NodePath(List<String> nameOrPaths) {
         for (String nameOrPath : nameOrPaths) {
             if (nameOrPath == null) {
                 continue;

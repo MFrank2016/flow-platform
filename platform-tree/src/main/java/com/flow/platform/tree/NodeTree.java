@@ -67,17 +67,42 @@ public class NodeTree {
     }
 
     /**
+     * Get previous Node instance from path
+     */
+    public Node prev(NodePath path) {
+        NodeWithIndex nodeWithIndex = getWithIndex(path);
+
+        if (nodeWithIndex.node.equals(root)) {
+            return null;
+        }
+
+        int prevIndex = nodeWithIndex.index - 1;
+
+        if (prevIndex < 0) {
+            return null;
+        }
+
+        return ordered.get(prevIndex);
+    }
+
+    /**
      * Get next Node instance from path
      */
     public Node next(NodePath path) {
         NodeWithIndex nodeWithIndex = getWithIndex(path);
 
+        if (nodeWithIndex.node.equals(root)) {
+            return ordered.get(0);
+        }
+
+        int nextIndex = nodeWithIndex.index + 1;
+
         // next is out of range
-        if ((nodeWithIndex.index + 1) > (ordered.size() - 1)) {
+        if (nextIndex > (ordered.size() - 1)) {
             return null;
         }
 
-        return ordered.get(nodeWithIndex.index + 1);
+        return ordered.get(nextIndex);
     }
 
     /**
@@ -106,7 +131,7 @@ public class NodeTree {
      */
     private void buildTree(Node root) {
         for (Node child : root.getChildren()) {
-            child.setPath(NodePath.create(root.getName(), child.getName()));
+            child.setPath(NodePath.create(root.getPath(), child.getName()));
             child.setParent(root);
             buildTree(child);
         }
