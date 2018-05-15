@@ -25,6 +25,7 @@
     <module>platform-util-http</module>
     <module>platform-plugin</module>
     <module>platform-queue</module>
+    <module>platform-tree</module>
   </modules>
 
   <properties>
