@@ -16,48 +16,43 @@
 
 package com.flow.platform.tree;
 
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
 /**
  * @author yang
  */
-public enum NodeStatus {
+@NoArgsConstructor
+public class Result extends Context {
+
+    @Getter
+    @Setter
+    private NodePath path;
 
     /**
-     * Init status for node
+     * Exit code for script content
      */
-    PENDING(0),
-
-    /**
-     * Cannot execute the node
-     */
-    SKIP(1),
-
-    /**
-     * Running status for node
-     */
-    RUNNING(2),
-
-    /**
-     * Node executed successfully
-     */
-    DONE(10),
-
-    /**
-     * Node executed with error
-     */
-    FAILURE(10),
-
-    /**
-     * Node stopped
-     */
-    KILLED(10);
-
+    @Getter
+    @Setter
     private int code;
 
-    NodeStatus(int code) {
-        this.code = code;
-    }
+    /**
+     * The script execute duration
+     */
+    @Getter
+    @Setter
+    private Long duration = 0L;
 
-    public int getCode() {
-        return code;
+    /**
+     * Extra message for error
+     */
+    @Getter
+    @Setter
+    private String errMsg;
+
+    public Result(NodePath path, int code) {
+        this.path = path;
+        this.code = code;
     }
 }

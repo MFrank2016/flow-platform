@@ -19,45 +19,10 @@ package com.flow.platform.tree;
 /**
  * @author yang
  */
-public enum NodeStatus {
+public class ExitCode {
 
-    /**
-     * Init status for node
-     */
-    PENDING(0),
+    public final static int SUCCESS = 0;
 
-    /**
-     * Cannot execute the node
-     */
-    SKIP(1),
+    public final static int KILLED = 130;
 
-    /**
-     * Running status for node
-     */
-    RUNNING(2),
-
-    /**
-     * Node executed successfully
-     */
-    DONE(10),
-
-    /**
-     * Node executed with error
-     */
-    FAILURE(10),
-
-    /**
-     * Node stopped
-     */
-    KILLED(10);
-
-    private int code;
-
-    NodeStatus(int code) {
-        this.code = code;
-    }
-
-    public int getCode() {
-        return code;
-    }
 }

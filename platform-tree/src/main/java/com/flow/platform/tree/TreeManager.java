@@ -36,13 +36,20 @@ public class TreeManager {
 
     /**
      * Execute tree from node
-     * @param startNode
+     * @param startPath
      * @param consumer real node executing method
      * @exception ScriptException Groovy script exception
      */
-    public void execute(Node startNode, NodeConsumer consumer) {
-        if (Objects.isNull(startNode)) {
-            throw new IllegalArgumentException("Start node cannot be null");
+    public void execute(NodePath startPath, NodeConsumer consumer) {
+        if (Objects.isNull(startPath)) {
+            throw new IllegalArgumentException("Start node path cannot be null");
+        }
+
+        Node startNode = tree.get(startPath);
+
+        // root node cannot be executed
+        if (startNode.equals(tree.getRoot())) {
+            startNode = tree.next(startPath);
         }
 
         try {
@@ -64,35 +71,44 @@ public class TreeManager {
     /**
      * Tell node tree the node been executed
      *
-     * @param finishNode
+     * @param result
      * @return next node
      */
-    public Node onFinish(Node finishNode) {
-        // 1. change finish node status
-        // 2. update parent node status
-        // 3. update shared context
-        // 4. return next node
+    public Node onFinish(Result result) {
+        Node current = tree.get(result.getPath());
+        current.setStatus(getNodeStatusFromResult(result));
+        updateParentStatus(current);
+        updateSharedContext(current, result);
+        return tree.next(current.getPath());
+    }
+
+    /**
+     * Get node status from node result by exit code
+     */
+    private NodeStatus getNodeStatusFromResult(Result result) {
+        switch (result.getCode()) {
+            case ExitCode.SUCCESS:
+                return NodeStatus.DONE;
+
+            case ExitCode.KILLED:
+                return NodeStatus.KILLED;
+
+            default:
+                return NodeStatus.FAILURE;
+        }
+    }
+
+    /**
+     *  Update parent node status
+     */
+    private void updateParentStatus(Node current) {
         throw new UnsupportedOperationException();
     }
 
     /**
-     * Tell node tree the node been executed with error
-     *
-     * @param errorNode
-     * @return next node
+     * Update shared context of node tree
      */
-    public Node onError(Node errorNode) {
-        // 1. change finish node status
-        // 2. update parent node status
-        // 3. update shared context
-        // 4. return next node
-        throw new UnsupportedOperationException();
-    }
-
-    /**
-     *  Update parent node status and context
-     */
-    private void updateParent(Node currentNode) {
+    private void updateSharedContext(Node current, Result result) {
         throw new UnsupportedOperationException();
     }
 
