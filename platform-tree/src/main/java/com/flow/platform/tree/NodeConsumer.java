@@ -19,40 +19,8 @@ package com.flow.platform.tree;
 /**
  * @author yang
  */
-public enum NodeStatus {
+public interface NodeConsumer {
 
-    /**
-     * Init status for node
-     */
-    PENDING(0),
+    void accept(Node node, Context sharedContext);
 
-    /**
-     * Cannot execute the node
-     */
-    SKIP(1),
-
-    /**
-     * Running status for node
-     */
-    RUNNING(2),
-
-    /**
-     * Node executed successfully
-     */
-    DONE(10),
-
-    /**
-     * Node executed with error
-     */
-    ERROR(10);
-
-    private int code;
-
-    NodeStatus(int code) {
-        this.code = code;
-    }
-
-    public int getCode() {
-        return code;
-    }
 }

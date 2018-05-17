@@ -16,43 +16,34 @@
 
 package com.flow.platform.tree;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+
 /**
+ * Tree context
+ *
  * @author yang
  */
-public enum NodeStatus {
+public class Context {
 
-    /**
-     * Init status for node
-     */
-    PENDING(0),
+    protected final Map<String, String> context = new LinkedHashMap<>();
 
-    /**
-     * Cannot execute the node
-     */
-    SKIP(1),
-
-    /**
-     * Running status for node
-     */
-    RUNNING(2),
-
-    /**
-     * Node executed successfully
-     */
-    DONE(10),
-
-    /**
-     * Node executed with error
-     */
-    ERROR(10);
-
-    private int code;
-
-    NodeStatus(int code) {
-        this.code = code;
+    public Set<Entry<String, String>> all() {
+        return context.entrySet();
     }
 
-    public int getCode() {
-        return code;
+    public void put(String key, String value) {
+        context.put(key, value);
     }
+
+    public String get(String key) {
+        return context.get(key);
+    }
+
+    public void remove(String key) {
+        context.remove(key);
+    }
+
 }

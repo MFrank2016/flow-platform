@@ -27,8 +27,8 @@ import lombok.ToString;
  * @author yang
  */
 @ToString(of = {"path"})
-@EqualsAndHashCode(of = {"path"})
-public final class Node {
+@EqualsAndHashCode(of = {"path"}, callSuper = false)
+public final class Node extends Context {
 
     /**
      * Name of node
@@ -48,7 +48,7 @@ public final class Node {
      */
     @Getter
     @Setter
-    private NodeStatus status;
+    private NodeStatus status = NodeStatus.PENDING;
 
     @Getter
     @Setter

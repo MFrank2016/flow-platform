@@ -48,7 +48,11 @@ public class NodeTree {
 
     private final Map<NodePath, NodeWithIndex> cached = new HashMap<>(DEFAULT_SIZE);
 
+    @Getter
     private final List<Node> ordered = new ArrayList<>(DEFAULT_SIZE);
+
+    @Getter
+    private final Context sharedContext = new Context();
 
     @Getter
     private final Node root;
