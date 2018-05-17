@@ -16,27 +16,20 @@
 
 package com.flow.platform.api.service;
 
-import com.flow.platform.api.config.AppConfig;
 import com.flow.platform.api.domain.job.Job;
 import com.flow.platform.api.domain.job.NodeResult;
 import com.flow.platform.api.service.job.JobService;
 import com.flow.platform.api.service.job.NodeResultService;
-import com.flow.platform.api.util.PlatformURL;
 import com.flow.platform.api.util.ZipUtil;
+import com.flow.platform.cc.service.CmdCCService;
 import com.flow.platform.core.exception.FlowException;
-import com.flow.platform.util.ObjectWrapper;
-import com.flow.platform.util.StringUtil;
-import com.flow.platform.util.http.HttpClient;
-import com.flow.platform.util.http.HttpURL;
-import com.google.common.base.Strings;
-import java.io.ByteArrayInputStream;
+import com.flow.platform.core.exception.IllegalParameterException;
+import com.flow.platform.domain.Cmd;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
@@ -56,10 +49,10 @@ public class LogServiceImpl implements LogService {
     private NodeResultService nodeResultService;
 
     @Autowired
-    private JobService jobService;
+    private CmdCCService cmdCCService;
 
     @Autowired
-    private PlatformURL platformURL;
+    private JobService jobService;
 
     @Autowired
     private Path workspace;
@@ -73,7 +66,7 @@ public class LogServiceImpl implements LogService {
             throw new FlowException("node result not finish");
         }
 
-        return readStepLog(job, nodeResult);
+        return readStepLog(nodeResult);
     }
 
     @Override
@@ -104,130 +97,29 @@ public class LogServiceImpl implements LogService {
     }
 
     /**
-     * save step log to workspace/:flowName/:jobId/
-     */
-    private String saveStepLog(Job job, InputStream inputStream, NodeResult nodeResult) {
-        Path jobPath = getJobLogPath(job);
-        Path targetPath = Paths.get(jobPath.toString(), nodeResult.getName() + ".log");
-
-        File flowFolderFile = new File(jobPath.toString());
-        if (!flowFolderFile.exists()) {
-            flowFolderFile.mkdirs();
-        }
-
-        byte[] buffers;
-        try {
-            buffers = new byte[inputStream.available()];
-            inputStream.read(buffers);
-
-            File file = new File(targetPath.toString());
-            try (OutputStream outputStream = new FileOutputStream(file)) {
-                outputStream.write(buffers);
-            }
-        } catch (IOException e) {
-            return null;
-        }
-
-        return targetPath.toString();
-    }
-
-    /**
      * read step log from workspace/:flowName/log/:jobId/
      */
-    private String readStepLog(Job job, NodeResult nodeResult) {
+    private String readStepLog(NodeResult nodeResult) {
 
-        // read log from api storage
-        String content = readStepLogFromLocal(job, nodeResult);
+        Cmd cmd = cmdCCService.find(nodeResult.getCmdId());
 
-        if (content != null) {
-            return content;
+        if (cmd == null) {
+            throw new IllegalParameterException("Cmd not found");
         }
 
-        // read step log from cc
-        content = readStepLogFromCC(job, nodeResult);
-        if (content != null) {
-            saveStepLog(job, new ByteArrayInputStream(
-                content.getBytes(AppConfig.DEFAULT_CHARSET)), nodeResult);
-        }
+        Path filePath = Paths.get(cmd.getLogPath());
 
-        return content;
-    }
-
-    /**
-     * read log from api storage
-     */
-    private String readStepLogFromLocal(Job job, NodeResult nodeResult) {
-        Path jobPath = getJobLogPath(job);
-
-        Path targetPath = Paths.get(jobPath.toString(), nodeResult.getName() + ".log");
-
-        File file = new File(targetPath.toString());
-        if (!file.exists()) {
-            return null;
-        }
-
-        StringBuilder content = new StringBuilder("");
         try {
-            InputStream inputStream = new FileInputStream(file);
-            byte[] buffers = new byte[2048];
-            int length;
-            while ((length = inputStream.read(buffers)) > 0) {
-                content.append(new String(buffers, 0, length, AppConfig.DEFAULT_CHARSET));
-            }
-
+            return ZipUtil.readZipFile(new FileInputStream(filePath.toFile()));
         } catch (IOException e) {
-            return null;
+            return "";
         }
-
-        return content.toString();
-
-    }
-
-    /**
-     * read log from cc
-     */
-    private String readStepLogFromCC(Job job, NodeResult nodeResult) {
-        String cmdId = nodeResult.getCmdId();
-
-        if (Strings.isNullOrEmpty(cmdId)) {
-            return StringUtil.EMPTY;
-        }
-
-        final String url = platformURL.getCmdDownloadLogUrl() + "?cmdId=" + HttpURL.encode(cmdId) + "&index=" + 0;
-        ObjectWrapper<String> logContent = new ObjectWrapper<>();
-
-        HttpClient.build(url).get().bodyAsStream((response) -> {
-            if (response.getBody() == null) {
-                logContent.setInstance(StringUtil.EMPTY);
-                return;
-            }
-
-            try {
-                String log = ZipUtil.readZipFile(response.getBody());
-                logContent.setInstance(log);
-
-                //save file to local storage
-                InputStream stream = new ByteArrayInputStream(log.getBytes(AppConfig.DEFAULT_CHARSET));
-                String logPath = saveStepLog(job, stream, nodeResult);
-
-                if (logPath == null) {
-                    throw new FlowException("store log to api error");
-                }
-
-                nodeResult.setLogPath(logPath);
-                nodeResultService.update(nodeResult);
-            } catch (IOException e) {
-                throw new FlowException("Cannot unzip log file for " + cmdId, e);
-            }
-        });
-
-        return logContent.getInstance();
     }
 
     /**
      * save job zip
      */
-    private File saveJobLog(Job job) {
+    private File cacheJobLog(Job job) {
         Path jobPath = getJobLogPath(job);
         Path zipPath = Paths.get(jobPath.getParent().toString(), job.getId().toString() + ".zip");
         Path destPath = Paths.get(jobPath.toString(), job.getId().toString() + ".zip");
@@ -265,10 +157,15 @@ public class LogServiceImpl implements LogService {
 
         // download all log from cc
         for (NodeResult nodeResult : list) {
-            readStepLog(job, nodeResult);
+            try {
+                FileUtils
+                    .writeStringToFile(Paths.get(getJobLogPath(job).toString(), nodeResult.getName() + ".log").toFile(),
+                        readStepLog(nodeResult));
+            } catch (IOException e) {
+            }
         }
 
-        saveJobLog(job);
+        cacheJobLog(job);
         zipFile = new File(zipPath.toString());
 
         return zipFile;

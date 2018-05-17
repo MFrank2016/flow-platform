@@ -67,42 +67,6 @@ public class CmdController {
     }
 
     /**
-     * Send command to agent
-     */
-    @PostMapping(path = "/send")
-    public Cmd sendCommand(@RequestBody CmdInfo cmd) {
-        Cmd cmdToExec = cmdService.create(cmd);
-        return cmdDispatchService.dispatch(cmdToExec);
-    }
-
-    @PostMapping(path = "/queue/send")
-    public Cmd sendCommandToQueue(@RequestBody CmdInfo cmd, @RequestParam int priority, @RequestParam int retry) {
-        if (!QueueCCConfig.PRIORITY_RANGE.contains(priority)) {
-            throw new IllegalParameterException("Illegal priority value should between (1 - 10)");
-        }
-
-        if (!Range.closed(0, 100).contains(retry)) {
-            throw new IllegalParameterException("Illegal retry value should between (0 - 100)");
-        }
-
-        return cmdService.enqueue(cmd, priority, retry);
-    }
-
-    /**
-     * Set cmd status to STOPPED
-     */
-    @PostMapping("/stop/{cmdId}")
-    public void stopCommand(@PathVariable String cmdId) {
-        try {
-            CmdStatusItem statusItem = new CmdStatusItem(cmdId, CmdStatus.STOPPED, null, true, true);
-            cmdService.updateStatus(statusItem, false);
-        } catch (CannotAcquireLockException e) {
-            // since cmd been locked, cannot change its status
-            throw new IllegalStatusException("Cmd been processed, cannot stop it");
-        }
-    }
-
-    /**
      * For agent report cmd status send to queue
      *
      * @param reportData only need id, status and result
