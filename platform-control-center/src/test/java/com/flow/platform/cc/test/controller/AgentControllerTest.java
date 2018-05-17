@@ -17,7 +17,7 @@
 package com.flow.platform.cc.test.controller;
 
 import com.flow.platform.domain.AgentPathWithWebhook;
-import com.flow.platform.cc.service.AgentService;
+import com.flow.platform.cc.service.AgentCCService;
 import com.flow.platform.cc.service.ZoneService;
 import com.flow.platform.cc.test.TestBase;
 import com.flow.platform.cc.util.ZKHelper;
@@ -45,7 +45,7 @@ public class AgentControllerTest extends TestBase {
     private final static String MOCK_CLOUD_PROVIDER_NAME = "test";
 
     @Autowired
-    private AgentService agentService;
+    private AgentCCService agentService;
 
     @Autowired
     private ZoneService zoneService;

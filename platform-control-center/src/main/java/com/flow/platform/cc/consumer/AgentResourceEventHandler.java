@@ -16,7 +16,7 @@
 
 package com.flow.platform.cc.consumer;
 
-import com.flow.platform.cc.config.QueueConfig;
+import com.flow.platform.cc.config.QueueCCConfig;
 import com.flow.platform.cc.event.AgentResourceEvent;
 import com.flow.platform.cc.event.AgentResourceEvent.Category;
 import com.flow.platform.cc.service.ZoneService;
@@ -53,7 +53,7 @@ public class AgentResourceEventHandler implements ApplicationListener<AgentResou
         zoneService.keepIdleAgentTask();
 
         // do not control cmd queue since enable retry
-        Boolean isRetry = Boolean.parseBoolean(System.getProperty(QueueConfig.PROP_CMD_QUEUE_RETRY, "false"));
+        Boolean isRetry = Boolean.parseBoolean(System.getProperty(QueueCCConfig.PROP_CMD_QUEUE_RETRY, "false"));
         if (cmdQueueRetryEnable || isRetry) {
             return;
         }

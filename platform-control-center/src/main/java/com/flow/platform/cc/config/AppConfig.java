@@ -35,7 +35,7 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
  * @author gy@fir.im
  */
 @Configuration
-@Import({DatabaseConfig.class, ZooKeeperConfig.class, QueueConfig.class, TaskConfig.class, AgentConfig.class})
+@Import({DatabaseConfig.class, ZooKeeperConfig.class, QueueCCConfig.class, TaskConfig.class, AgentConfig.class})
 public class AppConfig extends AppConfigBase {
 
     public final static String NAME = "Control Center";
@@ -58,16 +58,6 @@ public class AppConfig extends AppConfigBase {
             return Files.createDirectories(Paths.get(workspace));
         } catch (IOException e) {
             throw new RuntimeException("Fail to create flow.ci control center working dir", e);
-        }
-    }
-
-    @Bean
-    public Path cmdLogDir() {
-        Path cmdLogDir = Paths.get(workspace().toString(), "agent-logs");
-        try {
-            return Files.createDirectories(cmdLogDir);
-        } catch (IOException e) {
-            throw new RuntimeException("Fail to create agent log dir", e);
         }
     }
 

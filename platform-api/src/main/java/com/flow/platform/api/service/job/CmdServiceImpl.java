@@ -25,6 +25,8 @@ import com.flow.platform.api.envs.FlowEnvs;
 import com.flow.platform.api.envs.JobEnvs;
 import com.flow.platform.api.service.node.NodeService;
 import com.flow.platform.api.util.PlatformURL;
+import com.flow.platform.cc.service.CmdCCService;
+import com.flow.platform.cc.service.CmdDispatchService;
 import com.flow.platform.core.exception.HttpException;
 import com.flow.platform.core.exception.IllegalParameterException;
 import com.flow.platform.core.exception.IllegalStatusException;
@@ -32,15 +34,11 @@ import com.flow.platform.domain.AgentPath;
 import com.flow.platform.domain.Cmd;
 import com.flow.platform.domain.CmdInfo;
 import com.flow.platform.domain.CmdType;
-import com.flow.platform.domain.Jsonable;
 import com.flow.platform.util.ExceptionUtil;
-import com.flow.platform.util.http.HttpClient;
-import com.flow.platform.util.http.HttpResponse;
 import com.flow.platform.util.http.HttpURL;
 import com.google.common.base.Strings;
 import java.io.UnsupportedEncodingException;
 import lombok.extern.log4j.Log4j2;
-import org.apache.http.entity.ContentType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -63,6 +61,12 @@ public class CmdServiceImpl implements CmdService {
 
     @Autowired
     private PlatformURL platformURL;
+
+    @Autowired
+    private CmdCCService cmdCCService;
+
+    @Autowired
+    private CmdDispatchService cmdDispatchService;
 
     @Value(value = "${api.zone.default}")
     private String zone;
@@ -186,17 +190,9 @@ public class CmdServiceImpl implements CmdService {
      * Send cmd to control center directly
      */
     private Cmd sendDirectly(CmdInfo cmdInfo) throws UnsupportedEncodingException {
-        HttpResponse<String> response = HttpClient.build(platformURL.getCmdUrl())
-            .post(cmdInfo.toJson())
-            .withContentType(ContentType.APPLICATION_JSON)
-            .retry(httpRetryTimes)
-            .bodyAsString();
-
-        if (!response.hasSuccess()) {
-            throw new HttpException(String.format("Send cmd failure: %s", cmdInfo.getExtra()));
-        }
-
-        return Jsonable.parse(response.getBody(), Cmd.class);
+        Cmd cmdToExec = cmdCCService.create(cmdInfo);
+        Cmd cmd = cmdDispatchService.dispatch(cmdToExec);
+        return cmd;
     }
 
     /**
@@ -206,26 +202,11 @@ public class CmdServiceImpl implements CmdService {
      * @throws IllegalStatusException
      */
     private Cmd sendToQueue(CmdInfo cmdInfo, int priority, int retry) {
-        final String url = HttpURL.build(platformURL.getQueueUrl())
-            .withParam("priority", Integer.toString(priority))
-            .withParam("retry", Integer.toString(retry))
-            .toString();
-
         try {
+            Cmd cmd = cmdCCService.enqueue(cmdInfo, priority, retry);
 
-            HttpResponse<String> response = HttpClient.build(url)
-                .post(cmdInfo.toJson())
-                .withContentType(ContentType.APPLICATION_JSON)
-                .retry(httpRetryTimes)
-                .bodyAsString();
-
-            if (!response.hasSuccess()) {
-                final String message = "Create session cmd to queue failure for url: " + url;
-                throw new HttpException(message);
-            }
-
-            return Jsonable.parse(response.getBody(), Cmd.class);
-        } catch (UnsupportedEncodingException e) {
+            return cmd;
+        } catch (Throwable e) {
             throw new IllegalStateException("Unable to send cmd since: ", e);
         }
     }

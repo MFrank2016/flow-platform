@@ -16,10 +16,10 @@
 
 package com.flow.platform.cc.consumer;
 
-import com.flow.platform.cc.config.QueueConfig;
+import com.flow.platform.cc.config.QueueCCConfig;
 import com.flow.platform.cc.exception.AgentErr;
 import com.flow.platform.cc.service.CmdDispatchService;
-import com.flow.platform.cc.service.CmdService;
+import com.flow.platform.cc.service.CmdCCService;
 import com.flow.platform.core.exception.IllegalParameterException;
 import com.flow.platform.core.exception.IllegalStatusException;
 import com.flow.platform.core.queue.PriorityMessage;
@@ -53,7 +53,7 @@ public class CmdQueueConsumer implements QueueListener<PriorityMessage> {
     private Integer idleAgentTimeout; // timeout if no idle agent in seconds
 
     @Autowired
-    private CmdService cmdService;
+    private CmdCCService cmdService;
 
     @Autowired
     private CmdDispatchService cmdDispatchService;
@@ -111,7 +111,7 @@ public class CmdQueueConsumer implements QueueListener<PriorityMessage> {
     }
 
     private void retry(final PriorityMessage message) {
-        message.setPriority(QueueConfig.MAX_PRIORITY);
+        message.setPriority(QueueCCConfig.MAX_PRIORITY);
         cmdQueue.enqueue(message);
         ThreadUtil.sleep(RETRY_WAIT_TIME);
     }

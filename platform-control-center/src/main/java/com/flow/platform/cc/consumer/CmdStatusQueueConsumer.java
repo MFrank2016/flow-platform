@@ -17,7 +17,7 @@
 package com.flow.platform.cc.consumer;
 
 import com.flow.platform.cc.domain.CmdStatusItem;
-import com.flow.platform.cc.service.CmdService;
+import com.flow.platform.cc.service.CmdCCService;
 import com.flow.platform.core.queue.PriorityMessage;
 import com.flow.platform.queue.PlatformQueue;
 import com.flow.platform.queue.QueueListener;
@@ -39,7 +39,7 @@ public class CmdStatusQueueConsumer implements QueueListener<PriorityMessage> {
     private PlatformQueue<PriorityMessage> cmdStatusQueue;
 
     @Autowired
-    private CmdService cmdService;
+    private CmdCCService cmdService;
 
     @PostConstruct
     public void init() {

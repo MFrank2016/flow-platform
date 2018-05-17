@@ -64,10 +64,10 @@ public class CmdDispatchServiceImpl extends ApplicationEventService implements C
     private TaskConfig taskConfig;
 
     @Autowired
-    private CmdService cmdService;
+    private CmdCCService cmdService;
 
     @Autowired
-    private AgentService agentService;
+    private AgentCCService agentService;
 
     @Autowired
     protected ZKClient zkClient;

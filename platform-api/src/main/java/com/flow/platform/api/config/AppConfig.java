@@ -18,6 +18,10 @@ package com.flow.platform.api.config;
 
 import com.flow.platform.api.domain.user.User;
 import com.flow.platform.api.util.PlatformURL;
+import com.flow.platform.cc.config.AgentConfig;
+import com.flow.platform.cc.config.QueueCCConfig;
+import com.flow.platform.cc.config.TaskConfig;
+import com.flow.platform.cc.config.ZooKeeperConfig;
 import com.flow.platform.core.config.AppConfigBase;
 import com.flow.platform.core.config.DatabaseConfig;
 import com.flow.platform.core.util.ThreadUtil;
@@ -45,7 +49,18 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
  */
 @Log4j2
 @Configuration
-@Import({SchedulerConfig.class, CachingConfig.class, DatabaseConfig.class, QueueConfig.class, PluginConfig.class})
+@Import({
+    SchedulerConfig.class,
+    CachingConfig.class,
+    DatabaseConfig.class,
+    QueueConfig.class,
+    QueueCCConfig.class,
+    PluginConfig.class,
+    AgentConfig.class,
+    QueueConfig.class,
+    TaskConfig.class,
+    ZooKeeperConfig.class
+})
 public class AppConfig extends AppConfigBase {
 
     public final static String NAME = "API";
@@ -97,6 +112,16 @@ public class AppConfig extends AppConfigBase {
     @Bean
     public User superUser() {
         return new User(email, username, password);
+    }
+
+    @Bean
+    public Path cmdLogDir() {
+        Path cmdLogDir = Paths.get(workspace().toString(), "agent-logs");
+        try {
+            return Files.createDirectories(cmdLogDir);
+        } catch (IOException e) {
+            throw new RuntimeException("Fail to create agent log dir", e);
+        }
     }
 
     @Bean

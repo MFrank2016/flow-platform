@@ -20,9 +20,9 @@ import static junit.framework.TestCase.fail;
 
 import com.flow.platform.cc.domain.CmdStatusItem;
 import com.flow.platform.cc.exception.AgentErr;
-import com.flow.platform.cc.service.AgentService;
+import com.flow.platform.cc.service.AgentCCService;
 import com.flow.platform.cc.service.CmdDispatchService;
-import com.flow.platform.cc.service.CmdService;
+import com.flow.platform.cc.service.CmdCCService;
 import com.flow.platform.cc.service.ZoneService;
 import com.flow.platform.cc.test.TestBase;
 import com.flow.platform.cc.util.ZKHelper;
@@ -62,13 +62,13 @@ public class CmdServiceTest extends TestBase {
     private final static int ZK_NODE_WAIT_TIME = 2 * 1000;
 
     @Autowired
-    private CmdService cmdService;
+    private CmdCCService cmdService;
 
     @Autowired
     private CmdDispatchService cmdDispatchService;
 
     @Autowired
-    private AgentService agentService;
+    private AgentCCService agentService;
 
     @Autowired
     private ZoneService zoneService;

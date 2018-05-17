@@ -16,10 +16,10 @@
 
 package com.flow.platform.cc.controller;
 
-import com.flow.platform.cc.config.QueueConfig;
+import com.flow.platform.cc.config.QueueCCConfig;
 import com.flow.platform.cc.domain.CmdStatusItem;
 import com.flow.platform.cc.service.CmdDispatchService;
-import com.flow.platform.cc.service.CmdService;
+import com.flow.platform.cc.service.CmdCCService;
 import com.flow.platform.core.exception.IllegalParameterException;
 import com.flow.platform.core.exception.IllegalStatusException;
 import com.flow.platform.domain.AgentPath;
@@ -56,7 +56,7 @@ import org.springframework.web.multipart.MultipartFile;
 public class CmdController {
 
     @Autowired
-    private CmdService cmdService;
+    private CmdCCService cmdService;
 
     @Autowired
     private CmdDispatchService cmdDispatchService;
@@ -77,7 +77,7 @@ public class CmdController {
 
     @PostMapping(path = "/queue/send")
     public Cmd sendCommandToQueue(@RequestBody CmdInfo cmd, @RequestParam int priority, @RequestParam int retry) {
-        if (!QueueConfig.PRIORITY_RANGE.contains(priority)) {
+        if (!QueueCCConfig.PRIORITY_RANGE.contains(priority)) {
             throw new IllegalParameterException("Illegal priority value should between (1 - 10)");
         }
 

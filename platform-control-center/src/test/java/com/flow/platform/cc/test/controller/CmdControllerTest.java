@@ -23,8 +23,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.flow.platform.cc.service.AgentService;
-import com.flow.platform.cc.service.CmdService;
+import com.flow.platform.cc.service.AgentCCService;
+import com.flow.platform.cc.service.CmdCCService;
 import com.flow.platform.cc.service.ZoneService;
 import com.flow.platform.cc.test.TestBase;
 import com.flow.platform.cc.util.ZKHelper;
@@ -38,8 +38,6 @@ import com.flow.platform.domain.CmdStatus;
 import com.flow.platform.domain.CmdType;
 import com.flow.platform.domain.Jsonable;
 import com.flow.platform.domain.Zone;
-import com.flow.platform.core.exception.IllegalParameterException;
-import com.google.common.collect.Sets;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -55,7 +53,6 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.request.MockMultipartHttpServletRequestBuilder;
-import org.springframework.web.util.NestedServletException;
 
 /**
  * @author gy@fir.im
@@ -64,10 +61,10 @@ import org.springframework.web.util.NestedServletException;
 public class CmdControllerTest extends TestBase {
 
     @Autowired
-    private CmdService cmdService;
+    private CmdCCService cmdService;
 
     @Autowired
-    private AgentService agentService;
+    private AgentCCService agentService;
 
     @Autowired
     private ZoneService zoneService;

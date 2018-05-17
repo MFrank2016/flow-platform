@@ -29,7 +29,7 @@ import org.springframework.web.multipart.MultipartFile;
 /**
  * @author gy@fir.im
  */
-public interface CmdService extends WebhookService {
+public interface CmdCCService extends WebhookService {
 
     Integer DEFAULT_CMD_TIMEOUT = 3600; // in seconds, default 1 hour
 

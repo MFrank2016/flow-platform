@@ -53,10 +53,10 @@ import org.springframework.stereotype.Service;
 public class ZoneServiceImpl implements ZoneService, ContextEvent {
 
     @Autowired
-    private AgentService agentService;
+    private AgentCCService agentService;
 
     @Autowired
-    private CmdService cmdService;
+    private CmdCCService cmdService;
 
     @Autowired
     private CmdDispatchService cmdDispatchService;

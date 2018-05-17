@@ -27,33 +27,29 @@ import com.flow.platform.api.events.AgentStatusChangeEvent;
 import com.flow.platform.api.service.job.CmdService;
 import com.flow.platform.api.service.job.JobService;
 import com.flow.platform.api.util.PlatformURL;
+import com.flow.platform.cc.service.AgentCCService;
 import com.flow.platform.core.exception.HttpException;
 import com.flow.platform.core.exception.IllegalParameterException;
 import com.flow.platform.core.exception.IllegalStatusException;
 import com.flow.platform.core.service.ApplicationEventService;
 import com.flow.platform.domain.Agent;
 import com.flow.platform.domain.AgentPath;
-import com.flow.platform.domain.AgentPathWithWebhook;
 import com.flow.platform.domain.AgentSettings;
 import com.flow.platform.domain.AgentStatus;
 import com.flow.platform.domain.CmdInfo;
 import com.flow.platform.domain.CmdType;
-import com.flow.platform.domain.Jsonable;
 import com.flow.platform.util.CollectionUtil;
 import com.flow.platform.util.StringUtil;
 import com.flow.platform.util.http.HttpClient;
 import com.flow.platform.util.http.HttpResponse;
 import com.flow.platform.util.http.HttpURL;
 import com.google.common.base.Strings;
-import com.google.common.collect.Lists;
 import com.google.gson.JsonSyntaxException;
-import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import lombok.extern.log4j.Log4j2;
-import org.apache.http.entity.ContentType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -86,27 +82,20 @@ public class AgentServiceImpl extends ApplicationEventService implements AgentSe
     @Autowired
     private SyncService syncService;
 
+    @Autowired
+    private AgentCCService agentCCService;
+
     @Value(value = "${domain.api}")
     private String apiDomain;
 
     @Override
     public List<Agent> list() {
-        HttpResponse<String> response = HttpClient.build(platformURL.getAgentUrl())
-            .get()
-            .retry(httpRetryTimes)
-            .bodyAsString();
-
-        if (!response.hasSuccess()) {
-            throw new HttpException("Unable to load agent list");
-        }
-
-        Agent[] agents = Jsonable.GSON_CONFIG.fromJson(response.getBody(), Agent[].class);
-        return Lists.newArrayList(agents);
+        return agentCCService.list(null);
     }
 
     @Override
     public List<AgentItem> listItems() {
-        List<Agent> agents = list();
+        List<Agent> agents = agentCCService.list(null);
 
         // get all session id from agent collection
         List<String> sessionIds = CollectionUtil.toPropertyList("sessionId", agents);
@@ -128,7 +117,7 @@ public class AgentServiceImpl extends ApplicationEventService implements AgentSe
 
         for (Agent agent : agents) {
             // add offline agent
-            if (agent.getStatus() == AgentStatus.OFFLINE){
+            if (agent.getStatus() == AgentStatus.OFFLINE) {
                 list.add(new AgentItem(agent, null));
                 continue;
             }
@@ -189,39 +178,18 @@ public class AgentServiceImpl extends ApplicationEventService implements AgentSe
         }
 
         try {
-            AgentPathWithWebhook pathWithWebhook = new AgentPathWithWebhook(agentPath, buildAgentWebhook());
 
-            HttpResponse<String> response = HttpClient.build(platformURL.getAgentCreateUrl())
-                .post(pathWithWebhook.toJson())
-                .withContentType(ContentType.APPLICATION_JSON)
-                .retry(httpRetryTimes)
-                .bodyAsString();
-
-            if (!response.hasSuccess()) {
-                throw new HttpException("Unable to create agent via control center");
-            }
-
-            Agent agent = Agent.parse(response.getBody(), Agent.class);
+            Agent agent = agentCCService.create(agentPath, buildAgentWebhook());
             return new AgentItem(agent, null);
 
-        } catch (UnsupportedEncodingException | JsonSyntaxException e) {
+        } catch (JsonSyntaxException e) {
             throw new IllegalStatusException("Unable to create agent", e);
         }
     }
 
     @Override
     public AgentSettings settings(String token) {
-        String url = platformURL.getAgentSettingsUrl() + "?" + "token=" + token;
-        HttpResponse<String> response = HttpClient.build(url)
-            .get()
-            .retry(httpRetryTimes)
-            .bodyAsString();
-
-        if (!response.hasSuccess()) {
-            throw new HttpException("Unable to get agent settings from control center");
-        }
-
-        return AgentSettings.parse(response.getBody(), AgentSettings.class);
+        return agentCCService.settings(token);
     }
 
     @Override
@@ -229,13 +197,8 @@ public class AgentServiceImpl extends ApplicationEventService implements AgentSe
         Agent agent = findAgent(agentPath);
 
         try {
-            HttpClient.build(platformURL.getAgentDeleteUrl())
-                .post(agent.toJson())
-                .withContentType(ContentType.APPLICATION_JSON)
-                .retry(httpRetryTimes)
-                .bodyAsString();
-
-        } catch (UnsupportedEncodingException e) {
+            agentCCService.delete(agent);
+        } catch (Throwable e) {
             throw new IllegalStatusException(e.getMessage());
         }
     }
@@ -254,20 +217,10 @@ public class AgentServiceImpl extends ApplicationEventService implements AgentSe
      * find agent
      */
     private Agent findAgent(AgentPath agentPath) {
-        String url =
-            platformURL.getAgentFindUrl() + "?" + "zone=" + agentPath.getZone() + "&" + "name=" + agentPath.getName();
-        HttpResponse<String> response = HttpClient.build(url)
-            .get()
-            .retry(httpRetryTimes)
-            .bodyAsString();
 
-        if (!response.hasSuccess()) {
-            throw new HttpException("Unable to delete agent");
-        }
+        Agent agent = agentCCService.find(agentPath);
 
-        Agent agent = Agent.parse(response.getBody(), Agent.class);
-
-        if (agent == null){
+        if (agent == null) {
             throw new IllegalStatusException("agent is not exist");
         }
 
@@ -288,9 +241,7 @@ public class AgentServiceImpl extends ApplicationEventService implements AgentSe
     private void handleAgentOnSyncService(final Agent agent) {
         if (agent.getStatus() == AgentStatus.IDLE) {
             syncService.register(agent.getPath());
-        }
-
-        else if (agent.getStatus() == AgentStatus.OFFLINE) {
+        } else if (agent.getStatus() == AgentStatus.OFFLINE) {
             syncService.remove(agent.getPath());
         }
     }

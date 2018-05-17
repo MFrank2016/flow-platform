@@ -28,7 +28,7 @@ import java.util.Set;
 /**
  * @author gy@fir.im
  */
-public interface AgentService extends WebhookService {
+public interface AgentCCService extends WebhookService {
 
     int SESSION_TIMEOUT_TASK_HEARTBEAT = 60 * 1000; // millisecond
 

@@ -20,9 +20,9 @@ import static org.junit.Assert.fail;
 
 import com.flow.platform.cc.domain.CmdStatusItem;
 import com.flow.platform.cc.exception.AgentErr;
-import com.flow.platform.cc.service.AgentService;
+import com.flow.platform.cc.service.AgentCCService;
 import com.flow.platform.cc.service.CmdDispatchService;
-import com.flow.platform.cc.service.CmdService;
+import com.flow.platform.cc.service.CmdCCService;
 import com.flow.platform.cc.test.TestBase;
 import com.flow.platform.cc.util.ZKHelper;
 import com.flow.platform.core.exception.FlowException;
@@ -54,10 +54,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 public class CmdDispatchServiceTest extends TestBase {
 
     @Autowired
-    private CmdService cmdService;
+    private CmdCCService cmdService;
 
     @Autowired
-    private AgentService agentService;
+    private AgentCCService agentService;
 
     @Autowired
     private CmdDispatchService cmdDispatchService;

@@ -52,13 +52,13 @@ import org.springframework.transaction.annotation.Transactional;
 @Log4j2
 @Service
 @Transactional
-public class AgentServiceImpl extends WebhookServiceImplBase implements AgentService {
+public class AgentCCServiceImpl extends WebhookServiceImplBase implements AgentCCService {
 
     @Autowired
     private ZoneService zoneService;
 
     @Autowired
-    private CmdService cmdService;
+    private CmdCCService cmdService;
 
     @Autowired
     private CmdDispatchService cmdDispatchService;

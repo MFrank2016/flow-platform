@@ -23,10 +23,10 @@ import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.verify;
 
-import com.flow.platform.cc.config.QueueConfig;
+import com.flow.platform.cc.config.QueueCCConfig;
 import com.flow.platform.cc.domain.CmdStatusItem;
-import com.flow.platform.cc.service.AgentService;
-import com.flow.platform.cc.service.CmdService;
+import com.flow.platform.cc.service.AgentCCService;
+import com.flow.platform.cc.service.CmdCCService;
 import com.flow.platform.cc.service.ZoneService;
 import com.flow.platform.cc.test.TestBase;
 import com.flow.platform.cc.util.ZKHelper;
@@ -63,20 +63,20 @@ public class CmdQueueConsumerTest extends TestBase {
     public WireMockRule wireMockRule = new WireMockRule(8088);
 
     @Autowired
-    private AgentService agentService;
+    private AgentCCService agentService;
 
     @Autowired
     private ZoneService zoneService;
 
     @Autowired
-    private CmdService cmdService;
+    private CmdCCService cmdService;
 
     @Value("${queue.cmd.retry.enable}")
     private Boolean cmdQueueRetryEnable;
 
     @Before
     public void before() throws Throwable {
-        System.setProperty(QueueConfig.PROP_CMD_QUEUE_RETRY, "true");
+        System.setProperty(QueueCCConfig.PROP_CMD_QUEUE_RETRY, "true");
 
         zoneService.createZone(new Zone(ZONE, "mock-cloud-provider"));
 
@@ -212,6 +212,6 @@ public class CmdQueueConsumerTest extends TestBase {
     @After
     public void deleteZone() {
         deleteNodeWithChildren(ZKHelper.buildPath(ZONE, null));
-        System.setProperty(QueueConfig.PROP_CMD_QUEUE_RETRY, "false");
+        System.setProperty(QueueCCConfig.PROP_CMD_QUEUE_RETRY, "false");
     }
 }

@@ -183,4 +183,11 @@ public class WelcomeController {
     public String forbidden() {
         return "403";
     }
+
+    @GetMapping("/sys/info/{type}")
+    public SystemInfo systemInfo(@PathVariable String type) {
+        SystemInfo.Type targetType = SystemInfo.Type.valueOf(type.toUpperCase());
+        List<SystemInfo> infoList = sysInfoService.components(Category.CC, targetType);
+        return infoList.get(0);
+    }
 }

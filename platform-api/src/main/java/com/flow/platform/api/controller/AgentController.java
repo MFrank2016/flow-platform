@@ -49,9 +49,6 @@ public class AgentController {
     @Autowired
     private AgentService agentService;
 
-    @Autowired
-    private SyncService syncService;
-
     /**
      * @api {Get} /agents List
      * @apiName AgentList

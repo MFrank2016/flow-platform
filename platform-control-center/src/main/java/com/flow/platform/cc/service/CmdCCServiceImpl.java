@@ -23,7 +23,7 @@ import static com.flow.platform.domain.CmdType.RUN_SHELL;
 import static com.flow.platform.domain.CmdType.SHUTDOWN;
 import static com.flow.platform.domain.CmdType.STOP;
 
-import com.flow.platform.cc.config.QueueConfig;
+import com.flow.platform.cc.config.QueueCCConfig;
 import com.flow.platform.cc.dao.CmdDao;
 import com.flow.platform.cc.dao.CmdLogDao;
 import com.flow.platform.cc.dao.CmdResultDao;
@@ -61,6 +61,7 @@ import javax.annotation.PostConstruct;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -71,10 +72,10 @@ import org.springframework.web.multipart.MultipartFile;
 @Log4j2
 @Service
 @Transactional
-public class CmdServiceImpl extends WebhookServiceImplBase implements CmdService {
+public class CmdCCServiceImpl extends WebhookServiceImplBase implements CmdCCService {
 
     @Autowired
-    private AgentService agentService;
+    private AgentCCService agentService;
 
     @Autowired
     private ZoneService zoneService;
@@ -197,7 +198,7 @@ public class CmdServiceImpl extends WebhookServiceImplBase implements CmdService
     }
 
     @Override
-    @Transactional(propagation = Propagation.NEVER)
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
     public Cmd enqueue(CmdInfo cmdInfo, int priority, int retry) {
         Cmd cmd = create(cmdInfo, retry);
         PriorityMessage message = PriorityMessage.create(cmd.getId().getBytes(), priority);
@@ -210,7 +211,7 @@ public class CmdServiceImpl extends WebhookServiceImplBase implements CmdService
     public void updateStatus(CmdStatusItem statusItem, boolean inQueue) {
         if (inQueue) {
             log.trace("Report cmd status from queue: {}", statusItem.getCmdId());
-            cmdStatusQueue.enqueue(PriorityMessage.create(statusItem.toBytes(), QueueConfig.DEFAULT_PRIORITY));
+            cmdStatusQueue.enqueue(PriorityMessage.create(statusItem.toBytes(), QueueCCConfig.DEFAULT_PRIORITY));
             return;
         }
 

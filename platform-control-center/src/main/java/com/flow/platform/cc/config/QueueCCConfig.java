@@ -36,7 +36,7 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
  */
 @Log4j2
 @Configuration
-public class QueueConfig {
+public class QueueCCConfig {
 
     public final static int QUEUE_MAX_LENGTH = 100;
 

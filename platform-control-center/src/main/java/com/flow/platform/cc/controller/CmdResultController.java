@@ -16,7 +16,7 @@
 
 package com.flow.platform.cc.controller;
 
-import com.flow.platform.cc.service.CmdService;
+import com.flow.platform.cc.service.CmdCCService;
 import com.flow.platform.domain.CmdResult;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -35,7 +35,7 @@ import java.util.Set;
 public class CmdResultController {
 
     @Autowired
-    private CmdService cmdService;
+    private CmdCCService cmdService;
 
     /**
      * List cmd result by cmd list
