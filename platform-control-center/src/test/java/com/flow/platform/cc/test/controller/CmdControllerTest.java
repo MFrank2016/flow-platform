@@ -117,55 +117,6 @@ public class CmdControllerTest extends TestBase {
     }
 
     @Test
-    public void should_send_cmd_to_agent() throws Throwable {
-        // given:
-        final String zoneName = "test-zone-02";
-        final String agentName = "act-002";
-        final String path = ZKHelper.buildPath(zoneName, agentName);
-
-        zoneService.createZone(new Zone(zoneName, "mock-cloud-provider-name"));
-        Thread.sleep(1000);
-
-        zkClient.createEphemeral(path, null);
-        Thread.sleep(1000);
-
-        // when: send post request
-        CmdInfo cmd = new CmdInfo(zoneName, agentName, CmdType.RUN_SHELL, "~/hello.sh");
-        cmd.getInputs().put("FLOW_P_1", "flow-1");
-        cmd.getInputs().put("FLOW_P_2", "flow-2");
-        cmd.setWorkingDir("/user/flow");
-
-        MockHttpServletRequestBuilder content = post("/cmd/send")
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(cmd.toJson());
-
-        // then: check response data
-        MvcResult result = this.mockMvc.perform(content)
-            .andDo(print())
-            .andExpect(status().isOk())
-            .andReturn();
-
-        Cmd cmdInfo = gsonConfig.fromJson(result.getResponse().getContentAsString(), Cmd.class);
-        Assert.assertNotNull(cmdInfo);
-        Assert.assertEquals(CmdStatus.SENT, cmdInfo.getStatus());
-        Assert.assertEquals(zoneName, cmdInfo.getZoneName());
-        Assert.assertEquals(agentName, cmdInfo.getAgentName());
-        Assert.assertEquals(agentName, agentService.find(cmdInfo.getAgentPath()).getName());
-        Assert.assertEquals(2, cmdInfo.getInputs().size());
-        Assert.assertEquals("/user/flow", cmdInfo.getWorkingDir());
-
-        // then: check node data
-        byte[] raw = zkClient.getData(path);
-        Assert.assertNotNull(raw);
-
-        Cmd received = Jsonable.parse(raw, Cmd.class);
-        Assert.assertNotNull(received);
-        Assert.assertEquals(cmdInfo, received);
-        Assert.assertEquals(2, received.getInputs().size());
-        Assert.assertEquals("/user/flow", received.getWorkingDir());
-    }
-
-    @Test
     public void should_upload_and_download_zipped_log() throws Throwable {
         // given:
         ClassLoader classLoader = CmdControllerTest.class.getClassLoader();
@@ -207,31 +158,5 @@ public class CmdControllerTest extends TestBase {
         Assert.assertEquals("application/zip", response.getContentType());
         Assert.assertEquals(data.length, response.getContentLength());
         Assert.assertTrue(response.getHeader("Content-Disposition").contains(originalFilename));
-    }
-
-    @Test
-    public void should_raise_exception_if_illegal_parameter_for_queue() throws Exception {
-        // given:
-        CmdInfo cmdBase = new CmdInfo("test-zone-1", "test-agent-1", CmdType.RUN_SHELL, "~/hello.sh");
-        Assert.assertNotNull(cmdBase.getStatus());
-
-        // when: request api of send cmd via queue with illegal priority
-        MockHttpServletRequestBuilder content = post("/cmd/queue/send")
-            .param("priority", "0")
-            .param("retry", "0")
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(cmdBase.toJson());
-
-        // then: return 400 for illegal priority range
-        this.mockMvc.perform(content).andExpect(status().isBadRequest());
-
-        // when: request api of send cmd via queue with illegal retry
-        content = post("/cmd/queue/send")
-            .param("priority", "1")
-            .param("retry", "101")
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(cmdBase.toJson());
-
-        this.mockMvc.perform(content).andExpect(status().isBadRequest());
     }
 }

@@ -61,6 +61,8 @@ import com.flow.platform.api.service.job.JobService;
 import com.flow.platform.api.service.job.NodeResultService;
 import com.flow.platform.api.service.node.EnvService;
 import com.flow.platform.api.service.node.NodeService;
+import com.flow.platform.cc.dao.AgentDao;
+import com.flow.platform.cc.dao.CmdDao;
 import com.flow.platform.domain.Cmd;
 import com.flow.platform.util.git.model.GitSource;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
@@ -75,6 +77,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import org.apache.curator.test.TestingServer;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Assert;
@@ -112,6 +115,13 @@ public abstract class TestBase {
     static {
         System.setProperty("flow.api.env", "test");
         System.setProperty("flow.api.task.keep_idle_agent", "false");
+
+        try {
+            TestingServer server = new TestingServer(2181);
+            server.start();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     @Autowired
@@ -185,6 +195,12 @@ public abstract class TestBase {
 
     @Autowired
     protected ArtifactDao artifactDao;
+
+    @Autowired
+    protected CmdDao cmdDao;
+
+    @Autowired
+    protected AgentDao agentDao;
 
     @Autowired
     private User superUser;
@@ -314,6 +330,8 @@ public abstract class TestBase {
         permissionDao.deleteAll();
         userFlowDao.deleteAll();
         jobNumberDao.deleteAll();
+        cmdDao.deleteAll();
+        agentDao.deleteAll();
     }
 
     @After
