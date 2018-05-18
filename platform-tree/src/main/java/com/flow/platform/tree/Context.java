@@ -34,16 +34,18 @@ public class Context {
         return context.entrySet();
     }
 
-    public void put(String key, String value) {
+    public Context put(String key, String value) {
         context.put(key, value);
+        return this;
     }
 
     public String get(String key) {
         return context.get(key);
     }
 
-    public void remove(String key) {
+    public Context remove(String key) {
         context.remove(key);
+        return this;
     }
 
 }

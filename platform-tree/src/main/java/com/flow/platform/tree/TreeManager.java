@@ -58,6 +58,7 @@ public class TreeManager {
             }
 
             startNode.setStatus(NodeStatus.RUNNING);
+            updateParentStatus(startNode);
 
             if (!Objects.isNull(consumer)) {
                 consumer.accept(startNode, tree.getSharedContext());
@@ -88,7 +89,7 @@ public class TreeManager {
     private NodeStatus getNodeStatusFromResult(Result result) {
         switch (result.getCode()) {
             case ExitCode.SUCCESS:
-                return NodeStatus.DONE;
+                return NodeStatus.SUCCESS;
 
             case ExitCode.KILLED:
                 return NodeStatus.KILLED;
@@ -102,14 +103,81 @@ public class TreeManager {
      *  Update parent node status
      */
     private void updateParentStatus(Node current) {
-        throw new UnsupportedOperationException();
+        Node parent = current.getParent();
+        if (Objects.isNull(parent)) {
+            return;
+        }
+
+        if (current.getStatus() == NodeStatus.RUNNING) {
+            parent.setStatus(NodeStatus.RUNNING);
+        }
+
+        if (current.getStatus() == NodeStatus.SUCCESS && hasChildrenExecuted(parent)) {
+            if (hasFailureNode(parent)) {
+                parent.setStatus(NodeStatus.FAILURE);
+            } else {
+                parent.setStatus(NodeStatus.SUCCESS);
+            }
+        }
+
+        if (current.getStatus() == NodeStatus.KILLED) {
+            parent.setStatus(NodeStatus.KILLED);
+        }
+
+        if (current.getStatus() == NodeStatus.FAILURE) {
+            if (!current.isAllowFailure()) {
+                parent.setStatus(NodeStatus.FAILURE);
+            }
+
+            // same logic as NodeStatus.SUCCESS
+            else if (hasChildrenExecuted(parent)) {
+                if (hasFailureNode(parent)) {
+                    parent.setStatus(NodeStatus.FAILURE);
+                } else {
+                    parent.setStatus(NodeStatus.SUCCESS);
+                }
+            }
+        }
+
+        updateParentStatus(parent);
+    }
+
+    /**
+     * Has all children been executed
+     */
+    private boolean hasChildrenExecuted(Node parent) {
+        for (Node child : parent.getChildren()) {
+            if (child.getStatus().getCode() < NodeStatus.SUCCESS.getCode()) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * Has failure children node of parent node
+     */
+    private boolean hasFailureNode(Node parent) {
+        boolean successForAll = true;
+
+        for (Node child : parent.getChildren()) {
+            if (child.getStatus() == NodeStatus.FAILURE && !child.isAllowFailure()) {
+                successForAll = false;
+            }
+        }
+
+        return !successForAll;
     }
 
     /**
      * Update shared context of node tree
      */
     private void updateSharedContext(Node current, Result result) {
-        throw new UnsupportedOperationException();
+        Context sharedContext = tree.getSharedContext();
+        for (Map.Entry<String, String> entry : result.all()) {
+            sharedContext.put(entry.getKey(), entry.getValue());
+        }
     }
 
     /**

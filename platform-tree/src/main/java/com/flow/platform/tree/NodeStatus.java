@@ -39,17 +39,17 @@ public enum NodeStatus {
     /**
      * Node executed successfully
      */
-    DONE(10),
+    SUCCESS(10),
 
     /**
      * Node executed with error
      */
-    FAILURE(10),
+    FAILURE(20),
 
     /**
      * Node stopped
      */
-    KILLED(10);
+    KILLED(30);
 
     private int code;
 

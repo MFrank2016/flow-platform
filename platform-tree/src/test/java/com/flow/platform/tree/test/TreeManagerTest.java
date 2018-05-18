@@ -16,6 +16,7 @@
 
 package com.flow.platform.tree.test;
 
+import com.flow.platform.tree.Context;
 import com.flow.platform.tree.Node;
 import com.flow.platform.tree.NodePath;
 import com.flow.platform.tree.Result;
@@ -24,11 +25,14 @@ import com.flow.platform.tree.NodeTree;
 import com.flow.platform.tree.TreeManager;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.FixMethodOrder;
 import org.junit.Test;
+import org.junit.runners.MethodSorters;
 
 /**
  * @author yang
  */
+@FixMethodOrder(value = MethodSorters.JVM)
 public class TreeManagerTest {
 
     private TreeManager manager;
@@ -55,16 +59,35 @@ public class TreeManagerTest {
 
     @Test
     public void should_exec_node_tree_from_root() {
-        // the first node of tree status should be running
+        NodePath pathToTest = NodePath.create("root/child-1/child-1-1");
+
+        // the first node of tree status should be running and all parent node status should be running
         manager.execute(NodePath.create("root"), null);
-        Assert.assertEquals(NodeStatus.RUNNING, tree.get(NodePath.create("root/child-1/child-1-1")).getStatus());
+        Assert.assertEquals(NodeStatus.RUNNING, tree.get(pathToTest).getStatus());
+        Assert.assertEquals(NodeStatus.RUNNING, tree.get(pathToTest.parent()).getStatus());
+        Assert.assertEquals(NodeStatus.RUNNING, tree.getRoot().getStatus());
+
+        // when: tell tree manager node been executed
+        Result nodeResult = new Result(pathToTest, 0);
+        nodeResult.put("OUTPUT_1", "111").put("OUTPUT_2", "222");
+        manager.onFinish(nodeResult);
+
+        // then: verify shared context value
+        Context sharedContext = tree.getSharedContext();
+        Assert.assertEquals("111", sharedContext.get("OUTPUT_1"));
+        Assert.assertEquals("222", sharedContext.get("OUTPUT_2"));
+
+        // then: verify node status
+        Assert.assertEquals(NodeStatus.SUCCESS, tree.get(pathToTest).getStatus());
+        Assert.assertEquals(NodeStatus.SUCCESS, tree.get(NodePath.create("root/child-1")).getStatus());
+        Assert.assertEquals(NodeStatus.RUNNING, tree.getRoot().getStatus());
     }
 
     @Test
     public void should_get_success_status_for_node() {
         Result mockResult = new Result(NodePath.create("root/child-1/child-1-1"), 0);
         Node nextNode = manager.onFinish(mockResult);
-        Assert.assertEquals(NodeStatus.DONE, tree.get(NodePath.create("root/child-1/child-1-1")).getStatus());
+        Assert.assertEquals(NodeStatus.SUCCESS, tree.get(NodePath.create("root/child-1/child-1-1")).getStatus());
         Assert.assertEquals(tree.get(NodePath.create("root/child-1")), nextNode);
     }
 

@@ -17,6 +17,7 @@
 package com.flow.platform.tree;
 
 import com.google.common.base.Strings;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Range;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -99,20 +100,20 @@ public class NodePath {
         pathInStr = builder.deleteCharAt(builder.length() - 1).toString();
     }
 
-    public String root() {
-        return paths.get(0);
+    public NodePath parent() {
+        if ((paths.size() - 1) >= 0) {
+            paths.remove(paths.size() - 1);
+            return new NodePath(paths);
+        }
+        return null;
+    }
+
+    public NodePath root() {
+        return new NodePath(Lists.newArrayList(paths.get(0)));
     }
 
     public String name() {
         return paths.get(paths.size() - 1);
-    }
-
-    public String name(int level) {
-        if (level >= paths.size()) {
-            throw new IllegalArgumentException("The input level is out of path range");
-        }
-
-        return paths.get(level);
     }
 
     @Override
