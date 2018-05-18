@@ -58,7 +58,7 @@ public class TreeManagerTest {
     }
 
     @Test
-    public void should_exec_node_tree_from_root() {
+    public void should_exec_node_tree_from_root_with_success_status() {
         NodePath pathToTest = NodePath.create("root/child-1/child-1-1");
 
         // the first node of tree status should be running and all parent node status should be running
@@ -81,14 +81,17 @@ public class TreeManagerTest {
         Assert.assertEquals(NodeStatus.SUCCESS, tree.get(pathToTest).getStatus());
         Assert.assertEquals(NodeStatus.SUCCESS, tree.get(NodePath.create("root/child-1")).getStatus());
         Assert.assertEquals(NodeStatus.RUNNING, tree.getRoot().getStatus());
-    }
 
-    @Test
-    public void should_get_success_status_for_node() {
-        Result mockResult = new Result(NodePath.create("root/child-1/child-1-1"), 0);
-        Node nextNode = manager.onFinish(mockResult);
-        Assert.assertEquals(NodeStatus.SUCCESS, tree.get(NodePath.create("root/child-1/child-1-1")).getStatus());
-        Assert.assertEquals(tree.get(NodePath.create("root/child-1")), nextNode);
+        // then: mock to finish all children node for root and test their status
+        NodePath childTwoPath = NodePath.create("root/child-2");
+        manager.onFinish(new Result(childTwoPath, 0));
+        Assert.assertEquals(NodeStatus.SUCCESS, tree.get(childTwoPath).getStatus());
+        Assert.assertEquals(NodeStatus.RUNNING, tree.getRoot().getStatus());
+
+        NodePath childThreePath = NodePath.create("root/child-3");
+        manager.onFinish(new Result(childThreePath, 0));
+        Assert.assertEquals(NodeStatus.SUCCESS, tree.get(childThreePath).getStatus());
+        Assert.assertEquals(NodeStatus.SUCCESS, tree.getRoot().getStatus());
     }
 
     @Test
