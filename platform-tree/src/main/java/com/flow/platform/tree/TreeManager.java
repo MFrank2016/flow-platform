@@ -22,6 +22,8 @@ import java.util.Map;
 import java.util.Objects;
 
 /**
+ * Operate node tree
+ *
  * @author yang
  */
 public class TreeManager {
@@ -77,9 +79,15 @@ public class TreeManager {
      */
     public Node onFinish(Result result) {
         Node current = tree.get(result.getPath());
+        if (current.getStatus() == NodeStatus.PENDING) {
+            throw new IllegalStateException("The node has to start execute first");
+        }
+
         current.setStatus(getNodeStatusFromResult(result));
+
         updateParentStatus(current);
-        updateSharedContext(current, result);
+        updateSharedContext(result);
+
         return tree.next(current.getPath());
     }
 
@@ -95,7 +103,8 @@ public class TreeManager {
                 return NodeStatus.KILLED;
 
             default:
-                return NodeStatus.FAILURE;
+                Node node = tree.get(result.getPath());
+                return node.isAllowFailure() ? NodeStatus.SUCCESS : NodeStatus.FAILURE;
         }
     }
 
@@ -162,7 +171,7 @@ public class TreeManager {
         boolean successForAll = true;
 
         for (Node child : parent.getChildren()) {
-            if (child.getStatus() == NodeStatus.FAILURE && !child.isAllowFailure()) {
+            if (child.getStatus() == NodeStatus.FAILURE) {
                 successForAll = false;
             }
         }
@@ -173,7 +182,7 @@ public class TreeManager {
     /**
      * Update shared context of node tree
      */
-    private void updateSharedContext(Node current, Result result) {
+    private void updateSharedContext(Result result) {
         Context sharedContext = tree.getSharedContext();
         for (Map.Entry<String, String> entry : result.all()) {
             sharedContext.put(entry.getKey(), entry.getValue());

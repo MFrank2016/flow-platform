@@ -57,6 +57,12 @@ public class TreeManagerTest {
         manager = new TreeManager(tree);
     }
 
+    @Test(expected = IllegalStateException.class)
+    public void should_raise_illegal_state_exception_if_node_pending_on_finish() {
+        NodePath pathToTest = NodePath.create("root/child-1/child-1-1");
+        manager.onFinish(new Result(pathToTest, 0));
+    }
+
     @Test
     public void should_exec_node_tree_from_root_with_success_status() {
         NodePath pathToTest = NodePath.create("root/child-1/child-1-1");
@@ -84,34 +90,59 @@ public class TreeManagerTest {
 
         // then: mock to finish all children node for root and test their status
         NodePath childTwoPath = NodePath.create("root/child-2");
+        manager.execute(childTwoPath, null);
+        Assert.assertEquals(NodeStatus.RUNNING, tree.getRoot().getStatus());
+
         manager.onFinish(new Result(childTwoPath, 0));
         Assert.assertEquals(NodeStatus.SUCCESS, tree.get(childTwoPath).getStatus());
         Assert.assertEquals(NodeStatus.RUNNING, tree.getRoot().getStatus());
 
         NodePath childThreePath = NodePath.create("root/child-3");
+        manager.execute(childThreePath, null);
+        Assert.assertEquals(NodeStatus.RUNNING, tree.getRoot().getStatus());
+
         manager.onFinish(new Result(childThreePath, 0));
         Assert.assertEquals(NodeStatus.SUCCESS, tree.get(childThreePath).getStatus());
         Assert.assertEquals(NodeStatus.SUCCESS, tree.getRoot().getStatus());
     }
 
     @Test
+    public void should_get_success_status_when_allow_failure() {
+        NodePath testNodePath = NodePath.create("root/child-1/child-1-1");
+        tree.get(testNodePath).setAllowFailure(true);
+        manager.execute(testNodePath, null);
+
+        Result mockResult = new Result(testNodePath, 1);
+        manager.onFinish(mockResult);
+        Assert.assertEquals(NodeStatus.SUCCESS, tree.get(testNodePath).getStatus());
+        Assert.assertEquals(NodeStatus.SUCCESS, tree.get(testNodePath.parent()).getStatus());
+        Assert.assertEquals(NodeStatus.RUNNING, tree.getRoot().getStatus());
+    }
+
+    @Test
     public void should_get_failure_status_for_node() {
-        Result mockResult = new Result(NodePath.create("root/child-1/child-1-1"), 1);
+        NodePath testNodePath = NodePath.create("root/child-1/child-1-1");
+        manager.execute(testNodePath, null);
+
+        Result mockResult = new Result(testNodePath, 1);
         Node nextNode = manager.onFinish(mockResult);
 
-        Assert.assertEquals(NodeStatus.FAILURE, tree.get(NodePath.create("root/child-1/child-1-1")).getStatus());
-        Assert.assertEquals(NodeStatus.FAILURE, tree.get(NodePath.create("root/child-1")).getStatus());
+        Assert.assertEquals(NodeStatus.FAILURE, tree.get(testNodePath).getStatus());
+        Assert.assertEquals(NodeStatus.FAILURE, tree.get(testNodePath.parent()).getStatus());
         Assert.assertEquals(NodeStatus.FAILURE, tree.get(NodePath.create("root")).getStatus());
         Assert.assertEquals(tree.get(NodePath.create("root/child-1")), nextNode);
     }
 
     @Test
     public void should_get_killed_status_for_node() {
-        Result mockResult = new Result(NodePath.create("root/child-1/child-1-1"), 130);
+        NodePath testNodePath = NodePath.create("root/child-1/child-1-1");
+        manager.execute(testNodePath, null);
+
+        Result mockResult = new Result(testNodePath, 130);
         Node nextNode = manager.onFinish(mockResult);
 
-        Assert.assertEquals(NodeStatus.KILLED, tree.get(NodePath.create("root/child-1/child-1-1")).getStatus());
-        Assert.assertEquals(NodeStatus.KILLED, tree.get(NodePath.create("root/child-1")).getStatus());
+        Assert.assertEquals(NodeStatus.KILLED, tree.get(testNodePath).getStatus());
+        Assert.assertEquals(NodeStatus.KILLED, tree.get(testNodePath.parent()).getStatus());
         Assert.assertEquals(NodeStatus.KILLED, tree.get(NodePath.create("root")).getStatus());
         Assert.assertEquals(tree.get(NodePath.create("root/child-1")), nextNode);
     }
