@@ -62,6 +62,7 @@ public class CreateFlowTest extends TestBase {
 
     @Before
     public void before() {
+        stubAgent();
         flow = nodeService.createEmptyFlow("flow_integration");
         setFlowToReady(flow);
         Assert.assertNotNull(nodeService.find(flow.getPath()));
@@ -189,6 +190,7 @@ public class CreateFlowTest extends TestBase {
     @After
     public void after() {
         FileSystemUtils.deleteRecursively(Paths.get(workspace.toString(), "flow-integration").toFile());
+        clearAgent();
     }
 
     private String loadYml(Node node) throws InterruptedException {

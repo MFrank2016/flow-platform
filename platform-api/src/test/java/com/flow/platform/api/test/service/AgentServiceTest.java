@@ -84,6 +84,8 @@ public class AgentServiceTest extends TestBase {
         Agent agent = new Agent("zone", "name");
         agent.setStatus(AgentStatus.BUSY);
         agent.setSessionId(sessionId);
+
+        agentDao.save(agent);
         return agent;
     }
 

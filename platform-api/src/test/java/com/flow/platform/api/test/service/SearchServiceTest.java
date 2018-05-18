@@ -30,6 +30,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -42,6 +43,7 @@ public class SearchServiceTest extends TestBase {
     @Before
     public void before_test() throws IOException {
         stubDemo();
+        stubAgent();
 
         Node rootForFlow = createRootFlow("flow1", "yml/flow.yaml");
         Map<String, String> envs = new HashMap<>();
@@ -60,6 +62,11 @@ public class SearchServiceTest extends TestBase {
         Job jobTagCondition = jobService.createFromFlowYml(rootForFlow.getPath(), JobCategory.PR, envs, mockUser);
         jobTagCondition.setCreatedBy("yh@fir.im");
         jobDao.update(jobTagCondition);
+    }
+
+    @After
+    public void after() {
+        clearAgent();
     }
 
     @Test

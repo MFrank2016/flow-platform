@@ -35,6 +35,7 @@ import com.flow.platform.domain.CmdStatus;
 import com.google.common.collect.Sets;
 import java.io.IOException;
 import java.util.List;
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -50,7 +51,13 @@ public class NodeResultServiceTest extends TestBase {
 
     @Before
     public void init() {
+        stubAgent();
         stubDemo();
+    }
+
+    @After
+    public void after() {
+        clearAgent();
     }
 
     @Test

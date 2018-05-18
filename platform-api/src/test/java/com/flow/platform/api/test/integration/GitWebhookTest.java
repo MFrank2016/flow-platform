@@ -46,6 +46,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.FixMethodOrder;
@@ -78,7 +79,13 @@ public class GitWebhookTest extends TestBase {
 
     @Before
     public void before() throws IOException {
+        stubAgent();
         stubDemo();
+    }
+
+    @After
+    public void after() {
+        clearAgent();
     }
 
     @Test(expected = NotFoundException.class)

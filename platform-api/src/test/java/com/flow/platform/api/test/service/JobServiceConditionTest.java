@@ -34,6 +34,7 @@ import com.flow.platform.domain.Cmd;
 import com.flow.platform.domain.CmdResult;
 import com.flow.platform.domain.CmdStatus;
 import com.flow.platform.domain.CmdType;
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -46,10 +47,16 @@ public class JobServiceConditionTest extends TestBase {
     @Before
     public void init() {
         stubDemo();
+        stubAgent();
 
         stubFor(get(urlEqualTo("/mock-return-true"))
             .willReturn(aResponse()
                 .withBody("true")));
+    }
+
+    @After
+    public void after() {
+        clearAgent();
     }
 
     @Test
@@ -62,7 +69,7 @@ public class JobServiceConditionTest extends TestBase {
         // when: mock create session callback, and condition should be executed
         final String sessionId = CommonUtil.randomId().toString();
         Cmd cmd = new Cmd("default", null, CmdType.CREATE_SESSION, null);
-        cmd.setSessionId(sessionId);
+        cmd.setSessionId(job.getSessionId());
         cmd.setStatus(CmdStatus.SENT);
         jobService.callback(new CmdCallbackQueueItem(job.getId(), cmd));
         job = reload(job);
@@ -75,7 +82,7 @@ public class JobServiceConditionTest extends TestBase {
 
         // when: mock create step2 callback
         cmd = new Cmd("default", null, CmdType.RUN_SHELL, null);
-        cmd.setSessionId(sessionId);
+        cmd.setSessionId(job.getSessionId());
         cmd.setStatus(CmdStatus.LOGGED);
         cmd.setCmdResult(new CmdResult(0));
         cmd.setExtra(PathUtil.build(name, "step2"));
@@ -88,7 +95,7 @@ public class JobServiceConditionTest extends TestBase {
 
         // when: mock delete session callback
         cmd = new Cmd("default", null, CmdType.DELETE_SESSION, null);
-        cmd.setSessionId(sessionId);
+        cmd.setSessionId(job.getSessionId());
         cmd.setStatus(CmdStatus.SENT);
         jobService.callback(new CmdCallbackQueueItem(job.getId(), cmd));
 

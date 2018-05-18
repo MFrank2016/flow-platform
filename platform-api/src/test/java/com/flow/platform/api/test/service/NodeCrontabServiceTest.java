@@ -26,6 +26,7 @@ import com.google.common.collect.Sets;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -41,8 +42,14 @@ public class NodeCrontabServiceTest extends TestBase {
 
     @Before
     public void before() {
+        stubAgent();
         stubDemo();
         flowCrontabService.cleanTriggers();
+    }
+
+    @After
+    public void after() {
+        clearAgent();
     }
 
     @Test

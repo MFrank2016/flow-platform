@@ -27,7 +27,6 @@ import com.flow.platform.api.domain.job.NodeStatus;
 import com.flow.platform.api.domain.node.Node;
 import com.flow.platform.api.domain.node.NodeTree;
 import com.flow.platform.api.domain.response.BooleanValue;
-import com.flow.platform.api.util.CommonUtil;
 import com.flow.platform.api.util.PathUtil;
 import com.flow.platform.core.exception.NotFoundException;
 import com.flow.platform.core.response.ResponseError;
@@ -35,6 +34,7 @@ import com.flow.platform.domain.Cmd;
 import com.flow.platform.domain.CmdStatus;
 import com.flow.platform.domain.CmdType;
 import com.flow.platform.util.StringUtil;
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -51,8 +51,14 @@ public class FlowControllerTest extends ControllerTestWithoutAuth {
 
     @Before
     public void init() throws Throwable {
+        stubAgent();
         stubDemo();
         createEmptyFlow(flowName);
+    }
+
+    @After
+    public void after() {
+        clearAgent();
     }
 
     @Test
@@ -80,7 +86,7 @@ public class FlowControllerTest extends ControllerTestWithoutAuth {
         Node stepFirst = nodeTree.find(flow + "/step1");
 
         // first create session success
-        final String sessionId = CommonUtil.randomId().toString();
+        final String sessionId = job.getSessionId();
         Cmd cmd = new Cmd("default", null, CmdType.CREATE_SESSION, null);
         cmd.setSessionId(sessionId);
         cmd.setStatus(CmdStatus.SENT);

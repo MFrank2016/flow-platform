@@ -16,15 +16,8 @@
 
 package com.flow.platform.api.test.controller;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
-import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
-
 import com.flow.platform.api.consumer.JobStatusEventConsumer;
 import com.flow.platform.api.domain.CmdCallbackQueueItem;
-import com.flow.platform.api.domain.agent.AgentItem;
 import com.flow.platform.api.domain.job.Job;
 import com.flow.platform.api.domain.job.JobCategory;
 import com.flow.platform.api.domain.job.JobStatus;
@@ -34,23 +27,14 @@ import com.flow.platform.api.domain.node.Node;
 import com.flow.platform.api.domain.node.NodeTree;
 import com.flow.platform.api.envs.EnvUtil;
 import com.flow.platform.api.events.JobStatusChangeEvent;
-import com.flow.platform.api.service.AgentService;
 import com.flow.platform.api.test.TestBase;
-import com.flow.platform.cc.service.ZoneService;
-import com.flow.platform.cc.util.ZKHelper;
 import com.flow.platform.core.context.SpringContext;
 import com.flow.platform.core.queue.PriorityMessage;
-import com.flow.platform.domain.Agent;
-import com.flow.platform.domain.AgentPath;
-import com.flow.platform.domain.AgentStatus;
 import com.flow.platform.domain.Cmd;
 import com.flow.platform.domain.CmdResult;
 import com.flow.platform.domain.CmdStatus;
 import com.flow.platform.domain.CmdType;
-import com.flow.platform.domain.Zone;
 import com.flow.platform.queue.PlatformQueue;
-import com.flow.platform.util.zk.ZKClient;
-import com.github.tomakehurst.wiremock.client.WireMock;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -76,41 +60,16 @@ public class CmdWebhookControllerTest extends TestBase {
     @Autowired
     private SpringContext springContext;
 
-    @Autowired
-    private AgentService agentService;
-
-    @Autowired
-    private ZoneService zoneService;
-
-    @Autowired
-    private ZKClient zkClient;
-
     @Before
     public void before() throws Throwable {
-
-        stubAgentCallback();
-        stubHooksCmd();
-
-        AgentPath agentPath = new AgentPath("default", "test");
-
-        zoneService.createZone(new Zone("default", "test"));
-        agentService.create(agentPath);
-        ZKHelper.buildPath(agentPath);
-        zkClient.createEphemeral("/flow-agents/default/test", null);
-
-        Agent agent = agentDao.get(agentPath);
-        agent.setStatus(AgentStatus.IDLE);
-        agentDao.update(agent);
-
+        stubAgent();
         cmdCallbackQueue.clean();
         springContext.cleanApplictionListener();
     }
 
     @After
     public void after() {
-        if (zkClient.exist("/flow-agents/default")) {
-            zkClient.delete("/flow-agents/default", true);
-        }
+        clearAgent();
     }
 
     @Test
@@ -321,18 +280,6 @@ public class CmdWebhookControllerTest extends TestBase {
 
     protected Job refresh(Job job) {
         return jobService.find(job.getId());
-    }
-
-    private void stubAgentCallback() {
-        stubFor(WireMock.post(urlPathEqualTo("/agents/callback"))
-            .willReturn(aResponse()
-                .withBody("")));
-    }
-
-    private void stubHooksCmd() {
-        stubFor(WireMock.post(urlPathEqualTo("/hooks/cmd"))
-            .willReturn(aResponse()
-                .withBody("")));
     }
 
 

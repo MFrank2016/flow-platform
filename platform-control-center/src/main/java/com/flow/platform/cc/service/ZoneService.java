@@ -47,6 +47,13 @@ public interface ZoneService {
     Zone getZone(String zoneName);
 
     /**
+     * delete zone name
+     * @param zoneName
+     * @return
+     */
+    void deleteZone(String zoneName);
+
+    /**
      * Get zone list from zk
      *
      * @return zone list

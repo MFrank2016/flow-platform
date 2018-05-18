@@ -132,6 +132,15 @@ public class ZoneServiceImpl implements ZoneService, ContextEvent {
         return null;
     }
 
+
+    @Override
+    public void deleteZone(String zoneName) {
+        Zone zone = getZone(zoneName);
+        if(!Objects.isNull(zone)) {
+            zoneEventWatchers.remove(zone);
+        }
+    }
+
     @Override
     public List<Zone> getZones() {
         return Lists.newArrayList(zoneEventWatchers.keySet());

@@ -161,7 +161,7 @@ public class LogServiceImpl implements LogService {
                 FileUtils
                     .writeStringToFile(Paths.get(getJobLogPath(job).toString(), nodeResult.getName() + ".log").toFile(),
                         readStepLog(nodeResult));
-            } catch (IOException e) {
+            } catch (Throwable e) {
             }
         }
 

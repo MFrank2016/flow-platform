@@ -55,6 +55,7 @@ import com.flow.platform.api.envs.FlowEnvs.YmlStatusValue;
 import com.flow.platform.api.envs.GitEnvs;
 import com.flow.platform.api.envs.JobEnvs;
 import com.flow.platform.api.initializers.Initializer;
+import com.flow.platform.api.service.AgentService;
 import com.flow.platform.api.service.job.JobNodeService;
 import com.flow.platform.api.service.job.JobSearchService;
 import com.flow.platform.api.service.job.JobService;
@@ -63,8 +64,16 @@ import com.flow.platform.api.service.node.EnvService;
 import com.flow.platform.api.service.node.NodeService;
 import com.flow.platform.cc.dao.AgentDao;
 import com.flow.platform.cc.dao.CmdDao;
+import com.flow.platform.cc.service.ZoneService;
+import com.flow.platform.cc.util.ZKHelper;
+import com.flow.platform.domain.Agent;
+import com.flow.platform.domain.AgentPath;
+import com.flow.platform.domain.AgentStatus;
 import com.flow.platform.domain.Cmd;
+import com.flow.platform.domain.Zone;
 import com.flow.platform.util.git.model.GitSource;
+import com.flow.platform.util.zk.ZKClient;
+import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import com.google.common.io.Files;
 import java.io.File;
@@ -207,6 +216,16 @@ public abstract class TestBase {
 
     @Autowired
     private JobNodeService jobNodeService;
+
+    @Autowired
+    protected AgentService agentService;
+
+    @Autowired
+    protected ZoneService zoneService;
+
+    @Autowired
+    protected ZKClient zkClient;
+
 
     @Rule
     public WireMockRule wireMockRule = new WireMockRule(8080);
@@ -375,5 +394,41 @@ public abstract class TestBase {
     protected Job reload(Job job) {
         return jobService.find(job.getNodePath(), job.getNumber());
     }
+
+    protected void stubAgentCallback() {
+        stubFor(WireMock.post(urlPathEqualTo("/agents/callback"))
+            .willReturn(aResponse()
+                .withBody("")));
+    }
+
+    protected void stubHooksCmd() {
+        stubFor(WireMock.post(urlPathEqualTo("/hooks/cmd"))
+            .willReturn(aResponse()
+                .withBody("")));
+    }
+
+    protected void stubAgent() {
+        stubAgentCallback();
+        stubHooksCmd();
+
+        AgentPath agentPath = new AgentPath("default", "test");
+
+        zoneService.createZone(new Zone("default", "test"));
+        agentService.create(agentPath);
+        ZKHelper.buildPath(agentPath);
+        zkClient.createEphemeral("/flow-agents/default/test", null);
+
+        Agent agent = agentDao.get(agentPath);
+        agent.setStatus(AgentStatus.IDLE);
+        agentDao.update(agent);
+    }
+
+    protected void clearAgent() {
+        if (zkClient.exist("/flow-agents/default")) {
+            zkClient.delete("/flow-agents/default", true);
+        }
+        zoneService.deleteZone("default");
+    }
+
 
 }

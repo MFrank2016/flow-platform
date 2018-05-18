@@ -27,11 +27,11 @@ import com.flow.platform.api.domain.job.NodeResult;
 import com.flow.platform.api.domain.job.NodeStatus;
 import com.flow.platform.api.domain.node.Node;
 import com.flow.platform.api.envs.GitEnvs;
-import java.io.File;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
+import org.junit.After;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
@@ -44,6 +44,16 @@ public class JobControllerTest extends ControllerTestWithoutAuth {
 
     @Autowired
     private Path workspace;
+
+    @Before
+    public void before() {
+        stubAgent();
+    }
+
+    @After
+    public void after() {
+        clearAgent();
+    }
 
     @Test
     public void should_show_job_success() throws Exception {
@@ -132,15 +142,9 @@ public class JobControllerTest extends ControllerTestWithoutAuth {
 
         MvcResult mvcResult = this.mockMvc.perform(
             get(String.format("/jobs/%s/%s/log/download", job.getNodeName(), job.getNumber()))
-        ).andExpect(status().isOk()).andReturn();
+        ).andExpect(status().is4xxClientError()).andReturn();
         String response = mvcResult.getResponse().getContentAsString();
         Assert.assertNotNull(response);
-
-        Path zipLog = Paths
-            .get(workspace.toString(), job.getNodeName(), "log", job.getId().toString(),
-                job.getId().toString() + ".zip");
-        File zipFile = new File(zipLog.toString());
-        Assert.assertEquals(true, zipFile.exists());
     }
 
     private Job requestToShowJob(String path, Long buildNumber) throws Exception {
