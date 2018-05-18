@@ -19,9 +19,12 @@ package com.flow.platform.api.test.controller;
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 
 import com.flow.platform.api.consumer.JobStatusEventConsumer;
 import com.flow.platform.api.domain.CmdCallbackQueueItem;
+import com.flow.platform.api.domain.agent.AgentItem;
 import com.flow.platform.api.domain.job.Job;
 import com.flow.platform.api.domain.job.JobCategory;
 import com.flow.platform.api.domain.job.JobStatus;
@@ -31,18 +34,27 @@ import com.flow.platform.api.domain.node.Node;
 import com.flow.platform.api.domain.node.NodeTree;
 import com.flow.platform.api.envs.EnvUtil;
 import com.flow.platform.api.events.JobStatusChangeEvent;
+import com.flow.platform.api.service.AgentService;
 import com.flow.platform.api.test.TestBase;
+import com.flow.platform.cc.service.ZoneService;
+import com.flow.platform.cc.util.ZKHelper;
 import com.flow.platform.core.context.SpringContext;
 import com.flow.platform.core.queue.PriorityMessage;
+import com.flow.platform.domain.Agent;
+import com.flow.platform.domain.AgentPath;
+import com.flow.platform.domain.AgentStatus;
 import com.flow.platform.domain.Cmd;
 import com.flow.platform.domain.CmdResult;
 import com.flow.platform.domain.CmdStatus;
 import com.flow.platform.domain.CmdType;
+import com.flow.platform.domain.Zone;
 import com.flow.platform.queue.PlatformQueue;
+import com.flow.platform.util.zk.ZKClient;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.FixMethodOrder;
@@ -56,7 +68,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 @FixMethodOrder(value = MethodSorters.JVM)
 public class CmdWebhookControllerTest extends TestBase {
 
-    private final static String sessionId = "1111111";
+    private  String sessionId = "1111111";
 
     @Autowired
     private PlatformQueue<PriorityMessage> cmdCallbackQueue;
@@ -64,13 +76,41 @@ public class CmdWebhookControllerTest extends TestBase {
     @Autowired
     private SpringContext springContext;
 
+    @Autowired
+    private AgentService agentService;
+
+    @Autowired
+    private ZoneService zoneService;
+
+    @Autowired
+    private ZKClient zkClient;
+
     @Before
     public void before() throws Throwable {
-        stubSendCmdToQueue(sessionId);
-        stubSendCmd(sessionId);
+
+        stubAgentCallback();
+        stubHooksCmd();
+
+        AgentPath agentPath = new AgentPath("default", "test");
+
+        zoneService.createZone(new Zone("default", "test"));
+        agentService.create(agentPath);
+        ZKHelper.buildPath(agentPath);
+        zkClient.createEphemeral("/flow-agents/default/test", null);
+
+        Agent agent = agentDao.get(agentPath);
+        agent.setStatus(AgentStatus.IDLE);
+        agentDao.update(agent);
 
         cmdCallbackQueue.clean();
         springContext.cleanApplictionListener();
+    }
+
+    @After
+    public void after() {
+        if (zkClient.exist("/flow-agents/default")) {
+            zkClient.delete("/flow-agents/default", true);
+        }
     }
 
     @Test
@@ -78,6 +118,7 @@ public class CmdWebhookControllerTest extends TestBase {
         // given: flow with two steps , step1 and step2
         final Node rootForFlow = createRootFlow("flow1", "yml/demo_flow.yaml");
         final Job job = jobService.createFromFlowYml(rootForFlow.getPath(), JobCategory.PR, null, mockUser);
+        sessionId = job.getSessionId();
         final CountDownLatch runningLatch = createCountDownForJobStatusChange(job, JobStatus.RUNNING, 1);
 
         // when: create session
@@ -176,6 +217,8 @@ public class CmdWebhookControllerTest extends TestBase {
         final Node rootForFlow = createRootFlow("flow1", "yml/demo_flow.yaml");
         final Job job = jobService.createFromFlowYml(rootForFlow.getPath(), JobCategory.PR, null, mockUser);
 
+        sessionId = job.getSessionId();
+
         NodeTree nodeTree = nodeService.find("flow1");
         Node step2 = nodeTree.find("flow1/step2");
         Node step1 = nodeTree.find("flow1/step1");
@@ -219,6 +262,8 @@ public class CmdWebhookControllerTest extends TestBase {
     public void should_callback_with_timeout_but_allow_failure() throws Throwable {
         final Node rootForFlow = createRootFlow("flow1", "yml/demo_flow1.yaml");
         final Job job = jobService.createFromFlowYml(rootForFlow.getPath(), JobCategory.PR, null, mockUser);
+
+        sessionId = job.getSessionId();
 
         // when: create session
         Cmd cmd = new Cmd("default", null, CmdType.CREATE_SESSION, null);
@@ -278,25 +323,18 @@ public class CmdWebhookControllerTest extends TestBase {
         return jobService.find(job.getId());
     }
 
-    private void stubSendCmdToQueue(String sessionId) {
-        Cmd mockSessionCmd = new Cmd();
-        mockSessionCmd.setSessionId(sessionId);
-        mockSessionCmd.setId(UUID.randomUUID().toString());
-
-        stubFor(WireMock.post(urlEqualTo("/cmd/queue/send?priority=1&retry=5"))
+    private void stubAgentCallback() {
+        stubFor(WireMock.post(urlPathEqualTo("/agents/callback"))
             .willReturn(aResponse()
-                .withBody(mockSessionCmd.toJson())));
+                .withBody("")));
     }
 
-    private void stubSendCmd(String sessionId) {
-        Cmd sendCmd = new Cmd();
-        sendCmd.setSessionId(sessionId);
-        sendCmd.setId(UUID.randomUUID().toString());
-
-        stubFor(WireMock.post(urlEqualTo("/cmd/send"))
+    private void stubHooksCmd() {
+        stubFor(WireMock.post(urlPathEqualTo("/hooks/cmd"))
             .willReturn(aResponse()
-                .withBody(sendCmd.toJson())));
+                .withBody("")));
     }
+
 
     private CountDownLatch createCountDownForJobStatusChange(Job job, JobStatus expect, int num) {
         final CountDownLatch countDown = new CountDownLatch(num);
