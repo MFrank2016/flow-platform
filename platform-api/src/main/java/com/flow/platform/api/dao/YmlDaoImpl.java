@@ -16,7 +16,7 @@
 
 package com.flow.platform.api.dao;
 
-import com.flow.platform.api.domain.node.Yml;
+import com.flow.platform.api.domain.FlowYml;
 import com.flow.platform.core.dao.AbstractBaseDao;
 import org.springframework.stereotype.Repository;
 
@@ -24,15 +24,15 @@ import org.springframework.stereotype.Repository;
  * @author yh@firim
  */
 @Repository(value = "ymlDao")
-public class YmlDaoImpl extends AbstractBaseDao<String, Yml> implements YmlDao {
+public class YmlDaoImpl extends AbstractBaseDao<String, FlowYml> implements YmlDao {
 
     @Override
-    protected Class<Yml> getEntityClass() {
-        return Yml.class;
+    protected Class<FlowYml> getEntityClass() {
+        return FlowYml.class;
     }
 
     @Override
     protected String getKeyName() {
-        return "nodePath";
+        return "name";
     }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 flow.ci
+ * Copyright 2018 fir.im
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,9 +14,12 @@
  * limitations under the License.
  */
 
-package com.flow.platform.api.domain.node;
+package com.flow.platform.api.domain;
 
-import lombok.AllArgsConstructor;
+import com.flow.platform.tree.Context;
+import java.time.ZonedDateTime;
+import java.util.HashMap;
+import java.util.Map;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -24,27 +27,38 @@ import lombok.Setter;
 import lombok.ToString;
 
 /**
- * Yml raw content
- *
- * @author yh@firim
+ * @author yang
  */
-
-@Deprecated
 @NoArgsConstructor
-@AllArgsConstructor
-@EqualsAndHashCode(of = {"nodePath"})
-@ToString
-public class Yml {
+@ToString(of = {"name"})
+@EqualsAndHashCode(of = {"name"}, callSuper = false)
+public final class Flow {
+
+    /**
+     * Unique name of flow
+     */
+    @Getter
+    @Setter
+    private String name;
+
+    @Setter
+    @Getter
+    private Map<String, String> context = new HashMap<>(10);
 
     @Getter
     @Setter
-    private String nodePath;
+    private String createdBy;
 
     @Getter
     @Setter
-    private String file;
+    private ZonedDateTime createdAt;
 
-    public Yml(String nodePath) {
-        this.nodePath = nodePath;
+    @Getter
+    @Setter
+    private ZonedDateTime updatedAt;
+
+    public Flow(String name) {
+        this.name = name;
     }
+
 }

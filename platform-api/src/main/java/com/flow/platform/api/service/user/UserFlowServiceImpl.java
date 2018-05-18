@@ -60,7 +60,7 @@ public class UserFlowServiceImpl extends CurrentUser implements UserFlowService 
         if (flowPaths.isEmpty()) {
             return new ArrayList<>(0);
         }
-        return flowDao.list(flowPaths);
+        return null;
     }
 
     @Override

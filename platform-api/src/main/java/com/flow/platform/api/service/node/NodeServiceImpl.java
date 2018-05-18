@@ -167,7 +167,7 @@ public class NodeServiceImpl extends CurrentUser implements NodeService {
 
         // set YML status to found and update yml
         ymlService.saveOrUpdate(flow, ymlFromRoot);
-        flowDao.update(flow);
+//        flowDao.update(flow);
         updateYmlState(flow, FlowEnvs.YmlStatusValue.FOUND, null);
 
         // reset cache
@@ -202,7 +202,7 @@ public class NodeServiceImpl extends CurrentUser implements NodeService {
         jobNumberDao.delete(new JobNumber(path));
 
         // delete flow
-        flowDao.delete(flow);
+//        flowDao.delete(flow);
 
         // delete related yml storage
         ymlService.delete(flow);
@@ -247,7 +247,7 @@ public class NodeServiceImpl extends CurrentUser implements NodeService {
         flow.putEnv(GitToggleEnvs.FLOW_GIT_PR_ENABLED, "true");
 
         flow.setCreatedBy(currentUser().getEmail());
-        flow = flowDao.save(flow);
+//        flow = flowDao.save(flow);
 
         // init job number for flow
         jobNumberDao.save(new JobNumber(flow.getPath(), 0L));
@@ -266,21 +266,23 @@ public class NodeServiceImpl extends CurrentUser implements NodeService {
             root.removeEnv(FlowEnvs.FLOW_YML_ERROR_MSG);
         }
 
-        flowDao.update(root);
+//        flowDao.update(root);
     }
 
     @Override
     public List<Node> listFlows(boolean isOnlyCurrentUser) {
         if (!isOnlyCurrentUser) {
-            return flowDao.list();
+//            return flowDao.list();
         }
 
         List<Role> roles = roleService.list(currentUser());
         if (roles.contains(roleService.find(SysRole.ADMIN.name()))) {
-            return flowDao.list();
+//            return flowDao.list();
         } else {
             return userFlowService.list(currentUser());
         }
+
+        return null;
     }
 
     @Override
@@ -353,17 +355,17 @@ public class NodeServiceImpl extends CurrentUser implements NodeService {
         NodeTree tree = getTreeCache().get(rootPath, () -> {
 
             Yml ymlStorage = ymlService.get(rootPath);
-            Node flow = flowDao.get(path);
+//            Node flow = flowDao.get(path);
 
             try {
                 // has related yml
-                if (ymlStorage != null) {
-                    return new NodeTree(ymlStorage.getFile(), flow);
-                }
-
-                if (flow != null) {
-                    return new NodeTree(flow);
-                }
+//                if (ymlStorage != null) {
+//                    return new NodeTree(ymlStorage.getFile(), flow);
+//                }
+//
+//                if (flow != null) {
+//                    return new NodeTree(flow);
+//                }
             } catch (Throwable e) {
                 log.error("Cannot load node tree", e);
             }

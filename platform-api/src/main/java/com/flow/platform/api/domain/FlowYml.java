@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 flow.ci
+ * Copyright 2018 fir.im
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,9 +14,8 @@
  * limitations under the License.
  */
 
-package com.flow.platform.api.domain.node;
+package com.flow.platform.api.domain;
 
-import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -24,27 +23,27 @@ import lombok.Setter;
 import lombok.ToString;
 
 /**
- * Yml raw content
- *
- * @author yh@firim
+ * @author yang
  */
-
-@Deprecated
 @NoArgsConstructor
-@AllArgsConstructor
-@EqualsAndHashCode(of = {"nodePath"})
-@ToString
-public class Yml {
+@EqualsAndHashCode(of = {"name"})
+@ToString(of = {"name"})
+public class FlowYml {
 
     @Getter
     @Setter
-    private String nodePath;
+    private String name;
 
     @Getter
     @Setter
-    private String file;
+    private String content;
 
-    public Yml(String nodePath) {
-        this.nodePath = nodePath;
+    public FlowYml(String name) {
+        this.name = name;
+    }
+
+    public FlowYml(String name, String content) {
+        this.name = name;
+        this.content = content;
     }
 }

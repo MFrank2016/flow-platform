@@ -29,6 +29,7 @@ import java.util.NoSuchElementException;
 /**
  * @author yang
  */
+@Deprecated
 public class NodeTree {
 
     /**

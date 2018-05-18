@@ -112,7 +112,7 @@ public class YmlServiceImpl implements YmlService, ContextEvent {
         }
 
         exist.setFile(yml);
-        ymlDao.saveOrUpdate(exist);
+//        ymlDao.saveOrUpdate(exist);
     }
 
     @Override
@@ -122,26 +122,29 @@ public class YmlServiceImpl implements YmlService, ContextEvent {
 
     @Override
     public Yml get(String path) {
-        return ymlDao.get(path);
+//        return ymlDao.get(path);
+        return null;
     }
 
     @Override
     public Resource getResource(Node root) {
-        Yml yml = ymlDao.get(root.getPath());
-        String body = yml.getFile();
-        Resource allResource;
-        try (InputStream is = new ByteArrayInputStream(body.getBytes(AppConfig.DEFAULT_CHARSET))) {
-            allResource = new InputStreamResource(is);
-        } catch (Throwable throwable) {
-            throw new NotFoundException("yml not found");
-        }
+//        Yml yml = ymlDao.get(root.getPath());
+//        String body = yml.getFile();
+//        Resource allResource;
+//        try (InputStream is = new ByteArrayInputStream(body.getBytes(AppConfig.DEFAULT_CHARSET))) {
+//            allResource = new InputStreamResource(is);
+//        } catch (Throwable throwable) {
+//            throw new NotFoundException("yml not found");
+//        }
+//
+//        return allResource;
 
-        return allResource;
+        return null;
     }
 
     @Override
     public void delete(Node root) {
-        ymlDao.delete(new Yml(root.getPath(), null));
+//        ymlDao.delete(new Yml(root.getPath(), null));
     }
 
     @Override

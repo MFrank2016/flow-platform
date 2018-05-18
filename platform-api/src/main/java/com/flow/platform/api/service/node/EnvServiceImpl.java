@@ -124,7 +124,7 @@ public class EnvServiceImpl implements EnvService {
 
         // merge env to real node instance after handler
         EnvUtil.merge(copy.getEnvs(), node.getEnvs(), true);
-        flowDao.update(node);
+//        flowDao.update(node);
     }
 
     @Override
@@ -147,7 +147,7 @@ public class EnvServiceImpl implements EnvService {
         }
 
         // sync latest env into flow table
-        flowDao.update(node);
+//        flowDao.update(node);
     }
 
     private void verifyWhenAdd(Map<String, String> envs) {

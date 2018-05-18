@@ -16,6 +16,7 @@
 
 package com.flow.platform.api.dao;
 
+import com.flow.platform.api.domain.Flow;
 import com.flow.platform.api.domain.node.Node;
 import com.flow.platform.core.dao.AbstractBaseDao;
 import java.util.Collection;
@@ -26,11 +27,11 @@ import org.springframework.stereotype.Repository;
  * @author yh@firim
  */
 @Repository(value = "flowDao")
-public class FlowDaoImpl extends AbstractBaseDao<String, Node> implements FlowDao {
+public class FlowDaoImpl extends AbstractBaseDao<String, Flow> implements FlowDao {
 
     @Override
-    protected Class<Node> getEntityClass() {
-        return Node.class;
+    protected Class<Flow> getEntityClass() {
+        return Flow.class;
     }
 
     @Override
@@ -39,9 +40,9 @@ public class FlowDaoImpl extends AbstractBaseDao<String, Node> implements FlowDa
     }
 
     @Override
-    public List<String> pathList(Collection<String> createdBy) {
+    public List<Flow> listByCreatedBy(Collection<String> createdBy) {
         return execute(session -> session
-            .createQuery("select path from Node where createdBy in :createdByList", String.class)
+            .createQuery("from Flow where createdBy in :createdByList", Flow.class)
             .setParameterList("createdByList", createdBy)
             .list());
     }

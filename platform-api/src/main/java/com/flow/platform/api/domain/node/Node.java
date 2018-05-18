@@ -32,6 +32,7 @@ import lombok.ToString;
  * find the super class, but abstract class cannot be instant,
  * so now modified to class
  */
+@Deprecated
 @EqualsAndHashCode(of = {"path"}, callSuper = false)
 @ToString(of = {"path"})
 public final class Node extends EnvObject {

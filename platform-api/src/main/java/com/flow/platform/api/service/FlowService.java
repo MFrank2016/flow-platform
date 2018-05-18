@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 flow.ci
+ * Copyright 2018 fir.im
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,14 +14,34 @@
  * limitations under the License.
  */
 
-package com.flow.platform.api.dao;
+package com.flow.platform.api.service;
 
-import com.flow.platform.api.domain.FlowYml;
-import com.flow.platform.core.dao.BaseDao;
+import com.flow.platform.api.domain.Flow;
+import java.util.List;
 
 /**
- * @author yh@firim
+ * @author yang
  */
-public interface YmlDao extends BaseDao<String, FlowYml> {
+public interface FlowService {
+
+    /**
+     * Create a flow with name
+     */
+    Flow save(String name);
+
+    /**
+     * Get flow instance
+     */
+    Flow find(String name);
+
+    /**
+     * Delete flow
+     */
+    Flow delete(String name);
+
+    /**
+     * List flows for current user only or all
+     */
+    List<Flow> list(boolean isOnlyCurrentUser);
 
 }

@@ -19,6 +19,7 @@ package com.flow.platform.api.initializers;
 import com.flow.platform.api.dao.FlowDao;
 import com.flow.platform.api.dao.job.JobDao;
 import com.flow.platform.api.dao.job.JobNumberDao;
+import com.flow.platform.api.domain.Flow;
 import com.flow.platform.api.domain.job.JobNumber;
 import com.flow.platform.api.domain.node.Node;
 import java.util.List;
@@ -46,22 +47,22 @@ public class JobNumberInit extends Initializer {
 
     @Override
     void doStart() {
-        List<Node> list = flowDao.list();
-        for (Node flow : list) {
+        List<Flow> list = flowDao.list();
+        for (Flow flow : list) {
             initJobNumber(flow);
         }
     }
 
-    private void initJobNumber(Node flow) {
-        JobNumber jobNumber = jobNumberDao.get(flow.getPath());
+    private void initJobNumber(Flow flow) {
+//        JobNumber jobNumber = jobNumberDao.get(flow.getPath());
 
         // Job number has been created
-        if (!Objects.isNull(jobNumber)) {
-            return;
-        }
+//        if (!Objects.isNull(jobNumber)) {
+//            return;
+//        }
 
         // init job number for flow
-        Long numOfJob = jobDao.numOfJob(flow.getPath());
-        jobNumberDao.save(new JobNumber(flow.getPath(), numOfJob));
+//        Long numOfJob = jobDao.numOfJob(flow.getPath());
+//        jobNumberDao.save(new JobNumber(flow.getPath(), numOfJob));
     }
 }

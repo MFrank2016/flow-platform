@@ -4,11 +4,9 @@
   "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
 
 <hibernate-mapping package="com.flow.platform.api.domain">
-  <class name="com.flow.platform.api.domain.node.Node" table="flow">
-    <id name="path" type="string" column="path"/>
-
-    <property name="name" length="100" column="name"/>
-    <property name="envs" type="com.flow.platform.core.dao.adaptor.MapAdaptor" column="envs"/>
+  <class name="com.flow.platform.api.domain.Flow" table="flow">
+    <id name="name" length="100" column="name"/>
+    <property name="context" type="com.flow.platform.core.dao.adaptor.MapAdaptor" column="envs"/>
     <property name="createdBy" column="created_by" length="100"/>
     <property name="createdAt" type="java.time.ZonedDateTime">
       <column name="created_at" sql-type="timestamp" default="CURRENT_TIMESTAMP"/>
@@ -19,8 +17,8 @@
     </property>
   </class>
 
-  <class name="com.flow.platform.api.domain.node.Yml" table="yml_raw">
-    <id name="nodePath" type="string" column="node_path"/>
-    <property name="file" type="com.flow.platform.core.dao.adaptor.ByteAdaptor"/>
+  <class name="com.flow.platform.api.domain.FlowYml" table="flow_yml">
+    <id name="name" length="100" column="name"/>
+    <property name="content" type="com.flow.platform.core.dao.adaptor.ByteAdaptor"/>
   </class>
 </hibernate-mapping>

@@ -103,6 +103,12 @@
 
     <dependency>
       <groupId>com.flow.platform</groupId>
+      <artifactId>platform-tree</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>com.flow.platform</groupId>
       <artifactId>platform-plugin</artifactId>
       <version>${project.version}</version>
     </dependency>
