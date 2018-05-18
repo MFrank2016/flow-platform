@@ -16,6 +16,7 @@
 
 package com.flow.platform.api.domain;
 
+import com.flow.platform.util.StringUtil;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -36,7 +37,7 @@ public class FlowYml {
 
     @Getter
     @Setter
-    private String content;
+    private String content = StringUtil.EMPTY;
 
     public FlowYml(String name) {
         this.name = name;

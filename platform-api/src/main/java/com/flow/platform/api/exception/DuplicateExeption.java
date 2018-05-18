@@ -14,34 +14,20 @@
  * limitations under the License.
  */
 
-package com.flow.platform.api.service;
+package com.flow.platform.api.exception;
 
-import com.flow.platform.api.domain.Flow;
-import java.util.List;
+import com.flow.platform.core.exception.FlowException;
 
 /**
  * @author yang
  */
-public interface FlowService {
+public class DuplicateExeption extends FlowException {
 
-    /**
-     * Create a flow with name
-     */
-    Flow save(String name);
+    public DuplicateExeption(String description, Throwable e) {
+        super(description, e);
+    }
 
-    /**
-     * Get flow instance
-     */
-    Flow find(String name);
-
-    /**
-     * Delete flow
-     */
-    Flow delete(String name);
-
-    /**
-     * List flows for current user only or all
-     */
-    List<Flow> list(boolean isOnlyCurrentUser);
-
+    public DuplicateExeption(String message) {
+        super(message);
+    }
 }

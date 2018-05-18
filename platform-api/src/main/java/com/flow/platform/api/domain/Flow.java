@@ -16,7 +16,7 @@
 
 package com.flow.platform.api.domain;
 
-import com.flow.platform.tree.Context;
+import com.flow.platform.tree.NodePath;
 import java.time.ZonedDateTime;
 import java.util.HashMap;
 import java.util.Map;
@@ -37,12 +37,13 @@ public final class Flow {
     /**
      * Unique name of flow
      */
-    @Getter
-    @Setter
-    private String name;
+    private NodePath name;
 
-    @Setter
+    /**
+     * User defined context
+     */
     @Getter
+    @Setter
     private Map<String, String> context = new HashMap<>(10);
 
     @Getter
@@ -58,7 +59,15 @@ public final class Flow {
     private ZonedDateTime updatedAt;
 
     public Flow(String name) {
-        this.name = name;
+        this.name = NodePath.create(name);
+    }
+
+    public String getName() {
+        return name.toString();
+    }
+
+    public void setName(String name) {
+        this.name = NodePath.create(name);
     }
 
 }
