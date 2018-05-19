@@ -38,5 +38,5 @@ public abstract class NodeController {
      * The current node path from {@see NodeControllerAdvice}
      */
     @Autowired
-    protected ThreadLocal<String> currentNodePath;
+    protected ThreadLocal<String> flowName;
 }

@@ -22,11 +22,14 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.flow.platform.api.domain.CmdCallbackQueueItem;
+import com.flow.platform.api.domain.Flow;
 import com.flow.platform.api.domain.job.Job;
 import com.flow.platform.api.domain.job.NodeStatus;
 import com.flow.platform.api.domain.node.Node;
 import com.flow.platform.api.domain.node.NodeTree;
 import com.flow.platform.api.domain.response.BooleanValue;
+import com.flow.platform.api.service.v1.FlowService;
+import com.flow.platform.api.test.FlowHelper;
 import com.flow.platform.api.util.CommonUtil;
 import com.flow.platform.api.util.PathUtil;
 import com.flow.platform.core.exception.NotFoundException;
@@ -35,9 +38,11 @@ import com.flow.platform.domain.Cmd;
 import com.flow.platform.domain.CmdStatus;
 import com.flow.platform.domain.CmdType;
 import com.flow.platform.util.StringUtil;
+import net.bytebuddy.asm.Advice.Unused;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
@@ -48,6 +53,12 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 public class FlowControllerTest extends ControllerTestWithoutAuth {
 
     private final String flowName = "flow_default";
+
+    @Autowired
+    private FlowHelper flowHelper;
+
+    @Autowired
+    private FlowService flowService;
 
     @Before
     public void init() throws Throwable {
@@ -68,44 +79,23 @@ public class FlowControllerTest extends ControllerTestWithoutAuth {
 
     @Test(expected = NotFoundException.class)
     public void should_delete_flow_success() throws Exception {
-        String flow = "flow1";
-
-        // mock user
+        // given:
+        String flowName = "flow1";
         setCurrentUser(mockUser);
+        Flow flow = flowHelper.createFlowWithYml(flowName, "yml/demo_flow2.yaml");
 
-        Node rootForFlow = createRootFlow(flow, "yml/demo_flow2.yaml");
-        Job job = createMockJob(rootForFlow.getPath());
-
-        NodeTree nodeTree = nodeService.find("flow1");
-        Node stepFirst = nodeTree.find(flow + "/step1");
-
-        // first create session success
-        final String sessionId = CommonUtil.randomId().toString();
-        Cmd cmd = new Cmd("default", null, CmdType.CREATE_SESSION, null);
-        cmd.setSessionId(sessionId);
-        cmd.setStatus(CmdStatus.SENT);
-        jobService.callback(new CmdCallbackQueueItem(job.getId(), cmd));
-        job = reload(job);
-
-        // first step should running
-        cmd = new Cmd("default", null, CmdType.RUN_SHELL, nodeService.getRunningScript(stepFirst));
-        cmd.setStatus(CmdStatus.RUNNING);
-        cmd.setType(CmdType.RUN_SHELL);
-        cmd.setExtra(stepFirst.getPath());
-        jobService.callback(new CmdCallbackQueueItem(job.getId(), cmd));
-
-        job = reload(job);
-        Assert.assertEquals(NodeStatus.RUNNING, job.getRootResult().getStatus());
-
-        // delete flow
-        MvcResult result = mockMvc.perform(delete("/flows/" + flow))
+        // when: perform http delete
+        Flow deleted = Flow.parse(mockMvc.perform(delete("/flows/" + flowName))
             .andExpect(status().isOk())
-            .andReturn();
+            .andReturn()
+            .getResponse()
+            .getContentAsString(), Flow.class);
 
-        Assert.assertNotNull(result.getResponse());
-
-        // job should delete
-        reload(job);
+        // then: flow and flow yml been deleted
+        Assert.assertEquals(flow, deleted);
+        Assert.assertNull(flowDao.get(flowName));
+        Assert.assertNull(ymlDao.get(flowName));
+        flowService.find(flowName);
     }
 
     @Test

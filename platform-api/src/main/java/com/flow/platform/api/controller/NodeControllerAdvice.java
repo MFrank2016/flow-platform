@@ -16,7 +16,6 @@
 
 package com.flow.platform.api.controller;
 
-import com.flow.platform.api.util.PathUtil;
 import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,23 +31,17 @@ public class NodeControllerAdvice {
 
     private final static String PATH_VAR_ROOT = "root";
 
-    private final static String PATH_VAR_CHILD = "child";
-
     @Autowired
     private HttpServletRequest request;
 
     @Autowired
-    private ThreadLocal<String> currentNodePath;
+    private ThreadLocal<String> flowName;
 
     @ModelAttribute
     public void setCurrentNodePath() {
         Map<String, String> attributes =
             (Map<String, String>) request.getAttribute(HandlerMapping.URI_TEMPLATE_VARIABLES_ATTRIBUTE);
 
-        String root = attributes.get(PATH_VAR_ROOT);
-        String child = attributes.get(PATH_VAR_CHILD);
-
-        String path = PathUtil.build(root, child);
-        currentNodePath.set(path);
+        flowName.set(attributes.get(PATH_VAR_ROOT));
     }
 }

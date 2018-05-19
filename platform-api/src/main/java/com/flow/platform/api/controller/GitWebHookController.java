@@ -69,7 +69,7 @@ public class GitWebHookController extends NodeController {
 
     @PostMapping(path = "/{root}")
     public void onEventReceived(@RequestHeader HttpHeaders headers, HttpServletRequest request) {
-        final String path = currentNodePath.get();
+        final String path = flowName.get();
         Map<String, String> headerAsMap = headers.toSingleValueMap();
 
         String body;

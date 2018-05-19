@@ -215,7 +215,7 @@ public abstract class TestBase {
         stubFor(get(urlEqualTo("/agents/list")).willReturn(aResponse().withBody("[]")));
     }
 
-    public void setCurrentUser(User user) {
+    protected void setCurrentUser(User user) {
         if (user == null) {
             user = userDao.get(superUser.getEmail());
 
@@ -232,7 +232,7 @@ public abstract class TestBase {
         currentUser.set(user);
     }
 
-    public String getResourceContent(String fileName) throws IOException {
+    protected String getResourceContent(String fileName) throws IOException {
         ClassLoader classLoader = TestBase.class.getClassLoader();
         URL resource = classLoader.getResource(fileName);
         File path = new File(resource.getFile());

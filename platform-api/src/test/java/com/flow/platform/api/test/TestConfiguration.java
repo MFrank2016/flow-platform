@@ -33,4 +33,9 @@ public class TestConfiguration {
     public PluginService pluginService() {
         return Mockito.mock(PluginService.class);
     }
+
+    @Bean
+    public FlowHelper flowHelper() {
+        return new FlowHelper();
+    }
 }

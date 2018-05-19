@@ -111,7 +111,7 @@ public class JobController extends NodeController {
             envs = new LinkedHashMap<>();
         }
 
-        String path = currentNodePath.get();
+        String path = flowName.get();
         jobService.createFromFlowYml(path, JobCategory.MANUAL, envs, currentUser.get());
     }
 
@@ -139,7 +139,7 @@ public class JobController extends NodeController {
     @GetMapping(path = "/{root}")
     @WebSecurity(action = Actions.JOB_SHOW)
     public List<Job> index(@RequestParam Map<String, String> allParams, SearchCondition condition) {
-        String path = currentNodePath.get();
+        String path = flowName.get();
 
         List<String> paths = null;
         if (path != null) {
@@ -182,7 +182,7 @@ public class JobController extends NodeController {
     @GetMapping(path = "/limit/{root}")
     @WebSecurity(action = Actions.JOB_SHOW)
     public Page<Job> limitIndex(SearchCondition searchCondition, Pageable pageable) {
-        String path = currentNodePath.get();
+        String path = flowName.get();
 
         List<String> paths = null;
         if (path != null) {
@@ -210,7 +210,7 @@ public class JobController extends NodeController {
     @GetMapping(path = "/{root}/{buildNumber}")
     @WebSecurity(action = Actions.JOB_SHOW)
     public Job show(@PathVariable Long buildNumber) {
-        return jobService.find(currentNodePath.get(), buildNumber);
+        return jobService.find(flowName.get(), buildNumber);
     }
 
     /**
@@ -232,7 +232,7 @@ public class JobController extends NodeController {
     @GetMapping(path = "/{root}/{buildNumber}/yml")
     @WebSecurity(action = Actions.JOB_YML)
     public String yml(@PathVariable Long buildNumber) {
-        String path = currentNodePath.get();
+        String path = flowName.get();
         try {
             return jobService.findYml(path, buildNumber);
         } catch (NotFoundException ignore) {
@@ -277,7 +277,7 @@ public class JobController extends NodeController {
     @GetMapping(path = "/{root}/{buildNumber}/nodes")
     @WebSecurity(action = Actions.JOB_SHOW)
     public List<NodeResult> indexNodeResults(@PathVariable Long buildNumber) {
-        String path = currentNodePath.get();
+        String path = flowName.get();
         Job job = jobService.find(path, buildNumber);
         return nodeResultService.list(job, true);
     }
@@ -297,7 +297,7 @@ public class JobController extends NodeController {
     @GetMapping(path = "/{root}/{buildNumber}/{stepOrder}/log")
     @WebSecurity(action = Actions.JOB_LOG)
     public String stepLogs(@PathVariable Long buildNumber, @PathVariable Integer stepOrder) {
-        String path = currentNodePath.get();
+        String path = flowName.get();
         try {
             return logService.findNodeLog(path, buildNumber, stepOrder);
         } catch (Throwable e) {
@@ -321,7 +321,7 @@ public class JobController extends NodeController {
     @PostMapping(path = "/{root}/{buildNumber}/stop")
     @WebSecurity(action = Actions.JOB_STOP)
     public void stopJob(@PathVariable Long buildNumber) {
-        String path = currentNodePath.get();
+        String path = flowName.get();
         jobService.stop(path, buildNumber);
     }
 
@@ -369,7 +369,7 @@ public class JobController extends NodeController {
     @PostMapping(path = "/{root}/search")
     @WebSecurity(action = Actions.JOB_SHOW)
     public List<Job> search(@RequestBody SearchCondition condition) {
-        String path = currentNodePath.get();
+        String path = flowName.get();
 
         List<String> paths = null;
         if (path != null) {
@@ -392,7 +392,7 @@ public class JobController extends NodeController {
     @WebSecurity(action = Actions.JOB_LOG)
     public Resource jobLog(@PathVariable Long buildNumber,
                            HttpServletResponse httpResponse) {
-        String path = currentNodePath.get();
+        String path = flowName.get();
         httpResponse.setHeader(
             "Content-Disposition",
             String.format("attachment; filename=%s", String.format("%s-%s.zip", path, buildNumber)));
@@ -401,7 +401,7 @@ public class JobController extends NodeController {
 
     @GetMapping(path = "/{root}/{buildNumber}/artifacts")
     public List<Artifact> artifacts(@PathVariable Long buildNumber) {
-        return artifactService.list(currentNodePath.get(), buildNumber);
+        return artifactService.list(flowName.get(), buildNumber);
     }
 
 }

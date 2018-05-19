@@ -19,6 +19,7 @@ package com.flow.platform.api.test.controller;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.flow.platform.api.domain.Flow;
 import com.flow.platform.api.domain.node.Node;
 import com.flow.platform.api.envs.FlowEnvs;
 import com.flow.platform.api.envs.GitEnvs;
@@ -55,10 +56,8 @@ public abstract class ControllerTestWithoutAuth extends TestBase {
             .andExpect(status().isOk())
             .andReturn();
 
-        Node flowNode = Node.parse(result.getResponse().getContentAsString(), Node.class);
+        Flow flowNode = Flow.parse(result.getResponse().getContentAsString(), Flow.class);
         Assert.assertNotNull(flowNode);
-        Assert.assertNotNull(flowNode.getEnv(GitEnvs.FLOW_GIT_WEBHOOK));
-        Assert.assertEquals("PENDING", flowNode.getEnv(FlowEnvs.FLOW_STATUS));
     }
 
     void createYml(String flow, String resourcePath) throws Exception {

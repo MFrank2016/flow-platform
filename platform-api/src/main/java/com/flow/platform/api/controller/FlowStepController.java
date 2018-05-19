@@ -66,7 +66,7 @@ public class FlowStepController extends NodeController {
     @GetMapping
     @WebSecurity(action = Actions.FLOW_SHOW)
     public List<Node> getChildren() {
-        String root = currentNodePath.get();
+        String root = flowName.get();
         NodeTree tree = nodeService.find(root);
         return tree.children();
     }
@@ -101,7 +101,7 @@ public class FlowStepController extends NodeController {
         }
 
         // update
-        String root = currentNodePath.get();
+        String root = flowName.get();
         nodeService.updateByNodes(root, children);
         return children;
     }

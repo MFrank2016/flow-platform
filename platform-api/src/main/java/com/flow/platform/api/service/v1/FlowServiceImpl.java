@@ -20,10 +20,13 @@ import com.flow.platform.api.dao.FlowDao;
 import com.flow.platform.api.dao.YmlDao;
 import com.flow.platform.api.domain.Flow;
 import com.flow.platform.api.domain.FlowYml;
+import com.flow.platform.api.envs.EnvUtil;
 import com.flow.platform.api.exception.DuplicateExeption;
 import com.flow.platform.core.exception.NotFoundException;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -71,6 +74,16 @@ public class FlowServiceImpl implements FlowService {
     }
 
     @Override
+    public FlowYml updateYml(String name, String yml) {
+        FlowYml flowYml = findYml(name);
+        flowYml.setContent(yml);
+
+        // TODO: verify yml
+        ymlDao.update(flowYml);
+        return flowYml;
+    }
+
+    @Override
     @Transactional
     public Flow delete(String name) {
         Flow flow = find(name);
@@ -84,5 +97,26 @@ public class FlowServiceImpl implements FlowService {
     @Override
     public List<Flow> list(boolean isOnlyCurrentUser) {
         return null;
+    }
+
+    @Override
+    public Flow merge(String flowName, Map<String, String> newContext) {
+        Flow flow = find(flowName);
+        EnvUtil.merge(newContext, flow.getContext(), true);
+
+        flowDao.update(flow);
+        return flow;
+    }
+
+    @Override
+    public Flow remove(String flowName, Set<String> keys) {
+        Flow flow = find(flowName);
+
+        for (String key : keys) {
+            flow.getContext().remove(key);
+        }
+
+        flowDao.update(flow);
+        return flow;
     }
 }

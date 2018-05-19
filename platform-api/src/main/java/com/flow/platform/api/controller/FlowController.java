@@ -16,7 +16,10 @@
 
 package com.flow.platform.api.controller;
 
+import com.flow.platform.api.domain.Flow;
+import com.flow.platform.api.domain.FlowYml;
 import com.flow.platform.api.domain.node.Node;
+import com.flow.platform.api.domain.node.Yml;
 import com.flow.platform.api.domain.permission.Actions;
 import com.flow.platform.api.domain.request.ListParam;
 import com.flow.platform.api.domain.request.TriggerParam;
@@ -26,7 +29,9 @@ import com.flow.platform.api.envs.EnvUtil;
 import com.flow.platform.api.security.WebSecurity;
 import com.flow.platform.api.service.GitService;
 import com.flow.platform.api.service.node.YmlService;
+import com.flow.platform.api.service.v1.FlowService;
 import com.flow.platform.core.exception.IllegalParameterException;
+import com.flow.platform.util.StringUtil;
 import com.google.common.base.Strings;
 import java.util.List;
 import java.util.Map;
@@ -54,10 +59,13 @@ public class FlowController extends NodeController {
     @Autowired
     private GitService gitService;
 
+    @Autowired
+    private FlowService flowService;
+
     @GetMapping
     @WebSecurity(action = Actions.FLOW_SHOW)
-    public List<Node> index() {
-        return nodeService.listFlows(true);
+    public List<Flow> index() {
+        return flowService.list(true);
     }
 
     /**
@@ -79,15 +87,8 @@ public class FlowController extends NodeController {
      */
     @GetMapping(path = {"/{root}", "/{root}/show"})
     @WebSecurity(action = Actions.FLOW_SHOW)
-    public Node show() {
-        String path = currentNodePath.get();
-        Node node = nodeService.find(path).root();
-
-        if (node == null) {
-            throw new IllegalParameterException(String.format("The flow name %s doesn't exist", path));
-        }
-
-        return node;
+    public Flow show() {
+        return flowService.find(flowName.get());
     }
 
     /**
@@ -103,16 +104,14 @@ public class FlowController extends NodeController {
      *      createdAt: 15123123
      *      updatedAt: 15123123
      *      envs: {
-     *          FLOW_STATUS: PENDING,
-     *          FLOW_GIT_WEBHOOK: http://xxx,
-     *          FLOW_YML_STATUS: NOT_FOUND
      *      }
      *  }
      */
     @PostMapping(path = {"/{root}", "/{root}/create"})
     @WebSecurity(action = Actions.FLOW_CREATE)
-    public Node createEmptyFlow() {
-        return nodeService.createEmptyFlow(currentNodePath.get());
+    public Flow create() {
+        Flow created = flowService.save(flowName.get());
+        return created;
     }
 
     /**
@@ -135,8 +134,8 @@ public class FlowController extends NodeController {
      */
     @DeleteMapping(path = "/{root}")
     @WebSecurity(action = Actions.FLOW_DELETE)
-    public Node delete() {
-        return nodeService.delete(currentNodePath.get());
+    public Flow delete() {
+        return flowService.delete(flowName.get());
     }
 
     /**
@@ -165,11 +164,8 @@ public class FlowController extends NodeController {
      */
     @PostMapping("/{root}/env")
     @WebSecurity(action = Actions.FLOW_SET_ENV)
-    public Node addFlowEnv(@RequestBody Map<String, String> envs,
-                           @RequestParam(required = false, defaultValue = "false") boolean verify) {
-        Node flow = nodeService.find(currentNodePath.get()).root();
-        envService.save(flow, envs, verify);
-        return flow;
+    public Flow putContext(@RequestBody Map<String, String> envs) {
+        return flowService.merge(flowName.get(), envs);
     }
 
     /**
@@ -198,61 +194,8 @@ public class FlowController extends NodeController {
      */
     @DeleteMapping("/{root}/env")
     @WebSecurity(action = Actions.FLOW_SET_ENV)
-    public Node delFlowEnv(@RequestBody Set<String> envKeys,
-                           @RequestParam(required = false, defaultValue = "false") boolean verify) {
-        Node flow = nodeService.find(currentNodePath.get()).root();
-        envService.delete(flow, envKeys, verify);
-        return flow;
-    }
-
-    /**
-     * @api {get} /flows/:root/env Get Env
-     * @apiParam {String} root root node name
-     * @apiParam {String} [key] env variable name, ex: http://xxxx/flows/xx/env?key=FLOW_GIT_WEBHOOK
-     * @apiParam {Boolean} [editable = true] is get editalbe only variable
-     * @apiGroup Flows
-     * @apiDescription Get node env by path or name
-     *
-     * @apiSuccessExample {json} Success-Response
-     *  {
-     *      FLOW_ENV_VAR: xxx
-     *  }
-     */
-    @GetMapping(path = "/{root}/env")
-    @WebSecurity(action = Actions.FLOW_SHOW)
-    public Map<String, String> getFlowEnv(@RequestParam(required = false) String key,
-                                          @RequestParam(required = false) Boolean editable) {
-
-        Node flow = nodeService.find(currentNodePath.get()).root();
-
-        // return all env variables
-        if (editable == null) {
-            return flow.getEnvs();
-        }
-
-        Map<String, String> envs = envService.list(flow, editable.booleanValue());
-        if (Strings.isNullOrEmpty(key)) {
-            return envs;
-        }
-
-        return EnvUtil.build(key, envs.get(key));
-    }
-
-    /**
-     * @api {get} /flows/:root/exist IsExisted
-     * @apiParam {String} root flow node name to check
-     * @apiGroup Flows
-     *
-     * @apiSuccessExample {json} Success-Response
-     *  {
-     *      value: true
-     *  }
-     */
-    @GetMapping("/{root}/exist")
-    @WebSecurity(action = Actions.FLOW_SHOW)
-    public BooleanValue exist() {
-        boolean exist = nodeService.exist(currentNodePath.get());
-        return new BooleanValue(exist);
+    public Flow removeContext(@RequestBody Set<String> envKeys) {
+        return flowService.remove(flowName.get(), envKeys);
     }
 
     /**
@@ -275,7 +218,7 @@ public class FlowController extends NodeController {
             refresh = false;
         }
 
-        Node root = nodeService.find(currentNodePath.get()).root();
+        Node root = nodeService.find(flowName.get()).root();
         return gitService.branches(root, refresh);
     }
 
@@ -293,7 +236,7 @@ public class FlowController extends NodeController {
      */
     @GetMapping("/{root}/tags")
     public List<String> listTags() {
-        Node root = nodeService.find(currentNodePath.get()).root();
+        Node root = nodeService.find(flowName.get()).root();
         return gitService.tags(root, false);
     }
 
@@ -323,7 +266,7 @@ public class FlowController extends NodeController {
     @PostMapping("/{root}/users/auth")
     @WebSecurity(action = Actions.FLOW_AUTH)
     public List<User> flowAuthUsers(@RequestBody ListParam<String> listParam) {
-        return nodeService.authUsers(listParam.getArrays(), currentNodePath.get());
+        return nodeService.authUsers(listParam.getArrays(), flowName.get());
     }
 
     /**
@@ -363,7 +306,7 @@ public class FlowController extends NodeController {
      */
     @PostMapping("/{root}/trigger")
     public Node trigger(@RequestBody TriggerParam triggerParam) {
-        String path = currentNodePath.get();
+        String path = flowName.get();
         Node flow = nodeService.find(path).root();
         envService.save(flow, triggerParam.toEnv(), true);
         return flow;

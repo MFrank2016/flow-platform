@@ -16,7 +16,9 @@
 
 package com.flow.platform.api.domain;
 
+import com.flow.platform.domain.Jsonable;
 import com.flow.platform.tree.NodePath;
+import com.google.gson.annotations.Expose;
 import java.time.ZonedDateTime;
 import java.util.HashMap;
 import java.util.Map;
@@ -32,42 +34,47 @@ import lombok.ToString;
 @NoArgsConstructor
 @ToString(of = {"name"})
 @EqualsAndHashCode(of = {"name"}, callSuper = false)
-public final class Flow {
+public final class Flow extends Jsonable {
 
     /**
      * Unique name of flow
      */
-    private NodePath name;
+    @Expose
+    private String name;
 
     /**
      * User defined context
      */
+    @Expose
     @Getter
     @Setter
     private Map<String, String> context = new HashMap<>(10);
 
+    @Expose
     @Getter
     @Setter
     private String createdBy;
 
+    @Expose
     @Getter
     @Setter
     private ZonedDateTime createdAt;
 
+    @Expose
     @Getter
     @Setter
     private ZonedDateTime updatedAt;
 
     public Flow(String name) {
-        this.name = NodePath.create(name);
+        this.name = NodePath.create(name).toString();
     }
 
     public String getName() {
-        return name.toString();
+        return name;
     }
 
     public void setName(String name) {
-        this.name = NodePath.create(name);
+        this.name = NodePath.create(name).toString();
     }
 
 }
