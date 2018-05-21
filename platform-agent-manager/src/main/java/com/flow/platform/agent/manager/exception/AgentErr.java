@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.flow.platform.cc.exception;
+package com.flow.platform.agent.manager.exception;
 
 import com.flow.platform.core.exception.FlowException;
 

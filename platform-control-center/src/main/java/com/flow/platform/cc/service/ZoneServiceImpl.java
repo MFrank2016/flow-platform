@@ -16,6 +16,7 @@
 
 package com.flow.platform.cc.service;
 
+import com.flow.platform.agent.manager.service.AgentCCService;
 import com.flow.platform.cc.config.TaskConfig;
 import com.flow.platform.cc.util.ZKHelper;
 import com.flow.platform.cloud.InstanceManager;

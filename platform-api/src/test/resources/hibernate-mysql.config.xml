@@ -45,7 +45,7 @@
         <value>com/flow/platform/api/dao/hbm/userFlow.hbm.xml</value>
         <value>com/flow/platform/api/dao/hbm/local_file_resource.hbm.xml</value>
         <value>com/flow/platform/cc/dao/hbm/cmd.hbm.xml</value>
-        <value>com/flow/platform/cc/dao/hbm/agent.hbm.xml</value>
+        <value>com/flow/platform/agent/manager/dao/hbm/agent.hbm.xml</value>
       </list>
     </property>
     <property name="hibernateProperties">

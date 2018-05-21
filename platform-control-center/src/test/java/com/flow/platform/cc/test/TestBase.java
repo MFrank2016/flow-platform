@@ -17,7 +17,7 @@
 package com.flow.platform.cc.test;
 
 import com.flow.platform.cc.config.WebConfig;
-import com.flow.platform.cc.dao.AgentDao;
+import com.flow.platform.agent.manager.dao.AgentDao;
 import com.flow.platform.cc.dao.CmdDao;
 import com.flow.platform.cc.dao.CmdResultDao;
 import com.flow.platform.cc.resource.PropertyResourceLoader;

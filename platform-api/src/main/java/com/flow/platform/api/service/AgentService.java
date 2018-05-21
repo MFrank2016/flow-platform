@@ -38,39 +38,6 @@ public interface AgentService {
     List<AgentItem> listItems();
 
     /**
-     * agent shutdown
-     *
-     * @param password required
-     * @return true or false
-     */
-    Boolean shutdown(AgentPath path, String password);
-
-    /**
-     * Close agent
-     */
-    Boolean close(AgentPath path);
-
-    /**
-     * Create agent and return token from cc
-     */
-    AgentItem create(AgentPath agentPath);
-
-    /**
-     * Get agent setting by token from cc
-     */
-    AgentSettings settings(String token);
-
-    /**
-     * Delete agent by agentPath from cc
-     */
-    void delete(AgentPath agentPath);
-    /**
-     * send sys cmd
-     * @param agentPath required
-     */
-    void sendSysCmd(AgentPath agentPath);
-
-    /**
      * Handle agent status callback from cc
      */
     void onAgentStatusChange(Agent agent);

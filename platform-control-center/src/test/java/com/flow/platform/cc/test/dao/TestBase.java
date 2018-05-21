@@ -16,7 +16,7 @@
 
 package com.flow.platform.cc.test.dao;
 
-import com.flow.platform.cc.dao.AgentDao;
+import com.flow.platform.agent.manager.dao.AgentDao;
 import com.flow.platform.cc.dao.CmdDao;
 import com.flow.platform.cc.dao.CmdLogDao;
 import com.flow.platform.cc.dao.CmdResultDao;

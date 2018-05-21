@@ -32,7 +32,7 @@
     <property name="dataSource" ref="hikariCpDataSource"/>
     <property name="mappingResources">
       <list>
-        <value>com/flow/platform/cc/dao/hbm/agent.hbm.xml</value>
+        <value>com/flow/platform/agent/manager/dao/hbm/agent.hbm.xml</value>
         <value>com/flow/platform/cc/dao/hbm/cmd.hbm.xml</value>
       </list>
     </property>

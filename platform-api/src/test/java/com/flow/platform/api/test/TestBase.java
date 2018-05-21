@@ -62,7 +62,7 @@ import com.flow.platform.api.service.job.JobService;
 import com.flow.platform.api.service.job.NodeResultService;
 import com.flow.platform.api.service.node.EnvService;
 import com.flow.platform.api.service.node.NodeService;
-import com.flow.platform.cc.dao.AgentDao;
+import com.flow.platform.agent.manager.dao.AgentDao;
 import com.flow.platform.cc.dao.CmdDao;
 import com.flow.platform.cc.service.ZoneService;
 import com.flow.platform.cc.util.ZKHelper;
@@ -414,7 +414,7 @@ public abstract class TestBase {
         AgentPath agentPath = new AgentPath("default", "test");
 
         zoneService.createZone(new Zone("default", "test"));
-        agentService.create(agentPath);
+//        agentService.create(agentPath);
         ZKHelper.buildPath(agentPath);
         zkClient.createEphemeral("/flow-agents/default/test", null);
 

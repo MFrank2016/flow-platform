@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.flow.platform.cc.event;
+package com.flow.platform.agent.manager.event;
 
 import org.springframework.context.ApplicationEvent;
 

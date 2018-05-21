@@ -14,36 +14,28 @@
  * limitations under the License.
  */
 
-package com.flow.platform.cc.service;
+package com.flow.platform.agent.manager.service;
 
-import com.flow.platform.cc.config.TaskConfig;
-import com.flow.platform.cc.dao.AgentDao;
-import com.flow.platform.cc.event.AgentResourceEvent;
-import com.flow.platform.cc.event.AgentResourceEvent.Category;
-import com.flow.platform.cc.exception.AgentErr;
+import com.flow.platform.agent.manager.dao.AgentDao;
+import com.flow.platform.agent.manager.event.AgentResourceEvent;
+import com.flow.platform.agent.manager.event.AgentResourceEvent.Category;
+import com.flow.platform.agent.manager.exception.AgentErr;
 import com.flow.platform.core.exception.IllegalParameterException;
 import com.flow.platform.core.service.WebhookServiceImplBase;
 import com.flow.platform.domain.Agent;
 import com.flow.platform.domain.AgentPath;
 import com.flow.platform.domain.AgentSettings;
 import com.flow.platform.domain.AgentStatus;
-import com.flow.platform.domain.Cmd;
-import com.flow.platform.domain.CmdInfo;
-import com.flow.platform.domain.CmdType;
-import com.flow.platform.domain.Zone;
 import com.flow.platform.util.DateUtil;
 import com.google.common.base.Strings;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
@@ -55,19 +47,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class AgentCCServiceImpl extends WebhookServiceImplBase implements AgentCCService {
 
     @Autowired
-    private ZoneService zoneService;
-
-    @Autowired
-    private CmdCCService cmdService;
-
-    @Autowired
-    private CmdDispatchService cmdDispatchService;
-
-    @Autowired
     private AgentDao agentDao;
-
-    @Autowired
-    private TaskConfig taskConfig;
 
     @Autowired
     private AgentSettings agentSettings;
@@ -230,38 +210,5 @@ public class AgentCCServiceImpl extends WebhookServiceImplBase implements AgentC
             throw new UnsupportedOperationException("delete agent failure " + e.getMessage());
         }
 
-    }
-
-    @Override
-    @Transactional(propagation = Propagation.NEVER)
-    @Scheduled(initialDelay = 10 * 1000, fixedDelay = SESSION_TIMEOUT_TASK_HEARTBEAT)
-    public void sessionTimeoutTask() {
-        if (!taskConfig.isEnableAgentSessionTimeoutTask()) {
-            return;
-        }
-
-        ZonedDateTime now = DateUtil.utcNow();
-        for (Zone zone : zoneService.getZones()) {
-            Collection<Agent> agents = listForOnline(zone.getName());
-            for (Agent agent : agents) {
-                if (agent.getSessionId() != null && isSessionTimeout(agent, now, zone.getAgentSessionTimeout())) {
-                    Cmd delSessionCmd = cmdService.create(new CmdInfo(agent.getPath(), CmdType.DELETE_SESSION, null));
-                    cmdDispatchService.dispatch(delSessionCmd);
-                    log.trace("Send DELETE_SESSION to agent {} by sessionTimeoutTask", agent);
-                }
-            }
-        }
-    }
-
-    @Override
-    @Transactional(propagation = Propagation.NEVER)
-    @Scheduled(initialDelay = 10 * 1000, fixedDelay = IDLE_AGENT_TASK_HEARTBEAT)
-    public void idleAgentTask() {
-        for (Zone zone : zoneService.getZones()) {
-            List<Agent> availableList = findAvailable(zone.getName());
-            if (availableList.size() > 0) {
-                this.dispatchEvent(new AgentResourceEvent(this, zone.getName(), Category.RELEASED));
-            }
-        }
     }
 }

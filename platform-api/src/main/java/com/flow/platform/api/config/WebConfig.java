@@ -57,6 +57,8 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter
 @Configuration
 @EnableWebMvc
 @ComponentScan({
+    "com.flow.platform.agent.manager.service",
+    "com.flow.platform.agent.manager.dao",
     "com.flow.platform.core.controller",
     "com.flow.platform.cc.consumer",
     "com.flow.platform.cc.service",

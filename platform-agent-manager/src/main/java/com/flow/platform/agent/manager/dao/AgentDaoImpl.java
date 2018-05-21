@@ -14,28 +14,25 @@
  * limitations under the License.
  */
 
-package com.flow.platform.cc.dao;
+package com.flow.platform.agent.manager.dao;
 
 import com.flow.platform.core.dao.AbstractBaseDao;
 import com.flow.platform.domain.Agent;
 import com.flow.platform.domain.AgentPath;
 import com.flow.platform.domain.AgentStatus;
-import com.flow.platform.util.DateUtil;
 import com.google.common.base.Strings;
 import com.google.common.collect.Sets;
 import java.util.Collection;
 import java.util.HashSet;
-import javax.persistence.criteria.CriteriaUpdate;
-import org.hibernate.Session;
-import org.hibernate.query.Query;
-import org.springframework.stereotype.Repository;
-
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Predicate;
-import javax.persistence.criteria.Root;
 import java.util.List;
 import java.util.Set;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.CriteriaUpdate;
+import javax.persistence.criteria.Predicate;
+import javax.persistence.criteria.Root;
+import org.hibernate.query.Query;
+import org.springframework.stereotype.Repository;
 
 /**
  * @author Will

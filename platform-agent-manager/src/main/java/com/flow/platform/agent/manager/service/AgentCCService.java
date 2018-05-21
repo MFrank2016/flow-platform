@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.flow.platform.cc.service;
+package com.flow.platform.agent.manager.service;
 
 import com.flow.platform.core.service.WebhookService;
 import com.flow.platform.domain.Agent;
@@ -23,7 +23,6 @@ import com.flow.platform.domain.AgentSettings;
 import com.flow.platform.domain.AgentStatus;
 import java.time.ZonedDateTime;
 import java.util.List;
-import java.util.Set;
 
 /**
  * @author gy@fir.im
@@ -103,13 +102,13 @@ public interface AgentCCService extends WebhookService {
      */
     void delete(Agent agent);
 
-    /**
-     * To check agent session timeout
-     */
-    void sessionTimeoutTask();
-
-    /**
-     * Task to check num of idle agent for zone
-     */
-    void idleAgentTask();
+//    /**
+//     * To check agent session timeout
+//     */
+//    void sessionTimeoutTask();
+//
+//    /**
+//     * Task to check num of idle agent for zone
+//     */
+//    void idleAgentTask();
 }

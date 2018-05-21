@@ -19,19 +19,27 @@ package com.flow.platform.api.controller;
 import com.flow.platform.api.domain.agent.AgentItem;
 import com.flow.platform.api.domain.permission.Actions;
 import com.flow.platform.api.domain.response.BooleanValue;
-import com.flow.platform.api.domain.sync.Sync;
 import com.flow.platform.api.security.WebSecurity;
 import com.flow.platform.api.service.AgentService;
-import com.flow.platform.api.service.SyncService;
+import com.flow.platform.api.service.job.CmdService;
+import com.flow.platform.agent.manager.service.AgentCCService;
 import com.flow.platform.core.exception.IllegalParameterException;
+import com.flow.platform.core.exception.IllegalStatusException;
 import com.flow.platform.domain.Agent;
 import com.flow.platform.domain.AgentPath;
 import com.flow.platform.domain.AgentPathWithPassword;
 import com.flow.platform.domain.AgentSettings;
+import com.flow.platform.domain.AgentStatus;
+import com.flow.platform.domain.CmdInfo;
+import com.flow.platform.domain.CmdType;
+import com.flow.platform.util.StringUtil;
+import com.flow.platform.util.http.HttpURL;
 import com.google.common.base.Strings;
+import com.google.gson.JsonSyntaxException;
 import java.util.List;
 import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -46,8 +54,17 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping(path = "/agents")
 public class AgentController {
 
+    @Value(value = "${domain.api}")
+    private String apiDomain;
+
     @Autowired
     private AgentService agentService;
+
+    @Autowired
+    private AgentCCService agentCCService;
+
+    @Autowired
+    private CmdService cmdService;
 
     /**
      * @api {Get} /agents List
@@ -95,7 +112,17 @@ public class AgentController {
             throw new IllegalParameterException("Zone and agent name are required");
         }
 
-        return agentService.create(agentPath);
+        if (StringUtil.hasSpace(agentPath.getZone()) || StringUtil.hasSpace(agentPath.getName())) {
+            throw new IllegalParameterException("Zone name or agent name cannot contain empty space");
+        }
+
+        try {
+            Agent agent = agentCCService.create(agentPath, buildAgentWebhook());
+            return new AgentItem(agent, null);
+        } catch (JsonSyntaxException e) {
+            throw new IllegalStatusException("Unable to create agent", e);
+        }
+
     }
 
     /**
@@ -117,7 +144,9 @@ public class AgentController {
         if (agentPath.isEmpty()) {
             throw new IllegalParameterException("Zone and agent name are required");
         }
-        agentService.sendSysCmd(agentPath);
+
+        CmdInfo cmdInfo = new CmdInfo(agentPath, CmdType.SYSTEM_INFO, "");
+        cmdService.sendCmd(cmdInfo, false, 0);
     }
 
     /**
@@ -147,7 +176,7 @@ public class AgentController {
         if (Strings.isNullOrEmpty(token)) {
             throw new IllegalParameterException("miss required params ");
         }
-        return agentService.settings(token);
+        return agentCCService.settings(token);
     }
 
     /**
@@ -174,7 +203,7 @@ public class AgentController {
             throw new IllegalParameterException("Agent zone or name are required");
         }
 
-        agentService.close(path);
+        cmdService.close(path);
     }
 
     /**
@@ -202,8 +231,8 @@ public class AgentController {
         if (path.isEmpty()) {
             throw new IllegalParameterException("Agent zone or name are required");
         }
-
-        return new BooleanValue(agentService.shutdown(path, path.getPassword()));
+        cmdService.shutdown(path, path.getPassword());
+        return new BooleanValue(true);
     }
 
     /**
@@ -255,6 +284,32 @@ public class AgentController {
     @PostMapping(path = "/delete")
     @WebSecurity(action = Actions.ADMIN_DELETE)
     public void delete(@RequestBody AgentPath agentPath) {
-        agentService.delete(agentPath);
+
+        agentCCService.delete(findAgent(agentPath));
     }
+
+
+    /**
+     * find agent
+     */
+    private Agent findAgent(AgentPath agentPath) {
+
+        Agent agent = agentCCService.find(agentPath);
+
+        if (agent == null) {
+            throw new IllegalStatusException("agent is not exist");
+        }
+
+        if (agent.getStatus() == AgentStatus.BUSY) {
+            throw new IllegalStatusException("agent is busy, please wait");
+        }
+
+        return agent;
+    }
+
+
+    private String buildAgentWebhook() {
+        return HttpURL.build(apiDomain).append("/agents/callback").toString();
+    }
+
 }

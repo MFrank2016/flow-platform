@@ -23,11 +23,10 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.flow.platform.cc.service.AgentCCService;
+import com.flow.platform.agent.manager.service.AgentCCService;
 import com.flow.platform.cc.service.CmdCCService;
 import com.flow.platform.cc.service.ZoneService;
 import com.flow.platform.cc.test.TestBase;
-import com.flow.platform.cc.util.ZKHelper;
 import com.flow.platform.domain.AgentPath;
 import com.flow.platform.domain.AgentStatus;
 import com.flow.platform.domain.Cmd;
@@ -36,8 +35,6 @@ import com.flow.platform.domain.CmdReport;
 import com.flow.platform.domain.CmdResult;
 import com.flow.platform.domain.CmdStatus;
 import com.flow.platform.domain.CmdType;
-import com.flow.platform.domain.Jsonable;
-import com.flow.platform.domain.Zone;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;

@@ -16,12 +16,13 @@
 
 package com.flow.platform.cc.service;
 
+import com.flow.platform.agent.manager.service.AgentCCService;
 import com.flow.platform.cc.config.TaskConfig;
 import com.flow.platform.cc.domain.CmdStatusItem;
-import com.flow.platform.cc.event.AgentResourceEvent;
-import com.flow.platform.cc.event.AgentResourceEvent.Category;
-import com.flow.platform.cc.exception.AgentErr;
-import com.flow.platform.cc.exception.AgentErr.NotAvailableException;
+import com.flow.platform.agent.manager.event.AgentResourceEvent;
+import com.flow.platform.agent.manager.event.AgentResourceEvent.Category;
+import com.flow.platform.agent.manager.exception.AgentErr;
+import com.flow.platform.agent.manager.exception.AgentErr.NotAvailableException;
 import com.flow.platform.cc.util.ZKHelper;
 import com.flow.platform.core.exception.FlowException;
 import com.flow.platform.core.exception.IllegalParameterException;

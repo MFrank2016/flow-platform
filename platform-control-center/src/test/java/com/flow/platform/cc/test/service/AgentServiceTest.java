@@ -23,8 +23,8 @@ import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.verify;
 
-import com.flow.platform.cc.exception.AgentErr;
-import com.flow.platform.cc.service.AgentCCService;
+import com.flow.platform.agent.manager.exception.AgentErr;
+import com.flow.platform.agent.manager.service.AgentCCService;
 import com.flow.platform.cc.service.ZoneService;
 import com.flow.platform.cc.test.TestBase;
 import com.flow.platform.cc.util.ZKHelper;

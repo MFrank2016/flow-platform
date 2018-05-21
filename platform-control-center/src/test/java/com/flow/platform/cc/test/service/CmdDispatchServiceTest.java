@@ -19,8 +19,8 @@ package com.flow.platform.cc.test.service;
 import static org.junit.Assert.fail;
 
 import com.flow.platform.cc.domain.CmdStatusItem;
-import com.flow.platform.cc.exception.AgentErr;
-import com.flow.platform.cc.service.AgentCCService;
+import com.flow.platform.agent.manager.exception.AgentErr;
+import com.flow.platform.agent.manager.service.AgentCCService;
 import com.flow.platform.cc.service.CmdDispatchService;
 import com.flow.platform.cc.service.CmdCCService;
 import com.flow.platform.cc.test.TestBase;

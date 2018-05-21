@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.flow.platform.cc.dao;
+package com.flow.platform.agent.manager.dao;
 
 import com.flow.platform.core.dao.BaseDao;
 import com.flow.platform.domain.Agent;

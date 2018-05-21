@@ -17,8 +17,8 @@
 package com.flow.platform.cc.consumer;
 
 import com.flow.platform.cc.config.QueueCCConfig;
-import com.flow.platform.cc.event.AgentResourceEvent;
-import com.flow.platform.cc.event.AgentResourceEvent.Category;
+import com.flow.platform.agent.manager.event.AgentResourceEvent;
+import com.flow.platform.agent.manager.event.AgentResourceEvent.Category;
 import com.flow.platform.cc.service.ZoneService;
 import com.flow.platform.core.queue.PriorityMessage;
 import com.flow.platform.queue.PlatformQueue;

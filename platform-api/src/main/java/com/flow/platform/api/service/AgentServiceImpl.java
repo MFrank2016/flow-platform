@@ -24,27 +24,13 @@ import com.flow.platform.api.domain.job.JobStatus;
 import com.flow.platform.api.domain.job.NodeStatus;
 import com.flow.platform.api.domain.sync.SyncTask;
 import com.flow.platform.api.events.AgentStatusChangeEvent;
-import com.flow.platform.api.service.job.CmdService;
 import com.flow.platform.api.service.job.JobService;
-import com.flow.platform.api.util.PlatformURL;
-import com.flow.platform.cc.service.AgentCCService;
-import com.flow.platform.core.exception.HttpException;
-import com.flow.platform.core.exception.IllegalParameterException;
-import com.flow.platform.core.exception.IllegalStatusException;
+import com.flow.platform.agent.manager.service.AgentCCService;
 import com.flow.platform.core.service.ApplicationEventService;
 import com.flow.platform.domain.Agent;
-import com.flow.platform.domain.AgentPath;
-import com.flow.platform.domain.AgentSettings;
 import com.flow.platform.domain.AgentStatus;
-import com.flow.platform.domain.CmdInfo;
-import com.flow.platform.domain.CmdType;
 import com.flow.platform.util.CollectionUtil;
-import com.flow.platform.util.StringUtil;
-import com.flow.platform.util.http.HttpClient;
-import com.flow.platform.util.http.HttpResponse;
-import com.flow.platform.util.http.HttpURL;
 import com.google.common.base.Strings;
-import com.google.gson.JsonSyntaxException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -62,19 +48,11 @@ import org.springframework.stereotype.Service;
 @Log4j2
 public class AgentServiceImpl extends ApplicationEventService implements AgentService {
 
-    private final int httpRetryTimes = 5;
-
     @Value(value = "${api.zone.default}")
     private String zone;
 
     @Autowired
     private JobDao jobDao;
-
-    @Autowired
-    private PlatformURL platformURL;
-
-    @Autowired
-    private CmdService cmdService;
 
     @Autowired
     private JobService jobService;
@@ -84,9 +62,6 @@ public class AgentServiceImpl extends ApplicationEventService implements AgentSe
 
     @Autowired
     private AgentCCService agentCCService;
-
-    @Value(value = "${domain.api}")
-    private String apiDomain;
 
     @Override
     public List<Agent> list() {
@@ -147,88 +122,6 @@ public class AgentServiceImpl extends ApplicationEventService implements AgentSe
         }
 
         return list;
-    }
-
-    @Override
-    public Boolean shutdown(AgentPath path, String password) {
-        try {
-            cmdService.shutdown(path, password);
-            return true;
-        } catch (IllegalStatusException e) {
-            log.warn("Shutdown error: {}", e.getMessage());
-            return false;
-        }
-    }
-
-    @Override
-    public Boolean close(AgentPath path) {
-        try {
-            cmdService.close(path);
-            return true;
-        } catch (IllegalStatusException e) {
-            log.warn("Close error: {}", e.getMessage());
-            return false;
-        }
-    }
-
-    @Override
-    public AgentItem create(AgentPath agentPath) {
-        if (StringUtil.hasSpace(agentPath.getZone()) || StringUtil.hasSpace(agentPath.getName())) {
-            throw new IllegalParameterException("Zone name or agent name cannot contain empty space");
-        }
-
-        try {
-
-            Agent agent = agentCCService.create(agentPath, buildAgentWebhook());
-            return new AgentItem(agent, null);
-
-        } catch (JsonSyntaxException e) {
-            throw new IllegalStatusException("Unable to create agent", e);
-        }
-    }
-
-    @Override
-    public AgentSettings settings(String token) {
-        return agentCCService.settings(token);
-    }
-
-    @Override
-    public void delete(AgentPath agentPath) {
-        Agent agent = findAgent(agentPath);
-
-        try {
-            agentCCService.delete(agent);
-        } catch (Throwable e) {
-            throw new IllegalStatusException(e.getMessage());
-        }
-    }
-
-    @Override
-    public void sendSysCmd(AgentPath agentPath) {
-        CmdInfo cmdInfo = new CmdInfo(agentPath, CmdType.SYSTEM_INFO, "");
-        cmdService.sendCmd(cmdInfo, false, 0);
-    }
-
-    private String buildAgentWebhook() {
-        return HttpURL.build(apiDomain).append("/agents/callback").toString();
-    }
-
-    /**
-     * find agent
-     */
-    private Agent findAgent(AgentPath agentPath) {
-
-        Agent agent = agentCCService.find(agentPath);
-
-        if (agent == null) {
-            throw new IllegalStatusException("agent is not exist");
-        }
-
-        if (agent.getStatus() == AgentStatus.BUSY) {
-            throw new IllegalStatusException("agent is busy, please wait");
-        }
-
-        return agent;
     }
 
     @Override
