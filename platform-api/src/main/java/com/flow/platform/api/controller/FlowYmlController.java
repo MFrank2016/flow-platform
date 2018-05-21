@@ -16,6 +16,7 @@
 
 package com.flow.platform.api.controller;
 
+import com.flow.platform.api.config.AppConfig;
 import com.flow.platform.api.domain.FlowYml;
 import com.flow.platform.api.domain.node.Node;
 import com.flow.platform.api.domain.node.Yml;
@@ -28,9 +29,13 @@ import com.flow.platform.plugin.domain.Plugin;
 import com.flow.platform.plugin.domain.PluginStatus;
 import com.flow.platform.util.StringUtil;
 import com.google.common.collect.ImmutableSet;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Collection;
 import javax.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -85,13 +90,16 @@ public class FlowYmlController extends NodeController {
      */
     @GetMapping("/download")
     @WebSecurity(action = Actions.FLOW_CREATE)
-    public Resource downloadFlowYml(HttpServletResponse httpResponse) {
-        String path = flowName.get();
-        Node root = nodeService.find(path).root();
+    public Resource downloadYml(HttpServletResponse httpResponse) throws IOException {
+        FlowYml flow = flowService.findYml(flowName.get());
+
         httpResponse.setHeader(
             "Content-Disposition",
-            String.format("attachment; filename=%s", root.getName() + ".yml"));
-        return ymlService.getResource(root);
+            String.format("attachment; filename=%s", flow.getName() + ".yml"));
+
+        try (InputStream is = new ByteArrayInputStream(flow.getContent().getBytes(AppConfig.DEFAULT_CHARSET))) {
+            return new InputStreamResource(is);
+        }
     }
 
     /**
@@ -114,34 +122,7 @@ public class FlowYmlController extends NodeController {
     @PostMapping
     @WebSecurity(action = Actions.FLOW_CREATE)
     public String updateYml(@RequestBody String yml) {
-        nodeService.updateByYml(flowName.get(), yml);
+        flowService.updateYml(flowName.get(), yml);
         return yml;
-    }
-
-    /**
-     * @api {post} /flows/:root/yml/verify YML Verify
-     * @apiParam {String} root flow node name to verify yml
-     * @apiParamExample {yaml} Request-Body
-     *  - flows:
-     *      - name: xxx
-     *      - steps:
-     *          - name: xxx
-     * @apiGroup Flow YML
-     *
-     * @apiSuccessExample Success-Response
-     *  HTTP/1.1 200 OK
-     *
-     * @apiErrorExample Error-Response
-     *  HTTP/1.1 400 BAD REQUEST
-     *
-     *  {
-     *      message: xxxx
-     *  }
-     */
-    @PostMapping("/verify")
-    @WebSecurity(action = Actions.FLOW_YML)
-    public void ymlVerification(@RequestBody String yml) {
-        Node root = nodeService.find(flowName.get()).root();
-        ymlService.build(root, yml);
     }
 }

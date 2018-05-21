@@ -21,24 +21,15 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.flow.platform.api.domain.CmdCallbackQueueItem;
 import com.flow.platform.api.domain.Flow;
-import com.flow.platform.api.domain.job.Job;
-import com.flow.platform.api.domain.job.NodeStatus;
 import com.flow.platform.api.domain.node.Node;
-import com.flow.platform.api.domain.node.NodeTree;
 import com.flow.platform.api.domain.response.BooleanValue;
 import com.flow.platform.api.service.v1.FlowService;
 import com.flow.platform.api.test.FlowHelper;
-import com.flow.platform.api.util.CommonUtil;
 import com.flow.platform.api.util.PathUtil;
 import com.flow.platform.core.exception.NotFoundException;
 import com.flow.platform.core.response.ResponseError;
-import com.flow.platform.domain.Cmd;
-import com.flow.platform.domain.CmdStatus;
-import com.flow.platform.domain.CmdType;
 import com.flow.platform.util.StringUtil;
-import net.bytebuddy.asm.Advice.Unused;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -68,11 +59,7 @@ public class FlowControllerTest extends ControllerTestWithoutAuth {
 
     @Test
     public void should_get_flow_node_detail() throws Throwable {
-        MvcResult result = mockMvc.perform(get("/flows/" + flowName + "/show"))
-            .andExpect(status().isOk())
-            .andReturn();
-
-        Node flowNode = Node.parse(result.getResponse().getContentAsString(), Node.class);
+        Flow flowNode = Flow.parse(performRequestWith200Status(get("/flows/" + flowName + "/show")), Flow.class);
         Assert.assertNotNull(flowNode);
         Assert.assertEquals(flowName, flowNode.getName());
     }
@@ -85,11 +72,7 @@ public class FlowControllerTest extends ControllerTestWithoutAuth {
         Flow flow = flowHelper.createFlowWithYml(flowName, "yml/demo_flow2.yaml");
 
         // when: perform http delete
-        Flow deleted = Flow.parse(mockMvc.perform(delete("/flows/" + flowName))
-            .andExpect(status().isOk())
-            .andReturn()
-            .getResponse()
-            .getContentAsString(), Flow.class);
+        Flow deleted = Flow.parse(performRequestWith200Status(delete("/flows/" + flowName)), Flow.class);
 
         // then: flow and flow yml been deleted
         Assert.assertEquals(flow, deleted);
@@ -100,35 +83,24 @@ public class FlowControllerTest extends ControllerTestWithoutAuth {
 
     @Test
     public void should_get_env_value() throws Throwable {
-        MockHttpServletRequestBuilder request = get("/flows/" + flowName + "/env")
-            .param("key", "FLOW_STATUS")
-            .param("editable", "false");
+        // given: add env to context
+        mockMvc.perform(post("/flows/" + flowName + "/env")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content("{\"FLOW_STATUS\": \"PENDING\"}")).andExpect(status().isOk());
 
-        MvcResult result = mockMvc.perform(request).andExpect(status().isOk()).andReturn();
-        Assert.assertEquals("{\"FLOW_STATUS\":\"PENDING\"}", result.getResponse().getContentAsString());
+        // when: get env value from flow object
+        Flow flow = Flow.parse(performRequestWith200Status(get("/flows/" + flowName)), Flow.class);
+
+        // then: env value existed
+        Assert.assertEquals("PENDING", flow.getContext().get("FLOW_STATUS"));
     }
 
     @Test
-    public void should_return_true_if_flow_name_exist() throws Throwable {
-        MockHttpServletRequestBuilder request = get("/flows/" + flowName + "/exist")
-            .contentType(MediaType.APPLICATION_JSON);
-
-        MvcResult result = mockMvc.perform(request).andExpect(status().isOk()).andReturn();
-
-        String body = result.getResponse().getContentAsString();
-        BooleanValue existed = BooleanValue.parse(body, BooleanValue.class);
-        Assert.assertNotNull(existed);
-        Assert.assertEquals(true, existed.getValue());
-    }
-
-    @Test
-    public void should_response_4xx_if_flow_name_format_invalid() throws Throwable {
+    public void should_response_4xx_if_flow_name_format_invalid_when_create_flow() throws Throwable {
         String flowName = "hello*gmail";
 
-        MockHttpServletRequestBuilder request = get("/flows/" + flowName + "/exist")
-            .contentType(MediaType.APPLICATION_JSON);
-
-        MvcResult result = this.mockMvc.perform(request)
+        MvcResult result = this.mockMvc.perform(post("/flows/" + flowName)
+            .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().is4xxClientError())
             .andReturn();
 
@@ -144,46 +116,23 @@ public class FlowControllerTest extends ControllerTestWithoutAuth {
         String flowName = "not-exit";
 
         // when:
-        MockHttpServletRequestBuilder request = get("/flows/" + flowName + "/exist")
-            .contentType(MediaType.APPLICATION_JSON);
-
-        MvcResult mvcResult = this.mockMvc.perform(request)
-            .andExpect(status().isOk())
-            .andReturn();
+        String response = performRequestWith200Status(
+            get("/flows/" + flowName + "/exist").contentType(MediaType.APPLICATION_JSON));
 
         // then:
-        String response = mvcResult.getResponse().getContentAsString();
         BooleanValue existed = BooleanValue.parse(response, BooleanValue.class);
         Assert.assertNotNull(existed);
-        Assert.assertEquals(false, existed.getValue());
-    }
-
-    @Test
-    public void should_response_4xx_if_env_not_defined_for_load_file_content() throws Throwable {
-        // when: send request to load content
-        MvcResult result = this.mockMvc.perform(get("/flows/" + flowName + "/yml/load"))
-            .andExpect(status().is4xxClientError())
-            .andReturn();
-
-        // then:
-        String response = result.getResponse().getContentAsString();
-        ResponseError error = ResponseError.parse(response, ResponseError.class);
-        Assert.assertTrue(error.getMessage().contains("Missing git settings"));
+        Assert.assertFalse(existed.getValue());
     }
 
     @Test
     public void should_get_yml_file_content() throws Throwable {
         // given:
         String yml = getResourceContent("yml/demo_flow.yaml");
-        Node flow = nodeService.find(flowName).root();
-        setFlowToReady(flow);
-        nodeService.updateByYml(PathUtil.build(flowName), yml);
+        flowService.updateYml(flowName, yml);
 
         // when:
-        MvcResult result = mockMvc.perform(get("/flows/" + flowName + "/yml"))
-            .andExpect(status().isOk())
-            .andReturn();
-        String content = result.getResponse().getContentAsString();
+        String content = performRequestWith200Status(get("/flows/" + flowName + "/yml"));
 
         // then:
         Assert.assertEquals(yml, content);
