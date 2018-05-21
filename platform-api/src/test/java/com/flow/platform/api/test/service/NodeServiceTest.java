@@ -349,6 +349,8 @@ public class NodeServiceTest extends TestBase {
 
     @Test(expected = NotFoundException.class)
     public void should_delete_flow() throws Throwable {
+        stubAgent();
+
         stubDemo();
 
         Node emptyFlow = nodeService.createEmptyFlow("flow1");
@@ -388,6 +390,8 @@ public class NodeServiceTest extends TestBase {
 
         // then: job should be null
         jobService.find(job.getId());
+
+        clearAgent();
     }
 
     @Test
