@@ -19,14 +19,12 @@ import static com.flow.platform.api.domain.job.NodeStatus.FAILURE;
 import static com.flow.platform.api.domain.job.NodeStatus.STOPPED;
 import static com.flow.platform.api.domain.job.NodeStatus.SUCCESS;
 import static com.flow.platform.api.domain.job.NodeStatus.TIMEOUT;
-import static com.flow.platform.api.envs.FlowEnvs.FLOW_STATUS;
-import static com.flow.platform.api.envs.FlowEnvs.FLOW_YML_STATUS;
-import static com.flow.platform.api.envs.FlowEnvs.StatusValue;
 
 import com.flow.platform.api.dao.job.JobDao;
 import com.flow.platform.api.dao.job.JobNumberDao;
 import com.flow.platform.api.domain.CmdCallbackQueueItem;
 import com.flow.platform.api.domain.EnvObject;
+import com.flow.platform.api.domain.Flow;
 import com.flow.platform.api.domain.job.Job;
 import com.flow.platform.api.domain.job.JobCategory;
 import com.flow.platform.api.domain.job.JobNumber;
@@ -40,18 +38,14 @@ import com.flow.platform.api.domain.node.Yml;
 import com.flow.platform.api.domain.user.User;
 import com.flow.platform.api.envs.EnvUtil;
 import com.flow.platform.api.envs.FlowEnvs;
-import com.flow.platform.api.envs.FlowEnvs.YmlStatusValue;
 import com.flow.platform.api.envs.GitEnvs;
 import com.flow.platform.api.envs.JobEnvs;
 import com.flow.platform.api.events.JobStatusChangeEvent;
-import com.flow.platform.api.git.GitEventEnvConverter;
 import com.flow.platform.api.script.GroovyRunner;
 import com.flow.platform.api.service.GitService;
 import com.flow.platform.api.service.node.EnvService;
 import com.flow.platform.api.service.node.NodeService;
-import com.flow.platform.api.service.node.YmlService;
 import com.flow.platform.api.util.CommonUtil;
-import com.flow.platform.api.util.PathUtil;
 import com.flow.platform.core.domain.Page;
 import com.flow.platform.core.domain.Pageable;
 import com.flow.platform.core.exception.FlowException;
@@ -68,7 +62,6 @@ import com.flow.platform.domain.CmdType;
 import com.flow.platform.queue.PlatformQueue;
 import com.flow.platform.util.DateUtil;
 import com.flow.platform.util.ExceptionUtil;
-import com.flow.platform.util.git.model.GitCommit;
 import com.flow.platform.util.http.HttpURL;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
@@ -138,9 +131,6 @@ public class JobServiceImpl extends ApplicationEventService implements JobServic
     private CmdService cmdService;
 
     @Autowired
-    private YmlService ymlService;
-
-    @Autowired
     private PlatformQueue<PriorityMessage> cmdCallbackQueue;
 
     @Autowired
@@ -187,45 +177,50 @@ public class JobServiceImpl extends ApplicationEventService implements JobServic
 
     @Override
     @Transactional(noRollbackFor = FlowException.class)
-    public Job createFromFlowYml(String path, JobCategory eventType, Map<String, String> envs, User creator) {
-        // verify flow yml status
-        Node flow = nodeService.find(path).root();
-        String ymlStatus = flow.getEnv(FlowEnvs.FLOW_YML_STATUS);
+    public Job create(Flow flow, JobCategory eventType, Map<String, String> envs, User creator) {
+        Objects.requireNonNull(flow, "Flow must be defined");
+        Objects.requireNonNull(eventType, "Eventtype must be defined");
+        Objects.requireNonNull(creator, "User must be defined while create job");
 
-        if (!Objects.equals(ymlStatus, YmlStatusValue.FOUND.value())) {
-            throw new IllegalStatusException("Illegal yml status for flow " + flow.getName());
+
+        // TODO: Verify yml content
+
+        // verify required envs for create job
+        if (!EnvUtil.hasRequired(flow, REQUIRED_ENVS)) {
+            throw new IllegalStatusException("Missing required env variables for flow " + flow.getName());
         }
 
-        // get yml content
-        Yml yml = ymlService.get(flow);
+        // increate flow job number
+        JobNumber jobNumber = jobNumberDao.get(flow.getName());
+        if (Objects.isNull(jobNumber)) {
+            throw new IllegalStatusException("Job number not been initialized");
+        }
 
-        // create job instance
-        Job job = createJob(path, eventType, envs, creator);
-        new OnYmlSuccess(job, null).accept(yml);
-        return job;
-    }
-
-    @Override
-    @Transactional(noRollbackFor = FlowException.class)
-    public void createWithYmlLoad(String path,
-                                  JobCategory eventType,
-                                  Map<String, String> envs,
-                                  User creator,
-                                  Consumer<Job> onJobCreated) {
-
-        // find flow and reset yml status
-        Node flow = nodeService.find(path).root();
-        envService.save(flow, EnvUtil.build(FLOW_YML_STATUS, YmlStatusValue.NOT_FOUND), false);
-
-        // merge input env to flow for git loading, not save to flow since the envs is for job
-        EnvUtil.merge(envs, flow.getEnvs(), true);
+        jobNumber = jobNumberDao.increase(flow.getName());
 
         // create job
-        Job job = createJob(path, eventType, envs, creator);
-        updateJobStatusAndSave(job, JobStatus.YML_LOADING);
+        Job job = new Job(CommonUtil.randomId());
+        job.setNodePath(flow.getName());
+        job.setNodeName(flow.getName());
+        job.setNumber(jobNumber.getNumber());
+        job.setCategory(eventType);
+        job.setCreatedBy(creator.getEmail());
+        job.setCreatedAt(ZonedDateTime.now());
+        job.setUpdatedAt(ZonedDateTime.now());
 
-        // load yml
-        ymlService.startLoad(flow, new OnYmlSuccess(job, onJobCreated), new OnYmlError(job));
+        // setup job env variables
+        job.putEnv(FlowEnvs.FLOW_NAME, flow.getName());
+        job.putEnv(JobEnvs.FLOW_JOB_BUILD_CATEGORY, eventType.name());
+        job.putEnv(JobEnvs.FLOW_JOB_BUILD_NUMBER, job.getNumber().toString());
+        job.putEnv(JobEnvs.FLOW_JOB_LOG_PATH, logUrl(job));
+        job.putEnv(JobEnvs.FLOW_API_DOMAIN, apiDomain);
+        job.putEnv(JobEnvs.FLOW_JOB_ID, job.getId().toString());
+
+        EnvUtil.merge(flow.getEnvs(), job.getEnvs(), true);
+        EnvUtil.merge(envs, job.getEnvs(), true);
+
+        //save job
+        return jobDao.save(job);
     }
 
     @Override
@@ -308,61 +303,6 @@ public class JobServiceImpl extends ApplicationEventService implements JobServic
             stop(path, runningJob.getNumber());
         }
         log.trace("before delete flow, finish stop all jobs");
-    }
-
-
-    private Job createJob(String path, JobCategory eventType, Map<String, String> envs, User creator) {
-        Node root = nodeService.find(PathUtil.rootPath(path)).root();
-        if (Objects.isNull(root)) {
-            throw new IllegalParameterException("Path does not existed");
-        }
-
-        if (Objects.isNull(creator)) {
-            throw new IllegalParameterException("User is required while create job");
-        }
-
-        // verify required envs for create job
-        if (!EnvUtil.hasRequiredEnvKey(root, REQUIRED_ENVS)) {
-            throw new IllegalStatusException("Missing required env variables for flow " + path);
-        }
-
-        // verify flow status
-        String status = root.getEnv(FLOW_STATUS);
-        if (!Objects.equals(status, StatusValue.READY.value())) {
-            throw new IllegalStatusException("Cannot create job since status is not READY");
-        }
-
-        // increate flow job number
-        JobNumber jobNumber = jobNumberDao.get(root.getPath());
-        if (Objects.isNull(jobNumber)) {
-            throw new IllegalStatusException("Job number not been initialized");
-        }
-
-        jobNumber = jobNumberDao.increase(root.getPath());
-
-        // create job
-        Job job = new Job(CommonUtil.randomId());
-        job.setNodePath(root.getPath());
-        job.setNodeName(root.getName());
-        job.setNumber(jobNumber.getNumber());
-        job.setCategory(eventType);
-        job.setCreatedBy(creator.getEmail());
-        job.setCreatedAt(ZonedDateTime.now());
-        job.setUpdatedAt(ZonedDateTime.now());
-
-        // setup job env variables
-        job.putEnv(FlowEnvs.FLOW_NAME, root.getName());
-        job.putEnv(JobEnvs.FLOW_JOB_BUILD_CATEGORY, eventType.name());
-        job.putEnv(JobEnvs.FLOW_JOB_BUILD_NUMBER, job.getNumber().toString());
-        job.putEnv(JobEnvs.FLOW_JOB_LOG_PATH, logUrl(job));
-        job.putEnv(JobEnvs.FLOW_API_DOMAIN, apiDomain);
-        job.putEnv(JobEnvs.FLOW_JOB_ID, job.getId().toString());
-
-        EnvUtil.merge(root.getEnvs(), job.getEnvs(), true);
-        EnvUtil.merge(envs, job.getEnvs(), true);
-
-        //save job
-        return jobDao.save(job);
     }
 
     /**

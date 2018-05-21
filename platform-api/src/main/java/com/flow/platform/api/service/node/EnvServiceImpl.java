@@ -17,7 +17,7 @@
 package com.flow.platform.api.service.node;
 
 import com.flow.platform.api.dao.FlowDao;
-import com.flow.platform.api.domain.node.Node;
+import com.flow.platform.api.domain.Flow;
 import com.flow.platform.api.envs.AgentEnvs;
 import com.flow.platform.api.envs.EnvKey;
 import com.flow.platform.api.envs.EnvUtil;
@@ -86,8 +86,8 @@ public class EnvServiceImpl implements EnvService {
     }
 
     @Override
-    public Map<String, String> list(Node node, boolean editable) {
-        HashMap<String, String> envs = Maps.newHashMap(node.getEnvs());
+    public Map<String, String> list(Flow flow, boolean editable) {
+        HashMap<String, String> envs = Maps.newHashMap(flow.getEnvs());
 
         if (editable) {
             for (String key : noneEditableKeyMap.keySet()) {
@@ -105,13 +105,13 @@ public class EnvServiceImpl implements EnvService {
     }
 
     @Override
-    public void save(Node node, Map<String, String> envs, boolean verify) {
+    public void save(Flow flow, Map<String, String> envs, boolean verify) {
         if (verify) {
             verifyWhenAdd(envs);
         }
 
         // make copy of node since do not effect the node in cache
-        Node copy = ObjectUtil.deepCopy(node);
+        Flow copy = ObjectUtil.deepCopy(flow);
         EnvUtil.merge(envs, copy.getEnvs(), true);
 
         // handle envs before save
@@ -123,12 +123,12 @@ public class EnvServiceImpl implements EnvService {
         }
 
         // merge env to real node instance after handler
-        EnvUtil.merge(copy.getEnvs(), node.getEnvs(), true);
-//        flowDao.update(node);
+        EnvUtil.merge(copy.getEnvs(), flow.getEnvs(), true);
+        flowDao.update(flow);
     }
 
     @Override
-    public void delete(Node node, Set<String> keys, boolean verify) {
+    public void delete(Flow flow, Set<String> keys, boolean verify) {
         if (verify) {
             verifyWhenDelete(keys);
         }
@@ -136,18 +136,18 @@ public class EnvServiceImpl implements EnvService {
         // handle envs before delete
         for (String env : keys) {
             EnvHandler envHandler = envHandlerMap.get(env);
-            if (envHandler != null && node.getEnvs().containsKey(env)) {
-                envHandler.unHandle(node);
+            if (envHandler != null && flow.getEnvs().containsKey(env)) {
+                envHandler.unHandle(flow);
             }
         }
 
         // remove env
         for (String keyToRemove : keys) {
-            node.removeEnv(keyToRemove);
+            flow.removeEnv(keyToRemove);
         }
 
         // sync latest env into flow table
-//        flowDao.update(node);
+        flowDao.update(flow);
     }
 
     private void verifyWhenAdd(Map<String, String> envs) {

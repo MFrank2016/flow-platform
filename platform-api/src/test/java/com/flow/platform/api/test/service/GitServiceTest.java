@@ -58,10 +58,10 @@ public class GitServiceTest extends TestBase {
     @Before
     public void initNodeWithGitInfo() throws Throwable {
         flow = new Flow("flow_test");
-        flow.putContext(GitEnvs.FLOW_GIT_SOURCE.name(), GitSource.UNDEFINED_SSH.name());
-        flow.putContext(GitEnvs.FLOW_GIT_URL.name(), TestBase.GITHUB_TEST_REPO_SSH);
-        flow.putContext(GitEnvs.FLOW_GIT_SSH_PRIVATE_KEY.name(), getResourceContent("ssh_private_key"));
-        flow.putContext(GitEnvs.FLOW_GIT_BRANCH.name(), "master");
+        flow.putEnv(GitEnvs.FLOW_GIT_SOURCE, GitSource.UNDEFINED_SSH.name());
+        flow.putEnv(GitEnvs.FLOW_GIT_URL, TestBase.GITHUB_TEST_REPO_SSH);
+        flow.putEnv(GitEnvs.FLOW_GIT_SSH_PRIVATE_KEY, getResourceContent("ssh_private_key"));
+        flow.putEnv(GitEnvs.FLOW_GIT_BRANCH, "master");
     }
 
     @Test

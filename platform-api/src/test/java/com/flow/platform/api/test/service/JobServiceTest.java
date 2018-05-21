@@ -25,6 +25,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.verify;
 
 import com.flow.platform.api.domain.CmdCallbackQueueItem;
+import com.flow.platform.api.domain.Flow;
 import com.flow.platform.api.domain.job.Job;
 import com.flow.platform.api.domain.job.JobCategory;
 import com.flow.platform.api.domain.job.JobStatus;
@@ -38,7 +39,6 @@ import com.flow.platform.api.util.CommonUtil;
 import com.flow.platform.api.util.PathUtil;
 import com.flow.platform.core.domain.Page;
 import com.flow.platform.core.domain.Pageable;
-import com.flow.platform.core.exception.IllegalStatusException;
 import com.flow.platform.core.queue.PriorityMessage;
 import com.flow.platform.core.util.ThreadUtil;
 import com.flow.platform.domain.Cmd;
@@ -81,30 +81,24 @@ public class JobServiceTest extends TestBase {
         stubDemo();
     }
 
-    @Test(expected = IllegalStatusException.class)
-    public void should_raise_exception_since_flow_status_is_not_ready() throws IOException {
-        Node rootForFlow = nodeService.createEmptyFlow("flow1");
-        jobService.createFromFlowYml(rootForFlow.getPath(), JobCategory.MANUAL, null, mockUser);
-    }
-
     @Test
     public void should_create_job_with_unique_job_number() throws Throwable {
         // given:
-        final Node flow = createRootFlow("flow-job-number", "yml/demo_flow2.yaml");
+        final Flow flow = createRootFlow("flow-job-number", "yml/demo_flow2.yaml");
         final int numOfJob = 10;
         final CountDownLatch countDown = new CountDownLatch(numOfJob);
 
         // when:
         for (int i = 0; i < numOfJob; i++) {
             taskExecutor.execute(() -> {
-                jobService.createFromFlowYml(flow.getPath(), JobCategory.MANUAL, null, mockUser);
+                jobService.create(flow, JobCategory.MANUAL, null, mockUser);
                 countDown.countDown();
             });
         }
 
         // then:
         countDown.await(30, TimeUnit.SECONDS);
-        Assert.assertEquals(numOfJob, jobDao.numOfJob(flow.getPath()).intValue());
+        Assert.assertEquals(numOfJob, jobDao.numOfJob(flow.getName()).intValue());
     }
 
     @Test
@@ -113,10 +107,10 @@ public class JobServiceTest extends TestBase {
         wireMockRule.resetAll();
 
         // when: create job
-        Node rootForFlow = createRootFlow("flow1", "yml/demo_flow2.yaml");
+        Flow rootForFlow = createRootFlow("flow1", "yml/demo_flow2.yaml");
 
         // mock latest commit for git service
-        Job job = jobService.createFromFlowYml(rootForFlow.getPath(), JobCategory.MANUAL, null, mockUser);
+        Job job = jobService.create(rootForFlow, JobCategory.MANUAL, null, mockUser);
 
         // then: verify job status
         job = jobService.find(job.getId());
@@ -127,8 +121,8 @@ public class JobServiceTest extends TestBase {
 
     @Test
     public void should_create_node_success() throws IOException {
-        Node rootForFlow = createRootFlow("flow1", "yml/demo_flow2.yaml");
-        Job job = createMockJob(rootForFlow.getPath());
+        Flow rootForFlow = createRootFlow("flow1", "yml/demo_flow2.yaml");
+        Job job = createMockJob(rootForFlow.getName());
         Assert.assertNotNull(job.getEnv("FLOW_WORKSPACE"));
         Assert.assertNotNull(job.getEnv("FLOW_VERSION"));
 
@@ -186,8 +180,8 @@ public class JobServiceTest extends TestBase {
         final String sessionId = "session-id-for-final-node";
         final String flowName = "flow_job_with_final_node";
 
-        Node root = createRootFlow(flowName, "yml/for_job_service_final_node.yml");
-        Job job = createMockJob(root.getPath());
+        Flow root = createRootFlow(flowName, "yml/for_job_service_final_node.yml");
+        Job job = createMockJob(root.getName());
         NodeTree jobTree = jobNodeService.get(job);
         verify(exactly(1), postRequestedFor(urlEqualTo("/cmd/queue/send?priority=1&retry=5")));
 
@@ -220,10 +214,10 @@ public class JobServiceTest extends TestBase {
     public void should_run_job_with_success_status() throws Throwable {
         // given:
         final String sessionId = "session-id-1";
-        Node root = createRootFlow("flow_run_job", "yml/for_job_service_run_job.yml");
+        Flow root = createRootFlow("flow_run_job", "yml/for_job_service_run_job.yml");
 
         // when: create job and job should be SESSION_CREATING
-        Job job = createMockJob(root.getPath());
+        Job job = createMockJob(root.getName());
         verify(exactly(1), postRequestedFor(urlEqualTo("/cmd/queue/send?priority=1&retry=5")));
 
         // when: simulate cc callback for create session
@@ -295,8 +289,8 @@ public class JobServiceTest extends TestBase {
 
     @Test
     public void should_stop_success() throws IOException {
-        Node rootForFlow = createRootFlow("flow1", "yml/demo_flow2.yaml");
-        Job job = createMockJob(rootForFlow.getPath());
+        Flow rootForFlow = createRootFlow("flow1", "yml/demo_flow2.yaml");
+        Job job = createMockJob(rootForFlow.getName());
 
         Job stoppedJob = jobService.stop(job.getNodeName(), job.getNumber());
         Assert.assertNotNull(stoppedJob);
@@ -308,12 +302,12 @@ public class JobServiceTest extends TestBase {
     public void should_stop_running_job_success() throws IOException {
 
         // init flow
-        Node rootForFlow = createRootFlow("flow1", "yml/demo_flow2.yaml");
+        Flow rootForFlow = createRootFlow("flow1", "yml/demo_flow2.yaml");
         NodeTree nodeTree = nodeService.find("flow1");
         Node stepFirst = nodeTree.find("flow1/step1");
 
         // create job
-        Job job = createMockJob(rootForFlow.getPath());
+        Job job = createMockJob(rootForFlow.getName());
         verify(exactly(1), postRequestedFor(urlEqualTo("/cmd/queue/send?priority=1&retry=5")));
 
         // mock callback cmd
@@ -345,8 +339,8 @@ public class JobServiceTest extends TestBase {
     @Test
     public void should_job_time_out_and_reject_callback() throws IOException, InterruptedException {
         // given: job and mock updated time as expired
-        Node rootForFlow = createRootFlow("flow1", "yml/demo_flow2.yaml");
-        Job job = jobService.createFromFlowYml(rootForFlow.getPath(), JobCategory.TAG, null, mockUser);
+        Flow rootForFlow = createRootFlow("flow1", "yml/demo_flow2.yaml");
+        Job job = jobService.create(rootForFlow, JobCategory.TAG, null, mockUser);
         Assert.assertNotNull(job.getEnv("FLOW_WORKSPACE"));
         Assert.assertNotNull(job.getEnv("FLOW_VERSION"));
 
@@ -355,7 +349,7 @@ public class JobServiceTest extends TestBase {
         jobService.checkTimeOut(job);
 
         // then: job status should be timeout
-        Job jobRes = jobDao.get(rootForFlow.getPath(), job.getNumber());
+        Job jobRes = jobDao.get(rootForFlow.getName(), job.getNumber());
         Assert.assertEquals(JobStatus.TIMEOUT, jobRes.getStatus());
         Assert.assertEquals(NodeStatus.TIMEOUT, jobRes.getRootResult().getStatus());
 
@@ -371,16 +365,16 @@ public class JobServiceTest extends TestBase {
 
     @Test
     public void should_get_latest_job_by_node_path() throws IOException {
-        Node rootForFlow = createRootFlow("flowTest", "yml/demo_flow1.yaml");
-        createMockJob(rootForFlow.getPath());
-        createMockJob(rootForFlow.getPath());
+        Flow rootForFlow = createRootFlow("flowTest", "yml/demo_flow1.yaml");
+        createMockJob(rootForFlow.getName());
+        createMockJob(rootForFlow.getName());
 
         Assert.assertEquals(2, jobDao.list().size());
 
-        List<String> rootPath = Lists.newArrayList(rootForFlow.getPath());
+        List<String> rootPath = Lists.newArrayList(rootForFlow.getName());
         List<Job> jobs = jobService.list(rootPath, true);
         Assert.assertEquals(1, jobs.size());
-        Assert.assertEquals(2L, jobNumberDao.get(rootForFlow.getPath()).getNumber().longValue());
+        Assert.assertEquals(2L, jobNumberDao.get(rootForFlow.getName()).getNumber().longValue());
         Assert.assertEquals("2", jobs.get(0).getNumber().toString());
     }
 
@@ -416,15 +410,15 @@ public class JobServiceTest extends TestBase {
     public void should_page_list_by_node_path() throws IOException {
         Pageable pageable = new Pageable(1, 3);
 
-        Node rootForFlow = createRootFlow("flowTest", "yml/demo_flow1.yaml");
+        Flow rootForFlow = createRootFlow("flowTest", "yml/demo_flow1.yaml");
 
         Integer count = 5;
 
         for (int i = 0; i < count; i++) {
-            createMockJob(rootForFlow.getPath());
+            createMockJob(rootForFlow.getName());
         }
 
-        Page<Job> page = jobService.list(Lists.newArrayList(rootForFlow.getPath()), false, pageable);
+        Page<Job> page = jobService.list(Lists.newArrayList(rootForFlow.getName()), false, pageable);
 
         Assert.assertEquals(page.getTotalSize(), count.longValue());
         Assert.assertEquals(page.getPageCount(), 2);
@@ -437,15 +431,15 @@ public class JobServiceTest extends TestBase {
     public void should_page_list_by_node_path_latest() throws IOException {
         Pageable pageable = new Pageable(1, 3);
 
-        Node rootForFlow = createRootFlow("flowTest", "yml/demo_flow1.yaml");
+        Flow rootForFlow = createRootFlow("flowTest", "yml/demo_flow1.yaml");
 
         Integer count = 5;
 
         for (int i = 0; i < count; i++) {
-            createMockJob(rootForFlow.getPath());
+            createMockJob(rootForFlow.getName());
         }
 
-        Page<Job> page = jobService.list(Lists.newArrayList(rootForFlow.getPath()), true, pageable);
+        Page<Job> page = jobService.list(Lists.newArrayList(rootForFlow.getName()), true, pageable);
 
         Assert.assertEquals(page.getTotalSize(), 1);
         Assert.assertEquals(page.getPageCount(), 1);

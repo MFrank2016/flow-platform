@@ -22,7 +22,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.flow.platform.api.domain.Flow;
-import com.flow.platform.api.domain.response.BooleanValue;
 import com.flow.platform.api.service.v1.FlowService;
 import com.flow.platform.api.test.FlowHelper;
 import com.flow.platform.core.exception.NotFoundException;
@@ -90,7 +89,7 @@ public class FlowControllerTest extends ControllerTestWithoutAuth {
         Flow flow = Flow.parse(performRequestWith200Status(get("/flows/" + flowName)), Flow.class);
 
         // then: env value existed
-        Assert.assertEquals("PENDING", flow.getContext().get("FLOW_STATUS"));
+        Assert.assertEquals("PENDING", flow.getEnv("FLOW_STATUS"));
     }
 
     @Test
@@ -106,21 +105,6 @@ public class FlowControllerTest extends ControllerTestWithoutAuth {
         ResponseError error = ResponseError.parse(body, ResponseError.class);
         Assert.assertNotNull(error);
         Assert.assertEquals(error.getMessage(), "Illegal node name: hello*gmail");
-    }
-
-    @Test
-    public void should_response_false_if_flow_name_not_exist() throws Throwable {
-        // given:
-        String flowName = "not-exit";
-
-        // when:
-        String response = performRequestWith200Status(
-            get("/flows/" + flowName + "/exist").contentType(MediaType.APPLICATION_JSON));
-
-        // then:
-        BooleanValue existed = BooleanValue.parse(response, BooleanValue.class);
-        Assert.assertNotNull(existed);
-        Assert.assertFalse(existed.getValue());
     }
 
     @Test

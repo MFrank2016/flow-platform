@@ -103,7 +103,7 @@ public class GitServiceImpl implements GitService {
         }
 
         progressListener.onStart();
-        String branch = flow.getContext(GitEnvs.FLOW_GIT_BRANCH.name(), "master");
+        String branch = flow.getEnv(GitEnvs.FLOW_GIT_BRANCH, "master");
         return client.fetch(branch, filePath, new GitCloneProgressMonitor(progressListener));
     }
 
@@ -157,7 +157,7 @@ public class GitServiceImpl implements GitService {
     @Override
     public GitCommit latestCommit(Flow flow) {
         GitClient client = gitClientInstance(flow);
-        String branch = flow.getContext(GitEnvs.FLOW_GIT_BRANCH.name(), "master");
+        String branch = flow.getEnv(GitEnvs.FLOW_GIT_BRANCH, "master");
 
         try {
             return client.commit(branch);
@@ -167,7 +167,7 @@ public class GitServiceImpl implements GitService {
     }
 
     private void checkRequiredEnv(Flow node) {
-        if (!EnvUtil.hasRequired(node, REQUIRED_ENVS)) {
+        if (!EnvUtil.hasRequiredEnvKey(node, REQUIRED_ENVS)) {
             throw new IllegalParameterException("Missing required env variables");
         }
     }
@@ -229,7 +229,7 @@ public class GitServiceImpl implements GitService {
     private GitClient gitClientInstance(Flow flow) {
         checkRequiredEnv(flow);
 
-        GitSource source = GitSource.valueOf(flow.getContext(GitEnvs.FLOW_GIT_SOURCE.name()));
+        GitSource source = GitSource.valueOf(flow.getEnv(GitEnvs.FLOW_GIT_SOURCE));
         Class<? extends GitClientBuilder> builderClass = clientBuilderType.get(source);
         if (builderClass == null) {
             throw new UnsupportedException(String.format("Git source %s not supported yet", source));

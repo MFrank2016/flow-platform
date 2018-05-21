@@ -75,9 +75,6 @@ public class NodeServiceImpl extends CurrentUser implements NodeService {
     private CacheManager cacheManager;
 
     @Autowired
-    private YmlService ymlService;
-
-    @Autowired
     private Path workspace;
 
     @Autowired
@@ -110,7 +107,7 @@ public class NodeServiceImpl extends CurrentUser implements NodeService {
 
         Node rootFromYml;
         try {
-            rootFromYml = ymlService.build(flow, yml);
+//            rootFromYml = ymlService.build(flow, yml);
         } catch (YmlException e) {
 
             // if yml found before, not save flow error status
@@ -122,11 +119,11 @@ public class NodeServiceImpl extends CurrentUser implements NodeService {
         }
 
         // validate plugin
-        pluginValidation(rootFromYml.getChildren());
+//        pluginValidation(rootFromYml.getChildren());
 
         // persistent flow type node to flow table with env which from yml
-        ymlService.saveOrUpdate(flow, yml);
-        EnvUtil.merge(rootFromYml, flow, true);
+//        ymlService.saveOrUpdate(flow, yml);
+//        EnvUtil.merge(rootFromYml, flow, true);
         updateYmlState(flow, FlowEnvs.YmlStatusValue.FOUND, null);
 
         // reset cache
@@ -138,32 +135,33 @@ public class NodeServiceImpl extends CurrentUser implements NodeService {
 
     @Override
     public Node updateByNodes(final String path, final List<Node> children) {
-        Node flow = find(PathUtil.rootPath(path)).root();
-
-        // validate plugin
-        pluginValidation(children);
-
-        // find exist yml
-        Yml exist = ymlService.get(flow.getPath());
-
-        Node flowForYml = Objects.isNull(exist) ?
-            new Node(flow.getPath(), flow.getName()) :
-            ymlService.build(flow, exist.getFile());
-
-        // set latest children and parse to yml
-        flowForYml.setChildren(children);
-        String ymlFromRoot = ymlService.parse(flowForYml);
-
-        // set YML status to found and update yml
-        ymlService.saveOrUpdate(flow, ymlFromRoot);
-//        flowDao.update(flow);
-        updateYmlState(flow, FlowEnvs.YmlStatusValue.FOUND, null);
-
-        // reset cache
-        getTreeCache().evict(flow.getPath());
-
-        //retry find flow
-        return find(PathUtil.rootPath(path)).root();
+//        Node flow = find(PathUtil.rootPath(path)).root();
+//
+//        // validate plugin
+//        pluginValidation(children);
+//
+//        // find exist yml
+//        Yml exist = ymlService.get(flow.getPath());
+//
+//        Node flowForYml = Objects.isNull(exist) ?
+//            new Node(flow.getPath(), flow.getName()) :
+//            ymlService.build(flow, exist.getFile());
+//
+//        // set latest children and parse to yml
+//        flowForYml.setChildren(children);
+//        String ymlFromRoot = ymlService.parse(flowForYml);
+//
+//        // set YML status to found and update yml
+//        ymlService.saveOrUpdate(flow, ymlFromRoot);
+////        flowDao.update(flow);
+//        updateYmlState(flow, FlowEnvs.YmlStatusValue.FOUND, null);
+//
+//        // reset cache
+//        getTreeCache().evict(flow.getPath());
+//
+//        //retry find flow
+//        return find(PathUtil.rootPath(path)).root();
+        return null;
     }
 
     @Override
@@ -194,7 +192,7 @@ public class NodeServiceImpl extends CurrentUser implements NodeService {
 //        flowDao.delete(flow);
 
         // delete related yml storage
-        ymlService.delete(flow);
+//        ymlService.delete(flow);
 
         // delete local flow folder
         Path flowWorkspace = NodeUtil.workspacePath(workspace, flow);
@@ -202,7 +200,7 @@ public class NodeServiceImpl extends CurrentUser implements NodeService {
         getTreeCache().evict(rootPath);
 
         // stop yml loading tasks
-        ymlService.stopLoad(flow);
+//        ymlService.stopLoad(flow);
         return flow;
     }
 
@@ -343,7 +341,7 @@ public class NodeServiceImpl extends CurrentUser implements NodeService {
         // load tree from tree cache
         NodeTree tree = getTreeCache().get(rootPath, () -> {
 
-            Yml ymlStorage = ymlService.get(rootPath);
+//            Yml ymlStorage = ymlService.get(rootPath);
 //            Node flow = flowDao.get(path);
 
             try {

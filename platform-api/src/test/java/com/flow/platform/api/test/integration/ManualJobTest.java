@@ -21,6 +21,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 
+import com.flow.platform.api.domain.Flow;
 import com.flow.platform.api.domain.job.Job;
 import com.flow.platform.api.domain.job.JobCategory;
 import com.flow.platform.api.domain.job.JobStatus;
@@ -49,8 +50,7 @@ public class ManualJobTest extends TestBase {
     @Test
     public void should_manual_create_job_with_failure_since_unable_to_create_session() throws Throwable {
         // given: flow
-        Node flow = nodeService.createEmptyFlow("manual_flow_test");
-        setFlowToReady(flow);
+        Flow flow = flowService.save("manual_flow_test");
 
         Map<String, String> env = new HashMap<>();
         env.put(GitEnvs.FLOW_GIT_SOURCE.name(), GitSource.UNDEFINED_SSH.name());
@@ -59,11 +59,11 @@ public class ManualJobTest extends TestBase {
         envService.save(flow, env, false);
 
         String content = getResourceContent("yml/for_manual_job_test.yml");
-        Node yml = nodeService.updateByYml(flow.getPath(), content);
+        Node yml = nodeService.updateByYml(flow.getName(), content);
 
         // when: manual start job
         Map<String, String> envs = EnvUtil.build(GitEnvs.FLOW_GIT_BRANCH.name(), "master");
-        Job created = jobService.createFromFlowYml(flow.getPath(), JobCategory.MANUAL, envs, currentUser.get());
+        Job created = jobService.create(flow, JobCategory.MANUAL, envs, currentUser.get());
 
 
         // then: verify job

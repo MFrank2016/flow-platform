@@ -57,8 +57,9 @@ public class FlowServiceImpl extends CurrentUser implements FlowService {
             throw new DuplicateExeption("The flow name is duplicated");
         }
 
-        User user = currentUser();
         exist = new Flow(name);
+
+        User user = currentUser();
         exist.setCreatedBy(user.getEmail());
         userFlowService.assign(user, exist);
 
@@ -115,7 +116,7 @@ public class FlowServiceImpl extends CurrentUser implements FlowService {
     @Override
     public Flow merge(String flowName, Map<String, String> newContext) {
         Flow flow = find(flowName);
-        EnvUtil.merge(newContext, flow.getContext(), true);
+        EnvUtil.merge(newContext, flow.getEnvs(), true);
 
         flowDao.update(flow);
         return flow;
@@ -126,7 +127,7 @@ public class FlowServiceImpl extends CurrentUser implements FlowService {
         Flow flow = find(flowName);
 
         for (String key : keys) {
-            flow.getContext().remove(key);
+            flow.removeEnv(key);
         }
 
         flowDao.update(flow);

@@ -16,12 +16,13 @@
 
 package com.flow.platform.api.service.node;
 
-import com.flow.platform.api.domain.node.Node;
+import com.flow.platform.api.domain.Flow;
 import com.flow.platform.api.envs.EnvKey;
+import com.flow.platform.api.envs.EnvUtil;
 import com.flow.platform.api.envs.FlowEnvs;
 import com.flow.platform.api.service.job.JobService;
 import com.flow.platform.api.service.user.UserService;
-import com.flow.platform.api.envs.EnvUtil;
+import com.flow.platform.api.service.v1.FlowService;
 import com.flow.platform.core.exception.IllegalParameterException;
 import com.flow.platform.core.exception.IllegalStatusException;
 import com.google.common.collect.ImmutableSet;
@@ -51,7 +52,9 @@ import org.springframework.stereotype.Service;
 public class NodeCrontabServiceImpl implements NodeCrontabService {
 
     private final static Set<EnvKey> CRONTAB_REQUIRED_ENVS = ImmutableSet.of(
-        FlowEnvs.FLOW_TASK_CRONTAB_BRANCH, FlowEnvs.FLOW_TASK_CRONTAB_CONTENT);
+        FlowEnvs.FLOW_TASK_CRONTAB_BRANCH,
+        FlowEnvs.FLOW_TASK_CRONTAB_CONTENT
+    );
 
     @Autowired
     private Scheduler quartzScheduler;
@@ -63,7 +66,7 @@ public class NodeCrontabServiceImpl implements NodeCrontabService {
     private JobService jobService;
 
     @Autowired
-    private NodeService nodeService;
+    private FlowService flowService;
 
     @Autowired
     private UserService userService;
@@ -74,8 +77,8 @@ public class NodeCrontabServiceImpl implements NodeCrontabService {
     @PostConstruct
     public void initCrontabTask() {
         taskExecutor.execute(() -> {
-            List<Node> flows = nodeService.listFlows(false);
-            for (Node flow : flows) {
+            List<Flow> flows = flowService.list(false);
+            for (Flow flow : flows) {
                 try {
                     set(flow);
                 } catch (Throwable ignore) {
@@ -103,13 +106,13 @@ public class NodeCrontabServiceImpl implements NodeCrontabService {
     }
 
     @Override
-    public void set(Node node) {
-        if (!EnvUtil.hasRequiredEnvKey(node, CRONTAB_REQUIRED_ENVS)) {
+    public void set(Flow flow) {
+        if (!EnvUtil.hasRequiredEnvKey(flow, CRONTAB_REQUIRED_ENVS)) {
             throw new IllegalParameterException("Missing crontab setting env variables");
         }
 
-        final String branch = node.getEnv(FlowEnvs.FLOW_TASK_CRONTAB_BRANCH);
-        final String crontab = node.getEnv(FlowEnvs.FLOW_TASK_CRONTAB_CONTENT);
+        final String branch = flow.getEnv(FlowEnvs.FLOW_TASK_CRONTAB_BRANCH);
+        final String crontab = flow.getEnv(FlowEnvs.FLOW_TASK_CRONTAB_CONTENT);
 
         // init and verify cron expression
         CronScheduleBuilder cronSchedule;
@@ -131,14 +134,14 @@ public class NodeCrontabServiceImpl implements NodeCrontabService {
         // create data map
         JobDataMap dataMap = new JobDataMap();
         dataMap.put("jobService", jobService);
-        dataMap.put("nodeService", nodeService);
+        dataMap.put("flowService", flowService);
         dataMap.put("userService", userService);
         dataMap.put(KEY_BRANCH, branch);
-        dataMap.put(KEY_NODE_PATH, node.getPath());
+        dataMap.put(KEY_NODE_PATH, flow.getName());
 
         // init crontab trigger
         CronTrigger cronTrigger = TriggerBuilder.newTrigger()
-            .withIdentity(node.getPath())
+            .withIdentity(flow.getName())
             .withSchedule(cronSchedule)
             .usingJobData(dataMap)
             .forJob(nodeCrontabDetail)
@@ -153,9 +156,9 @@ public class NodeCrontabServiceImpl implements NodeCrontabService {
     }
 
     @Override
-    public void delete(Node node) {
+    public void delete(Flow flow) {
         try {
-            quartzScheduler.unscheduleJob(new TriggerKey(node.getPath()));
+            quartzScheduler.unscheduleJob(new TriggerKey(flow.getName()));
         } catch (SchedulerException e) {
             throw new IllegalStatusException(e.getMessage());
         }

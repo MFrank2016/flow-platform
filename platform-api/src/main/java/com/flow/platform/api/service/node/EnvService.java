@@ -16,6 +16,7 @@
 
 package com.flow.platform.api.service.node;
 
+import com.flow.platform.api.domain.Flow;
 import com.flow.platform.api.domain.node.Node;
 import java.util.Map;
 import java.util.Set;
@@ -28,25 +29,25 @@ public interface EnvService {
     /**
      * List all available env variable
      *
-     * @param node target node
+     * @param flow target node
      * @param editable is get editable or none editable env list
      */
-    Map<String, String> list(Node node, boolean editable);
+    Map<String, String> list(Flow flow, boolean editable);
 
     /**
      * Add env variables to node
-     * @param node target node
+     * @param flow target node
      * @param envs env variables to add
      * @param verify is verify according to EnvKey properties
      */
-    void save(Node node, Map<String, String> envs, boolean verify);
+    void save(Flow flow, Map<String, String> envs, boolean verify);
 
     /**
      * Del env variables from node
-     * @param node target node
+     * @param flow target node
      * @param keys env variables to delete
      * @param verify is verify according to EnvKey properties
      */
-    void delete(Node node, Set<String> keys, boolean verify);
+    void delete(Flow flow, Set<String> keys, boolean verify);
 
 }

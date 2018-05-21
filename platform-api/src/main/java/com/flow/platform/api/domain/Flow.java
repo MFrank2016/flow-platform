@@ -16,13 +16,9 @@
 
 package com.flow.platform.api.domain;
 
-import com.flow.platform.domain.Jsonable;
 import com.flow.platform.tree.NodePath;
 import com.google.gson.annotations.Expose;
 import java.time.ZonedDateTime;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -35,21 +31,13 @@ import lombok.ToString;
 @NoArgsConstructor
 @ToString(of = {"name"})
 @EqualsAndHashCode(of = {"name"}, callSuper = false)
-public final class Flow extends Jsonable {
+public final class Flow extends EnvObject {
 
     /**
      * Unique name of flow
      */
     @Expose
     private String name;
-
-    /**
-     * User defined context
-     */
-    @Expose
-    @Getter
-    @Setter
-    private Map<String, String> context = new HashMap<>(10);
 
     @Expose
     @Getter
@@ -76,22 +64,5 @@ public final class Flow extends Jsonable {
 
     public void setName(String name) {
         this.name = NodePath.create(name).toString();
-    }
-
-    public String getContext(String key) {
-        return context.get(key);
-    }
-
-    public String getContext(String key, String defaultVal) {
-        String val = context.get(key);
-        return Objects.isNull(val) ? defaultVal : val;
-    }
-
-    public void putContext(String key, String val) {
-        context.put(key, val);
-    }
-
-    public void removeContext(String key) {
-        context.remove(key);
     }
 }

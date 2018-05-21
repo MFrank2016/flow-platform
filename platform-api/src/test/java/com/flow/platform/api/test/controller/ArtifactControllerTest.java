@@ -4,6 +4,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 
 import com.flow.platform.api.domain.Artifact;
+import com.flow.platform.api.domain.Flow;
 import com.flow.platform.api.domain.job.Job;
 import com.flow.platform.api.domain.job.JobCategory;
 import com.flow.platform.api.domain.node.Node;
@@ -26,8 +27,8 @@ public class ArtifactControllerTest extends TestBase {
     @Before
     public void before_action() throws IOException {
         stubDemo();
-        Node rootForFlow = createRootFlow("flow", "yml/flow.yaml");
-        job = jobService.createFromFlowYml(rootForFlow.getPath(), JobCategory.MANUAL, null, mockUser);
+        Flow flow = createRootFlow("flow", "yml/flow.yaml");
+        job = jobService.create(flow, JobCategory.MANUAL, null, mockUser);
         job.putEnv(GitEnvs.FLOW_GIT_BRANCH, "master");
         jobDao.update(job);
     }

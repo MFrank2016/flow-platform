@@ -16,6 +16,7 @@
 
 package com.flow.platform.api.test.envs;
 
+import com.flow.platform.api.domain.Flow;
 import com.flow.platform.api.domain.node.Node;
 import com.flow.platform.api.envs.EnvKey;
 import com.flow.platform.api.envs.FlowEnvs;
@@ -51,7 +52,7 @@ public class FlowCrontabEnvHandlerTest extends TestBase {
     @Test
     public void should_handle_crontab_variable() throws Throwable {
         // given:
-        Node node = new Node("flow", "flow");
+        Flow node = new Flow("flow");
 
         // should handle cron to execute twice 5am and 5pm daily
         node.putEnv(FlowEnvs.FLOW_TASK_CRONTAB_CONTENT, "0 5,17 * * *");
@@ -74,16 +75,16 @@ public class FlowCrontabEnvHandlerTest extends TestBase {
 
     @Test(expected = IllegalParameterException.class)
     public void should_raise_exception_when_cron_format_illegal() throws Throwable {
-        Node node = new Node("flow", "flow");
-        node.putEnv(FlowEnvs.FLOW_TASK_CRONTAB_CONTENT, "* * * * * ?");
+        Flow flow = new Flow("flow");
+        flow.putEnv(FlowEnvs.FLOW_TASK_CRONTAB_CONTENT, "* * * * * ?");
 
         EnvHandler envHandler = handlerMap.get(FlowEnvs.FLOW_TASK_CRONTAB_CONTENT);
-        envHandler.handle(node);
+        envHandler.handle(flow);
     }
 
     @Test(expected = IllegalParameterException.class)
     public void should_raise_exception_when_missing_dependent_env_var() throws Throwable {
-        Node node = new Node("flow", "flow");
+        Flow node = new Flow("flow");
         node.putEnv(FlowEnvs.FLOW_TASK_CRONTAB_CONTENT, "* * * * *");
 
         EnvHandler envHandler = handlerMap.get(FlowEnvs.FLOW_TASK_CRONTAB_CONTENT);

@@ -16,7 +16,7 @@
 
 package com.flow.platform.api.service.node;
 
-import com.flow.platform.api.domain.node.Node;
+import com.flow.platform.api.domain.Flow;
 import com.flow.platform.core.context.ContextEvent;
 import java.util.List;
 import org.quartz.Trigger;
@@ -33,12 +33,12 @@ public interface NodeCrontabService extends ContextEvent {
     /**
      * Set crontab task for node
      */
-    void set(Node node);
+    void set(Flow flow);
 
     /**
      * Delete crontab task for node
      */
-    void delete(Node node);
+    void delete(Flow flow);
 
     /**
      * List current triggers

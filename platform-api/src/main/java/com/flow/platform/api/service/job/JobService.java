@@ -16,6 +16,8 @@
 package com.flow.platform.api.service.job;
 
 import com.flow.platform.api.domain.CmdCallbackQueueItem;
+import com.flow.platform.api.domain.Flow;
+import com.flow.platform.api.domain.FlowYml;
 import com.flow.platform.api.domain.job.Job;
 import com.flow.platform.api.domain.job.JobCategory;
 import com.flow.platform.api.domain.job.JobStatus;
@@ -40,11 +42,9 @@ public interface JobService {
     /**
      * Required env variable envs for create job
      */
-    Set<EnvKey> REQUIRED_ENVS = ImmutableSet.of(
-        FlowEnvs.FLOW_STATUS,
-        FlowEnvs.FLOW_YML_STATUS,
-        GitEnvs.FLOW_GIT_URL,
-        GitEnvs.FLOW_GIT_SOURCE
+    Set<String> REQUIRED_ENVS = ImmutableSet.of(
+        GitEnvs.FLOW_GIT_URL.name(),
+        GitEnvs.FLOW_GIT_SOURCE.name()
     );
 
     /**
@@ -52,7 +52,7 @@ public interface JobService {
      *
      * @return job with children node result
      */
-    Job find(String path, Long number);
+    Job find(String flowName, Long number);
 
     /**
      * Find by job id
@@ -87,24 +87,9 @@ public interface JobService {
     Page<Job> list(List<String> paths, boolean latestOnly, Pageable pageable);
 
     /**
-     * Create job by yml which from flow
+     * Create job by flow yml
      */
-    Job createFromFlowYml(String path, JobCategory eventType, Map<String, String> envs, User creator);
-
-    /**
-     * Create job after loading yml from git repo, in async mode
-     *
-     * @param path any node path
-     * @param eventType the trigger type
-     * @param envs the input environment variables
-     * @param creator the user who create job
-     * @param onJobCreated callback
-     */
-    void createWithYmlLoad(String path,
-                           JobCategory eventType,
-                           Map<String, String> envs,
-                           User creator,
-                           Consumer<Job> onJobCreated);
+    Job create(Flow flow, JobCategory eventType, Map<String, String> envs, User creator);
 
     /**
      * Process cmd callback from queue

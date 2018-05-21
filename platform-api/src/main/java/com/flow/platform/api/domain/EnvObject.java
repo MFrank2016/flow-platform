@@ -79,6 +79,10 @@ public class EnvObject extends Jsonable {
         return value == null ? defaultValue : value;
     }
 
+    public void putEnv(String key, String value) {
+        envs.put(key, value);
+    }
+
     public void putEnv(EnvKey key, EnvValue value) {
         envs.put(key.name(), value.value());
     }

@@ -18,6 +18,7 @@ package com.flow.platform.api.envs.handler;
 
 import static com.flow.platform.api.envs.GitEnvs.FLOW_GIT_CREDENTIAL;
 
+import com.flow.platform.api.domain.Flow;
 import com.flow.platform.api.domain.node.Node;
 import com.flow.platform.api.envs.EnvKey;
 import com.flow.platform.api.envs.GitEnvs;
@@ -47,16 +48,16 @@ public class FlowCredentialEnvHandler extends EnvHandler {
     }
 
     @Override
-    void onHandle(Node node, String value) {
+    void onHandle(Flow flow, String value) {
         Map<String, String> credentialEnvs = credentialService.findByName(value);
-        node.putAll(credentialEnvs);
+        flow.putAll(credentialEnvs);
     }
 
     @Override
-    void onUnHandle(Node node, String value) {
-        node.removeEnv(GitEnvs.FLOW_GIT_SSH_PUBLIC_KEY);
-        node.removeEnv(GitEnvs.FLOW_GIT_SSH_PRIVATE_KEY);
-        node.removeEnv(GitEnvs.FLOW_GIT_HTTP_USER);
-        node.removeEnv(GitEnvs.FLOW_GIT_HTTP_PASS);
+    void onUnHandle(Flow flow, String value) {
+        flow.removeEnv(GitEnvs.FLOW_GIT_SSH_PUBLIC_KEY);
+        flow.removeEnv(GitEnvs.FLOW_GIT_SSH_PRIVATE_KEY);
+        flow.removeEnv(GitEnvs.FLOW_GIT_HTTP_USER);
+        flow.removeEnv(GitEnvs.FLOW_GIT_HTTP_PASS);
     }
 }

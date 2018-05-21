@@ -23,7 +23,7 @@ import static com.flow.platform.api.envs.GitEnvs.FLOW_GIT_BRANCH;
 import static com.flow.platform.api.envs.GitEnvs.FLOW_GIT_WEBHOOK;
 import static junit.framework.TestCase.fail;
 
-import com.flow.platform.api.domain.node.Node;
+import com.flow.platform.api.domain.Flow;
 import com.flow.platform.api.envs.EnvUtil;
 import com.flow.platform.api.envs.FlowEnvs;
 import com.flow.platform.api.test.TestBase;
@@ -44,7 +44,7 @@ public class EnvServiceTest extends TestBase {
     public void should_raise_exception_when_save_readonly_env() {
         Assert.assertTrue(FlowEnvs.FLOW_STATUS.isReadonly());
 
-        Node mock = new Node("flow", "flow");
+        Flow mock = new Flow("flow");
         envService.save(mock, EnvUtil.build(FlowEnvs.FLOW_STATUS.name(), "Hello"), true);
     }
 
@@ -52,14 +52,14 @@ public class EnvServiceTest extends TestBase {
     public void should_raise_exception_when_delete_readonly_env() {
         Assert.assertTrue(FlowEnvs.FLOW_STATUS.isReadonly());
 
-        Node mock = new Node("flow", "flow");
+        Flow mock = new Flow("flow");
         envService.delete(mock, Sets.newHashSet(FlowEnvs.FLOW_STATUS.name()), true);
     }
 
     @Test
     public void should_env_not_changed_when_env_handler_has_exception() {
         // given:
-        Node node = nodeService.createEmptyFlow("flow");
+        Flow node = flowService.save("flow");
 
         // when: save env variable with error
         Map<String, String> envs = new HashMap<>(2);
@@ -82,22 +82,22 @@ public class EnvServiceTest extends TestBase {
     @Test
     public void should_list_env() {
         // given:
-        Node node = nodeService.createEmptyFlow("flow");
-        node.putEnv(FLOW_ENV_OUTPUT_PREFIX, "hello");
-        node.putEnv(FLOW_GIT_BRANCH, "master");
-        envService.save(node, node.getEnvs(), false);
+        Flow flow = flowService.save("flow");
+        flow.putEnv(FLOW_ENV_OUTPUT_PREFIX, "hello");
+        flow.putEnv(FLOW_GIT_BRANCH, "master");
+        envService.save(flow, flow.getEnvs(), false);
 
         // when: list editable only which from copied node envs
-        Map<String, String> editable = envService.list(node, true);
+        Map<String, String> editable = envService.list(flow, true);
         Assert.assertEquals(2, editable.size());
         Assert.assertFalse(editable.containsKey(FLOW_STATUS.name()));
 
         // then: check the flow actual envs size
-        Node flow = nodeService.find(node.getPath()).root();
+        flow = flowService.find(flow.getName());
         Assert.assertEquals(11, flow.getEnvs().size());
 
         // when: list none editable only which from copied node envs
-        Map<String, String> noneEditable = envService.list(node, false);
+        Map<String, String> noneEditable = envService.list(flow, false);
         Assert.assertEquals(9, noneEditable.size());
         Assert.assertTrue(noneEditable.containsKey(FLOW_STATUS.name()));
         Assert.assertTrue(noneEditable.containsKey(FLOW_YML_STATUS.name()));

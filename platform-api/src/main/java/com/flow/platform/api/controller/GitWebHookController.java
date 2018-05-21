@@ -17,6 +17,7 @@
 package com.flow.platform.api.controller;
 
 import com.flow.platform.api.config.AppConfig;
+import com.flow.platform.api.domain.Flow;
 import com.flow.platform.api.domain.job.Job;
 import com.flow.platform.api.domain.job.JobCategory;
 import com.flow.platform.api.domain.node.Node;
@@ -26,6 +27,7 @@ import com.flow.platform.api.envs.GitToggleEnvs;
 import com.flow.platform.api.git.GitEventEnvConverter;
 import com.flow.platform.api.git.GitWebhookTriggerFinishEvent;
 import com.flow.platform.api.service.job.JobService;
+import com.flow.platform.api.service.v1.FlowService;
 import com.flow.platform.core.exception.FlowException;
 import com.flow.platform.core.exception.IllegalStatusException;
 import com.flow.platform.domain.Jsonable;
@@ -62,6 +64,9 @@ public class GitWebHookController extends NodeController {
     private final static String SKIP_SIGNAL = "[skip]";
 
     @Autowired
+    private FlowService flowService;
+
+    @Autowired
     private JobService jobService;
 
     @Autowired
@@ -69,7 +74,6 @@ public class GitWebHookController extends NodeController {
 
     @PostMapping(path = "/{root}")
     public void onEventReceived(@RequestHeader HttpHeaders headers, HttpServletRequest request) {
-        final String path = flowName.get();
         Map<String, String> headerAsMap = headers.toSingleValueMap();
 
         String body;
@@ -82,7 +86,9 @@ public class GitWebHookController extends NodeController {
 
         try {
             final GitEvent hookEvent = GitHookEventFactory.build(headerAsMap, body);
-            Node flow = nodeService.find(path).root();
+
+            Flow flow = flowService.find(flowName.get());
+
             // extract git related env variables from event, and temporary set to node for git loading
             final Map<String, String> gitEnvs = GitEventEnvConverter.convert(hookEvent);
 
@@ -102,7 +108,7 @@ public class GitWebHookController extends NodeController {
             // get user email from git event
             User user = new User(hookEvent.getUserEmail(), StringUtil.EMPTY, StringUtil.EMPTY);
             JobCategory jobCategory = GitEventEnvConverter.convert(hookEvent.getType());
-            Job newJob = jobService.createFromFlowYml(path, jobCategory, gitEnvs, user);
+            Job newJob = jobService.create(flow, jobCategory, gitEnvs, user);
             applicationEventPublisher.publishEvent(new GitWebhookTriggerFinishEvent(newJob));
 
         } catch (GitException | FlowException e) {
@@ -110,7 +116,7 @@ public class GitWebHookController extends NodeController {
         }
     }
 
-    private boolean canExecuteGitEvent(Node flow, Map<String, String> gitEnvs) {
+    private boolean canExecuteGitEvent(Flow flow, Map<String, String> gitEnvs) {
         String gitEventType = gitEnvs.get(GitEnvs.FLOW_GIT_EVENT_TYPE.name());
         String gitBranch = gitEnvs.get(GitEnvs.FLOW_GIT_BRANCH.name());
 

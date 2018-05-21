@@ -66,11 +66,11 @@ public class FlowDaoTest extends TestBase {
     public void should_update_success(){
         Assert.assertEquals(1, flowDao.list().size());
 
-        flow.getContext().put("FLOW_1", "hello");
+        flow.putEnv("FLOW_1", "hello");
         flowDao.update(flow);
 
         Flow flowCp = flowDao.get(flow.getName());
-        Assert.assertEquals("hello", flowCp.getContext().get("FLOW_1"));
+        Assert.assertEquals("hello", flowCp.getEnv("FLOW_1"));
     }
 
     @Test

@@ -17,6 +17,7 @@
 package com.flow.platform.api.domain;
 
 import com.flow.platform.util.StringUtil;
+import java.util.Objects;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -46,5 +47,9 @@ public class FlowYml {
     public FlowYml(String name, String content) {
         this.name = name;
         this.content = content;
+    }
+
+    public boolean isEmpty() {
+        return Objects.isNull(content) || content.isEmpty();
     }
 }

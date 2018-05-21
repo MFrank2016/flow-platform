@@ -17,6 +17,7 @@
 package com.flow.platform.api.service;
 
 import com.flow.platform.api.domain.Flow;
+import com.flow.platform.api.envs.EnvKey;
 import com.flow.platform.api.envs.GitEnvs;
 import com.flow.platform.util.git.GitException;
 import com.flow.platform.util.git.model.GitCommit;
@@ -35,9 +36,9 @@ public interface GitService {
     // the folder in the flow workspace
     String SOURCE_FOLDER_NAME = "source";
 
-    Set<String> REQUIRED_ENVS = ImmutableSet.of(
-        GitEnvs.FLOW_GIT_URL.name(),
-        GitEnvs.FLOW_GIT_SOURCE.name()
+    Set<EnvKey> REQUIRED_ENVS = ImmutableSet.of(
+        GitEnvs.FLOW_GIT_URL,
+        GitEnvs.FLOW_GIT_SOURCE
     );
 
     interface ProgressListener {

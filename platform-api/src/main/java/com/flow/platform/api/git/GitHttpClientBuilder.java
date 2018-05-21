@@ -22,6 +22,7 @@ import com.flow.platform.util.StringUtil;
 import com.flow.platform.util.git.GitClient;
 import com.flow.platform.util.git.GitHttpClient;
 import java.nio.file.Path;
+import java.util.Objects;
 
 /**
  * @author yang
@@ -34,17 +35,17 @@ public class GitHttpClientBuilder extends GitClientBuilder {
 
     public GitHttpClientBuilder(Flow flow, Path sourceFolder) {
         super(flow, sourceFolder);
-        user = flow.getContext(GitEnvs.FLOW_GIT_HTTP_USER.name());
-        pass = flow.getContext(GitEnvs.FLOW_GIT_HTTP_PASS.name());
+        user = flow.getEnv(GitEnvs.FLOW_GIT_HTTP_USER);
+        pass = flow.getEnv(GitEnvs.FLOW_GIT_HTTP_PASS);
     }
 
     @Override
     public GitClient build() {
-        if (user == null) {
+        if (Objects.isNull(user)) {
             user = StringUtil.EMPTY;
         }
 
-        if (pass == null) {
+        if (Objects.isNull(pass)) {
             pass = StringUtil.EMPTY;
         }
 

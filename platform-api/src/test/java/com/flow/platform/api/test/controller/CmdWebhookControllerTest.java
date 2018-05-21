@@ -22,6 +22,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 
 import com.flow.platform.api.consumer.JobStatusEventConsumer;
 import com.flow.platform.api.domain.CmdCallbackQueueItem;
+import com.flow.platform.api.domain.Flow;
 import com.flow.platform.api.domain.job.Job;
 import com.flow.platform.api.domain.job.JobCategory;
 import com.flow.platform.api.domain.job.JobStatus;
@@ -76,8 +77,8 @@ public class CmdWebhookControllerTest extends TestBase {
     @Test
     public void should_callback_session_success() throws Throwable {
         // given: flow with two steps , step1 and step2
-        final Node rootForFlow = createRootFlow("flow1", "yml/demo_flow.yaml");
-        final Job job = jobService.createFromFlowYml(rootForFlow.getPath(), JobCategory.PR, null, mockUser);
+        final Flow flow = createRootFlow("flow1", "yml/demo_flow.yaml");
+        final Job job = jobService.create(flow, JobCategory.PR, null, mockUser);
         final CountDownLatch runningLatch = createCountDownForJobStatusChange(job, JobStatus.RUNNING, 1);
 
         // when: create session
@@ -173,8 +174,8 @@ public class CmdWebhookControllerTest extends TestBase {
     @Test
     public void should_callback_with_timeout() throws Throwable {
         // given: job and listener
-        final Node rootForFlow = createRootFlow("flow1", "yml/demo_flow.yaml");
-        final Job job = jobService.createFromFlowYml(rootForFlow.getPath(), JobCategory.PR, null, mockUser);
+        final Flow rootForFlow = createRootFlow("flow1", "yml/demo_flow.yaml");
+        final Job job = jobService.create(rootForFlow, JobCategory.PR, null, mockUser);
 
         NodeTree nodeTree = nodeService.find("flow1");
         Node step2 = nodeTree.find("flow1/step2");
@@ -217,8 +218,8 @@ public class CmdWebhookControllerTest extends TestBase {
 
     @Test
     public void should_callback_with_timeout_but_allow_failure() throws Throwable {
-        final Node rootForFlow = createRootFlow("flow1", "yml/demo_flow1.yaml");
-        final Job job = jobService.createFromFlowYml(rootForFlow.getPath(), JobCategory.PR, null, mockUser);
+        final Flow rootForFlow = createRootFlow("flow1", "yml/demo_flow1.yaml");
+        final Job job = jobService.create(rootForFlow, JobCategory.PR, null, mockUser);
 
         // when: create session
         Cmd cmd = new Cmd("default", null, CmdType.CREATE_SESSION, null);

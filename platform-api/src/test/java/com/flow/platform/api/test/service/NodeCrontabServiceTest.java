@@ -16,9 +16,9 @@
 
 package com.flow.platform.api.test.service;
 
+import com.flow.platform.api.domain.Flow;
 import com.flow.platform.api.domain.job.Job;
 import com.flow.platform.api.domain.job.JobCategory;
-import com.flow.platform.api.domain.node.Node;
 import com.flow.platform.api.envs.FlowEnvs;
 import com.flow.platform.api.service.node.NodeCrontabService;
 import com.flow.platform.api.test.TestBase;
@@ -48,7 +48,7 @@ public class NodeCrontabServiceTest extends TestBase {
     @Test
     public void should_start_job_when_set_crontab_for_flow() throws Throwable {
         // given: flow and set crontab
-        Node flow = createRootFlow("FirstFlow", "yml/demo_flow.yaml");
+        Flow flow = createRootFlow("FirstFlow", "yml/demo_flow.yaml");
 
         Map<String, String> envs = new HashMap<>();
         envs.put(FlowEnvs.FLOW_TASK_CRONTAB_BRANCH.name(), "master");
@@ -63,7 +63,7 @@ public class NodeCrontabServiceTest extends TestBase {
 
         // then: job should be created
         Assert.assertEquals(1, flowCrontabService.triggers().size());
-        Job job = jobService.find(flow.getPath(), 1L);
+        Job job = jobService.find(flow.getName(), 1L);
         Assert.assertEquals(JobCategory.SCHEDULER, job.getCategory());
         Assert.assertEquals("master", job.getEnv(FlowEnvs.FLOW_TASK_CRONTAB_BRANCH));
         Assert.assertEquals("0/1 * * * ?", job.getEnv(FlowEnvs.FLOW_TASK_CRONTAB_CONTENT));

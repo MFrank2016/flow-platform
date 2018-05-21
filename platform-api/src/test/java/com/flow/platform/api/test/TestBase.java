@@ -40,18 +40,15 @@ import com.flow.platform.api.dao.user.RoleDao;
 import com.flow.platform.api.dao.user.UserDao;
 import com.flow.platform.api.dao.user.UserFlowDao;
 import com.flow.platform.api.dao.user.UserRoleDao;
+import com.flow.platform.api.domain.Flow;
 import com.flow.platform.api.domain.job.Job;
 import com.flow.platform.api.domain.job.JobCategory;
 import com.flow.platform.api.domain.job.JobStatus;
 import com.flow.platform.api.domain.job.NodeResult;
 import com.flow.platform.api.domain.job.NodeStatus;
 import com.flow.platform.api.domain.job.NodeTag;
-import com.flow.platform.api.domain.node.Node;
 import com.flow.platform.api.domain.node.NodeTree;
 import com.flow.platform.api.domain.user.User;
-import com.flow.platform.api.envs.FlowEnvs;
-import com.flow.platform.api.envs.FlowEnvs.StatusValue;
-import com.flow.platform.api.envs.FlowEnvs.YmlStatusValue;
 import com.flow.platform.api.envs.GitEnvs;
 import com.flow.platform.api.envs.JobEnvs;
 import com.flow.platform.api.initializers.Initializer;
@@ -61,6 +58,7 @@ import com.flow.platform.api.service.job.JobService;
 import com.flow.platform.api.service.job.NodeResultService;
 import com.flow.platform.api.service.node.EnvService;
 import com.flow.platform.api.service.node.NodeService;
+import com.flow.platform.api.service.v1.FlowService;
 import com.flow.platform.domain.Cmd;
 import com.flow.platform.util.git.model.GitSource;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
@@ -73,7 +71,6 @@ import java.net.URL;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 import org.junit.After;
 import org.junit.AfterClass;
@@ -146,6 +143,9 @@ public abstract class TestBase {
 
     @Autowired
     protected NodeService nodeService;
+
+    @Autowired
+    protected FlowService flowService;
 
     @Autowired
     protected EnvService envService;
@@ -239,24 +239,16 @@ public abstract class TestBase {
         return Files.toString(path, AppConfig.DEFAULT_CHARSET);
     }
 
-    public Node createRootFlow(String flowName, String ymlResourceName) throws IOException {
-        Node emptyFlow = nodeService.createEmptyFlow(flowName);
-        setFlowToReady(emptyFlow);
+    public Flow createRootFlow(String flowName, String ymlResourceName) throws IOException {
+        Flow flow = flowService.save(flowName);
         String yml = getResourceContent(ymlResourceName);
-        setRequiredJobEnvsForFlow(emptyFlow);
-        return nodeService.updateByYml(emptyFlow.getPath(), yml);
+        setRequiredJobEnvsForFlow(flow);
+        flowService.updateYml(flowName, yml);
+        return flow;
     }
 
-    public void setFlowToReady(Node flowNode) {
-        Map<String, String> envs = new HashMap<>();
-        envs.put(FlowEnvs.FLOW_STATUS.name(), FlowEnvs.StatusValue.READY.value());
-        envService.save(flowNode, envs, false);
-    }
-
-    public void setRequiredJobEnvsForFlow(Node flow) throws IOException {
+    protected void setRequiredJobEnvsForFlow(Flow flow) throws IOException {
         HashMap<String, String> envs = new HashMap<>();
-        envs.put(FlowEnvs.FLOW_STATUS.name(), StatusValue.READY.value());
-        envs.put(FlowEnvs.FLOW_YML_STATUS.name(), YmlStatusValue.FOUND.value());
         envs.put(GitEnvs.FLOW_GIT_URL.name(), TestBase.GITHUB_TEST_REPO_SSH);
         envs.put(GitEnvs.FLOW_GIT_SOURCE.name(), GitSource.UNDEFINED_SSH.name());
         envs.put(GitEnvs.FLOW_GIT_SSH_PRIVATE_KEY.name(), getResourceContent("ssh_private_key"));
@@ -288,11 +280,11 @@ public abstract class TestBase {
             stubFor(
                 get(urlPathEqualTo("/cmd/log/download"))
                     .willReturn(aResponse().withBody(org.apache.commons.io.IOUtils.toByteArray(inputStream))));
-        } catch (Throwable throwable) {
+        } catch (Throwable ignored) {
         }
     }
 
-    public String performRequestWith200Status(MockHttpServletRequestBuilder builder) throws Exception {
+    protected String performRequestWith200Status(MockHttpServletRequestBuilder builder) throws Exception {
         MvcResult result = mockMvc.perform(builder).andExpect(status().isOk()).andReturn();
         return result.getResponse().getContentAsString();
     }
@@ -326,9 +318,11 @@ public abstract class TestBase {
         FileSystemUtils.deleteRecursively(WORKSPACE.toFile());
     }
 
-    protected Job createMockJob(String nodePath) {
+    protected Job createMockJob(String flowName) {
+        Flow flow = flowService.find(flowName);
+
         // create job
-        Job job = jobService.createFromFlowYml(nodePath, JobCategory.TAG, null, mockUser);
+        Job job = jobService.create(flow, JobCategory.TAG, null, mockUser);
         Assert.assertNotNull(job.getId());
         Assert.assertNotNull(job.getSessionId());
         Assert.assertNotNull(job.getNumber());

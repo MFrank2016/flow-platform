@@ -16,6 +16,7 @@
 
 package com.flow.platform.api.envs;
 
+import com.flow.platform.api.domain.EnvObject;
 import com.flow.platform.api.domain.Flow;
 import com.flow.platform.api.domain.node.Node;
 import com.flow.platform.util.CommandUtil.Unix;
@@ -72,13 +73,13 @@ public class EnvUtil {
         }
     }
 
-    public static boolean hasRequired(Node node, Collection<String> requiredEnvSet) {
-        for (String requiredKey : requiredEnvSet) {
-            if (!node.getEnvs().containsKey(requiredKey)) {
+    public static boolean hasRequired(EnvObject obj, Collection<String> requiredEnvKeys) {
+        for (String requiredKey : requiredEnvKeys) {
+            if (!obj.getEnvs().containsKey(requiredKey)) {
                 return false;
             }
 
-            Object requiredValue = node.getEnvs().get(requiredKey);
+            Object requiredValue = obj.getEnvs().get(requiredKey);
             if (requiredValue == null || Strings.isNullOrEmpty(requiredValue.toString().trim())) {
                 return false;
             }
@@ -87,23 +88,8 @@ public class EnvUtil {
         return true;
     }
 
-    public static boolean hasRequired(Flow flow, Collection<String> requiredKeys) {
-        for (String requiredKey : requiredKeys) {
-            if (!flow.getContext().containsKey(requiredKey)) {
-                return false;
-            }
-
-            Object requiredValue = flow.getContext().get(requiredKey);
-            if (Objects.isNull(requiredKey) || Strings.isNullOrEmpty(requiredValue.toString().trim())) {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    public static boolean hasRequiredEnvKey(Node node, Collection<EnvKey> requiredEnvSet) {
-        return hasRequired(node, toString(requiredEnvSet));
+    public static boolean hasRequiredEnvKey(Flow flow, Collection<EnvKey> requiredEnvSet) {
+        return hasRequired(flow, toString(requiredEnvSet));
     }
 
     public static Collection<String> toString(Collection<EnvKey> keySet) {

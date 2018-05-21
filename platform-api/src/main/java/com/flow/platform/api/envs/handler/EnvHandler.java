@@ -16,7 +16,7 @@
 
 package com.flow.platform.api.envs.handler;
 
-import com.flow.platform.api.domain.node.Node;
+import com.flow.platform.api.domain.Flow;
 import com.flow.platform.api.envs.EnvKey;
 import com.flow.platform.core.exception.IllegalParameterException;
 import com.google.common.base.Strings;
@@ -49,10 +49,10 @@ public abstract class EnvHandler {
      * Handle env variable on adding
      *
      * @throws com.flow.platform.core.exception.FlowException
-     * @param node target node
+     * @param flow target node
      */
-    public void handle(final Node node) {
-        String value = node.getEnv(env());
+    public void handle(final Flow flow) {
+        String value = flow.getEnv(env());
 
         // check value is presented in node if it is required
         if (isRequired() && Strings.isNullOrEmpty(value)) {
@@ -64,31 +64,31 @@ public abstract class EnvHandler {
             return;
         }
 
-        checkEnvDependency(node);
+        checkEnvDependency(flow);
 
-        onHandle(node, value);
+        onHandle(flow, value);
     }
 
     /**
      * Handle env variable on delete
      */
-    public void unHandle(final Node node) {
-        checkEnvDependency(node);
+    public void unHandle(final Flow flow) {
+        checkEnvDependency(flow);
 
-        String value = node.getEnv(env());
-        onUnHandle(node, value);
+        String value = flow.getEnv(env());
+        onUnHandle(flow, value);
     }
 
-    private void checkEnvDependency(Node node) {
+    private void checkEnvDependency(Flow flow) {
         // delete dependent envs
         for (EnvKey key : dependents()) {
-            if (Strings.isNullOrEmpty(node.getEnv(key))) {
+            if (Strings.isNullOrEmpty(flow.getEnv(key))) {
                 throw new IllegalParameterException("Dependent value '" + key+ "' is missing");
             }
         }
     }
 
-    abstract void onHandle(Node node, String value);
+    abstract void onHandle(Flow flow, String value);
 
-    abstract void onUnHandle(Node node, String value);
+    abstract void onUnHandle(Flow flow, String value);
 }

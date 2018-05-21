@@ -17,6 +17,7 @@
 package com.flow.platform.api.controller;
 
 import com.flow.platform.api.domain.Artifact;
+import com.flow.platform.api.domain.Flow;
 import com.flow.platform.api.domain.SearchCondition;
 import com.flow.platform.api.domain.job.Job;
 import com.flow.platform.api.domain.job.JobCategory;
@@ -29,6 +30,7 @@ import com.flow.platform.api.service.LogService;
 import com.flow.platform.api.service.job.JobSearchService;
 import com.flow.platform.api.service.job.JobService;
 import com.flow.platform.api.service.job.NodeResultService;
+import com.flow.platform.api.service.v1.FlowService;
 import com.flow.platform.api.util.I18nUtil;
 import com.flow.platform.core.domain.Page;
 import com.flow.platform.core.domain.Pageable;
@@ -39,6 +41,7 @@ import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import javax.servlet.http.HttpServletResponse;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -59,6 +62,9 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping(path = "/jobs")
 public class JobController extends NodeController {
+
+    @Autowired
+    private FlowService flowService;
 
     @Autowired
     private JobService jobService;
@@ -107,12 +113,12 @@ public class JobController extends NodeController {
     @WebSecurity(action = Actions.JOB_CREATE)
     public void create(@RequestParam(required = false, defaultValue = "true") boolean isFromScmYml,
                        @RequestBody(required = false) Map<String, String> envs) {
-        if (envs == null) {
+        if (Objects.isNull(envs)) {
             envs = new LinkedHashMap<>();
         }
 
-        String path = flowName.get();
-        jobService.createFromFlowYml(path, JobCategory.MANUAL, envs, currentUser.get());
+        Flow flow = flowService.find(flowName.get());
+        jobService.create(flow, JobCategory.MANUAL, envs, currentUser.get());
     }
 
     /**

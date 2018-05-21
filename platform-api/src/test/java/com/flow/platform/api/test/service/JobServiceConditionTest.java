@@ -22,6 +22,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 
 import com.flow.platform.api.domain.CmdCallbackQueueItem;
+import com.flow.platform.api.domain.Flow;
 import com.flow.platform.api.domain.job.Job;
 import com.flow.platform.api.domain.job.JobStatus;
 import com.flow.platform.api.domain.job.NodeResult;
@@ -56,8 +57,8 @@ public class JobServiceConditionTest extends TestBase {
     public void should_job_failure_since_condition_return_false() throws Throwable {
         // given: init flow and job
         String name = "flow-condition";
-        Node rootForFlow = createRootFlow(name, "yml/condition.yml");
-        Job job = createMockJob(rootForFlow.getPath());
+        Flow rootForFlow = createRootFlow(name, "yml/condition.yml");
+        Job job = createMockJob(rootForFlow.getName());
 
         // when: mock create session callback, and condition should be executed
         final String sessionId = CommonUtil.randomId().toString();

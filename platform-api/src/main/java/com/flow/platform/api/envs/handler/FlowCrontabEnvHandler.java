@@ -16,7 +16,7 @@
 
 package com.flow.platform.api.envs.handler;
 
-import com.flow.platform.api.domain.node.Node;
+import com.flow.platform.api.domain.Flow;
 import com.flow.platform.api.envs.EnvKey;
 import com.flow.platform.api.envs.FlowEnvs;
 import com.flow.platform.api.service.node.NodeCrontabService;
@@ -56,7 +56,7 @@ public class FlowCrontabEnvHandler extends EnvHandler {
     }
 
     @Override
-    void onHandle(Node node, String value) {
+    void onHandle(Flow flow, String value) {
         String[] crons = value.split(" ");
         if (crons.length != 5) {
             throw new IllegalParameterException("Illegal crontab format");
@@ -83,21 +83,21 @@ public class FlowCrontabEnvHandler extends EnvHandler {
 
         try {
             // fill seconds to crontab value
-            node.putEnv(env(), crontabValue);
+            flow.putEnv(env(), crontabValue);
             new CronExpression(crontabValue);
 
             // setup new value and crontab task
-            nodeCrontabService.set(node);
+            nodeCrontabService.set(flow);
         } catch (ParseException e) {
             throw new IllegalParameterException(e.getMessage());
         } finally {
             // reset value to original
-            node.putEnv(env(), value);
+            flow.putEnv(env(), value);
         }
     }
 
     @Override
-    void onUnHandle(Node node, String value) {
-        nodeCrontabService.delete(node);
+    void onUnHandle(Flow flow, String value) {
+        nodeCrontabService.delete(flow);
     }
 }

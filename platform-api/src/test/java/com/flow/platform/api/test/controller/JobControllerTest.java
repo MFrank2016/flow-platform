@@ -20,12 +20,12 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.flow.platform.api.domain.Flow;
 import com.flow.platform.api.domain.job.Job;
 import com.flow.platform.api.domain.job.JobCategory;
 import com.flow.platform.api.domain.job.JobStatus;
 import com.flow.platform.api.domain.job.NodeResult;
 import com.flow.platform.api.domain.job.NodeStatus;
-import com.flow.platform.api.domain.node.Node;
 import com.flow.platform.api.envs.GitEnvs;
 import java.io.File;
 import java.nio.file.Path;
@@ -48,8 +48,8 @@ public class JobControllerTest extends ControllerTestWithoutAuth {
     @Test
     public void should_show_job_success() throws Exception {
         stubDemo();
-        Node rootForFlow = createRootFlow("flow1", "yml/flow.yaml");
-        Job job = jobService.createFromFlowYml(rootForFlow.getPath(), JobCategory.MANUAL, null, mockUser);
+        Flow rootForFlow = createRootFlow("flow1", "yml/flow.yaml");
+        Job job = jobService.create(rootForFlow, JobCategory.MANUAL, null, mockUser);
         job.putEnv(GitEnvs.FLOW_GIT_BRANCH, "master");
         jobDao.update(job);
 
@@ -70,8 +70,8 @@ public class JobControllerTest extends ControllerTestWithoutAuth {
     @Test
     public void should_stop_job_success() throws Exception {
         stubDemo();
-        Node rootForFlow = createRootFlow("flow1", "yml/flow.yaml");
-        Job job = jobService.createFromFlowYml(rootForFlow.getPath(), JobCategory.TAG, null, mockUser);
+        Flow rootForFlow = createRootFlow("flow1", "yml/flow.yaml");
+        Job job = jobService.create(rootForFlow, JobCategory.TAG, null, mockUser);
         job.putEnv(GitEnvs.FLOW_GIT_BRANCH, "master");
         jobDao.update(job);
 
@@ -87,8 +87,8 @@ public class JobControllerTest extends ControllerTestWithoutAuth {
     @Test
     public void should_get_step_log_success() throws Exception {
         stubDemo();
-        Node rootForFlow = createRootFlow("flow1", "yml/flow.yaml");
-        Job job = jobService.createFromFlowYml(rootForFlow.getPath(), JobCategory.TAG, null, mockUser);
+        Flow rootForFlow = createRootFlow("flow1", "yml/flow.yaml");
+        Job job = jobService.create(rootForFlow, JobCategory.TAG, null, mockUser);
         job.putEnv(GitEnvs.FLOW_GIT_BRANCH, "master");
         jobDao.update(job);
 
@@ -102,8 +102,8 @@ public class JobControllerTest extends ControllerTestWithoutAuth {
     @Test
     public void should_get_job_zip_error() throws Exception {
         stubDemo();
-        Node rootForFlow = createRootFlow("flow1", "yml/flow.yaml");
-        Job job = jobService.createFromFlowYml(rootForFlow.getPath(), JobCategory.TAG, null, mockUser);
+        Flow rootForFlow = createRootFlow("flow1", "yml/flow.yaml");
+        Job job = jobService.create(rootForFlow, JobCategory.TAG, null, mockUser);
 
         job.putEnv(GitEnvs.FLOW_GIT_BRANCH, "master");
         jobDao.update(job);
@@ -117,8 +117,8 @@ public class JobControllerTest extends ControllerTestWithoutAuth {
     @Test
     public void should_get_job_zip_success() throws Exception {
         stubDemo();
-        Node rootForFlow = createRootFlow("flow1", "yml/flow.yaml");
-        Job job = jobService.createFromFlowYml(rootForFlow.getPath(), JobCategory.TAG, null, mockUser);
+        Flow rootForFlow = createRootFlow("flow1", "yml/flow.yaml");
+        Job job = jobService.create(rootForFlow, JobCategory.TAG, null, mockUser);
 
         job.putEnv(GitEnvs.FLOW_GIT_BRANCH, "master");
         job.setStatus(JobStatus.SUCCESS);
@@ -140,7 +140,7 @@ public class JobControllerTest extends ControllerTestWithoutAuth {
             .get(workspace.toString(), job.getNodeName(), "log", job.getId().toString(),
                 job.getId().toString() + ".zip");
         File zipFile = new File(zipLog.toString());
-        Assert.assertEquals(true, zipFile.exists());
+        Assert.assertTrue(zipFile.exists());
     }
 
     private Job requestToShowJob(String path, Long buildNumber) throws Exception {

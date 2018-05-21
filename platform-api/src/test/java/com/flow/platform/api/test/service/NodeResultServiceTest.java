@@ -20,6 +20,7 @@ import static com.flow.platform.api.domain.job.NodeStatus.STOPPED;
 import static com.flow.platform.api.domain.job.NodeStatus.SUCCESS;
 import static com.flow.platform.api.domain.job.NodeStatus.TIMEOUT;
 
+import com.flow.platform.api.domain.Flow;
 import com.flow.platform.api.domain.job.Job;
 import com.flow.platform.api.domain.job.JobCategory;
 import com.flow.platform.api.domain.job.NodeResult;
@@ -56,8 +57,8 @@ public class NodeResultServiceTest extends TestBase {
     @Test
     public void should_save_job_node_by_job() throws IOException {
         // when: create node result list from job
-        Node rootForFlow = createRootFlow("flow1", "yml/flow.yaml");
-        Job job = jobService.createFromFlowYml(rootForFlow.getPath(), JobCategory.MANUAL, null, mockUser);
+        Flow rootForFlow = createRootFlow("flow1", "yml/flow.yaml");
+        Job job = jobService.create(rootForFlow, JobCategory.MANUAL, null, mockUser);
 
         // then: check node result is created
         List<NodeResult> list = nodeResultService.list(job, false);
@@ -81,8 +82,8 @@ public class NodeResultServiceTest extends TestBase {
     @Test
     public void should_correct_update_node_status_from_cmd() throws Throwable {
         // given: create job
-        Node rootForFlow = createRootFlow("flow1", "yml/flow.yaml");
-        Job job = jobService.createFromFlowYml(rootForFlow.getPath(), JobCategory.MANUAL, null, mockUser);
+        Flow rootForFlow = createRootFlow("flow1", "yml/flow.yaml");
+        Job job = jobService.create(rootForFlow, JobCategory.MANUAL, null, mockUser);
 
         Node firstStep = jobNodeService.get(job).find("flow1/step1");
 
@@ -104,8 +105,8 @@ public class NodeResultServiceTest extends TestBase {
     @Test
     public void should_update_node_status_with_skip_set() throws Throwable {
         // given:
-        Node rootForFlow = createRootFlow("flow1", "yml/flow.yaml");
-        Job job = jobService.createFromFlowYml(rootForFlow.getPath(), JobCategory.TAG, null, mockUser);
+        Flow rootForFlow = createRootFlow("flow1", "yml/flow.yaml");
+        Job job = jobService.create(rootForFlow, JobCategory.TAG, null, mockUser);
 
         List<NodeResult> list = nodeResultService.list(job, false);
         Assert.assertEquals(5, list.size());

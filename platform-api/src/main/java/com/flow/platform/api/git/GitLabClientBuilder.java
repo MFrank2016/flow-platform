@@ -36,9 +36,9 @@ public class GitLabClientBuilder extends GitClientBuilder {
 
     public GitLabClientBuilder(Flow flow, Path sourceFolder) {
         super(flow, sourceFolder);
-        host = flow.getContext(GitEnvs.FLOW_GIT_URL.name());
-        token = flow.getContext(GitEnvs.FLOW_GITLAB_TOKEN.name());
-        project = flow.getContext(GitEnvs.FLOW_GITLAB_PROJECT.name());
+        host = flow.getEnv(GitEnvs.FLOW_GIT_URL);
+        token = flow.getEnv(GitEnvs.FLOW_GITLAB_TOKEN);
+        project = flow.getEnv(GitEnvs.FLOW_GITLAB_PROJECT);
     }
 
     @Override

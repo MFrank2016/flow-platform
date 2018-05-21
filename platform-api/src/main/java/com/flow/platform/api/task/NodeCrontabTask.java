@@ -19,14 +19,14 @@ package com.flow.platform.api.task;
 import static com.flow.platform.api.service.node.NodeCrontabService.KEY_BRANCH;
 import static com.flow.platform.api.service.node.NodeCrontabService.KEY_NODE_PATH;
 
+import com.flow.platform.api.domain.Flow;
 import com.flow.platform.api.domain.job.JobCategory;
-import com.flow.platform.api.domain.node.Node;
 import com.flow.platform.api.domain.user.User;
 import com.flow.platform.api.envs.EnvUtil;
 import com.flow.platform.api.envs.GitEnvs;
 import com.flow.platform.api.service.job.JobService;
-import com.flow.platform.api.service.node.NodeService;
 import com.flow.platform.api.service.user.UserService;
+import com.flow.platform.api.service.v1.FlowService;
 import java.util.Map;
 import lombok.extern.log4j.Log4j2;
 import org.quartz.Job;
@@ -45,16 +45,17 @@ public class NodeCrontabTask implements Job {
         final String path = context.getMergedJobDataMap().getString(KEY_NODE_PATH);
 
         final JobService jobService = (JobService) context.getMergedJobDataMap().get("jobService");
-        final NodeService nodeService = (NodeService) context.getMergedJobDataMap().get("nodeService");
+        final FlowService flowService = (FlowService) context.getMergedJobDataMap().get("flowService");
         final UserService userService = (UserService) context.getMergedJobDataMap().get("userService");
 
         log.debug("Branch {} with node path {}", branch, path);
 
         try {
-            Node flow = nodeService.find(path).root();
+            Flow flow = flowService.find(path);
             User owner = userService.findByEmail(flow.getCreatedBy());
+
             Map<String, String> envs = EnvUtil.build(GitEnvs.FLOW_GIT_BRANCH.name(), branch);
-            jobService.createFromFlowYml(path, JobCategory.SCHEDULER, envs, owner);
+            jobService.create(flow, JobCategory.SCHEDULER, envs, owner);
         } catch (Throwable e) {
             throw new JobExecutionException(e.getMessage());
         }

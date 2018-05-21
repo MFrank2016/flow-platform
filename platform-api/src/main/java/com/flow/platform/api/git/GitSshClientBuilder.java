@@ -44,8 +44,8 @@ public class GitSshClientBuilder extends GitClientBuilder {
 
     public GitSshClientBuilder(final Flow flow, final Path sourceFolder) {
         super(flow, sourceFolder);
-        privateKey = flow.getContext(GitEnvs.FLOW_GIT_SSH_PRIVATE_KEY.name());
-        publicKey = flow.getContext(GitEnvs.FLOW_GIT_SSH_PUBLIC_KEY.name());
+        privateKey = flow.getEnv(GitEnvs.FLOW_GIT_SSH_PRIVATE_KEY);
+        publicKey = flow.getEnv(GitEnvs.FLOW_GIT_SSH_PUBLIC_KEY);
     }
 
     @Override
