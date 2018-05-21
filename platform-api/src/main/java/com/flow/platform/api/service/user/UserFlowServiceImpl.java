@@ -18,11 +18,12 @@ package com.flow.platform.api.service.user;
 import com.flow.platform.api.dao.FlowDao;
 import com.flow.platform.api.dao.user.UserDao;
 import com.flow.platform.api.dao.user.UserFlowDao;
-import com.flow.platform.api.domain.node.Node;
+import com.flow.platform.api.domain.Flow;
 import com.flow.platform.api.domain.user.User;
 import com.flow.platform.api.domain.user.UserFlow;
 import com.flow.platform.api.domain.user.UserFlowKey;
 import com.flow.platform.api.service.CurrentUser;
+import com.google.common.collect.Lists;
 import java.util.ArrayList;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,9 +43,12 @@ public class UserFlowServiceImpl extends CurrentUser implements UserFlowService 
     @Autowired
     private UserDao userDao;
 
+    @Autowired
+    private FlowDao flowDao;
+
     @Override
-    public List<User> list(String flowPath) {
-        List<String> userEmails = userFlowDao.listByFlowPath(flowPath);
+    public List<User> list(String flowName) {
+        List<String> userEmails = userFlowDao.listByFlowPath(flowName);
         if (userEmails.isEmpty()) {
             return new ArrayList<>(0);
         }
@@ -52,17 +56,17 @@ public class UserFlowServiceImpl extends CurrentUser implements UserFlowService 
     }
 
     @Override
-    public List<Node> list(User user) {
+    public List<Flow> list(User user) {
         List<String> flowPaths = userFlowDao.listByEmail(user.getEmail());
         if (flowPaths.isEmpty()) {
             return new ArrayList<>(0);
         }
-        return null;
+        return flowDao.listByCreatedBy(Lists.newArrayList(user.getEmail()));
     }
 
     @Override
-    public void assign(User user, Node flow) {
-        UserFlow userFlow = new UserFlow(flow.getPath(), user.getEmail());
+    public void assign(User user, Flow flow) {
+        UserFlow userFlow = new UserFlow(flow.getName(), user.getEmail());
         userFlow.setCreatedBy(currentUser().getEmail());
         userFlowDao.save(userFlow);
     }
@@ -73,13 +77,13 @@ public class UserFlowServiceImpl extends CurrentUser implements UserFlowService 
     }
 
     @Override
-    public void unAssign(Node flow) {
-        userFlowDao.deleteByFlowPath(flow.getPath());
+    public void unAssign(Flow flow) {
+        userFlowDao.deleteByFlowPath(flow.getName());
     }
 
     @Override
-    public void unAssign(User user, Node flow) {
-        UserFlow userFlow = userFlowDao.get(new UserFlowKey(flow.getPath(), user.getEmail()));
+    public void unAssign(User user, Flow flow) {
+        UserFlow userFlow = userFlowDao.get(new UserFlowKey(flow.getName(), user.getEmail()));
         if (userFlow != null) {
             userFlowDao.delete(userFlow);
         }

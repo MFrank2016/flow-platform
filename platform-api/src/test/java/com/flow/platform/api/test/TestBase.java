@@ -206,7 +206,7 @@ public abstract class TestBase {
     }
 
     @Before
-    public void beforeEach() throws IOException, InterruptedException {
+    public void beforeEach() {
         WORKSPACE = workspace;
         mockMvc = MockMvcBuilders.webAppContextSetup(webAppContext).build();
         setCurrentUser(null);
@@ -322,7 +322,7 @@ public abstract class TestBase {
     }
 
     @AfterClass
-    public static void afterClass() throws IOException {
+    public static void afterClass() {
         FileSystemUtils.deleteRecursively(WORKSPACE.toFile());
     }
 

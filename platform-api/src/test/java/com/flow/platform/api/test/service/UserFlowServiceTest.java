@@ -15,12 +15,14 @@
  */
 package com.flow.platform.api.test.service;
 
-import com.flow.platform.api.domain.node.Node;
+import com.flow.platform.api.domain.Flow;
 import com.flow.platform.api.domain.user.User;
 import com.flow.platform.api.service.user.UserFlowService;
+import com.flow.platform.api.service.v1.FlowService;
 import com.flow.platform.api.test.TestBase;
 import java.util.List;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -35,17 +37,25 @@ public class UserFlowServiceTest extends TestBase {
     @Autowired
     private ThreadLocal<User> currentUser;
 
-    @Test
-    public void should_assign_user_flow() {
-        final String flowPath = "flow_integration";
+    @Autowired
+    private FlowService flowService;
 
+    private Flow flow;
+
+    @Before
+    public void init() {
         Assert.assertNotNull(userDao.get(currentUser.get().getEmail()));
 
-        Node flow = nodeService.createEmptyFlow(flowPath);
-        Assert.assertNotNull(nodeService.find(flowPath));
+        final String flowPath = "user_flow_test";
+        flow = flowService.save(flowPath);
+        Assert.assertNotNull(flowService.find(flowPath));
+        Assert.assertNotNull(userDao.get(currentUser.get().getEmail()));
+    }
 
+    @Test
+    public void should_assign_user_flow() {
         // then:
-        List<User> usersForFlow = userFlowService.list(flowPath);
+        List<User> usersForFlow = userFlowService.list(flow.getName());
         Assert.assertEquals(1, usersForFlow.size());
         Assert.assertEquals(currentUser.get(), usersForFlow.get(0));
 
@@ -53,7 +63,7 @@ public class UserFlowServiceTest extends TestBase {
         userFlowService.unAssign(currentUser.get(), flow);
 
         // then:
-        usersForFlow = userFlowService.list(flowPath);
+        usersForFlow = userFlowService.list(flow.getName());
         Assert.assertEquals(0, usersForFlow.size());
     }
 }

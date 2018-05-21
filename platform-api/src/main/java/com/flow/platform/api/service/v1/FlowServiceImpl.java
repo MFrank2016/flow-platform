@@ -20,8 +20,11 @@ import com.flow.platform.api.dao.FlowDao;
 import com.flow.platform.api.dao.YmlDao;
 import com.flow.platform.api.domain.Flow;
 import com.flow.platform.api.domain.FlowYml;
+import com.flow.platform.api.domain.user.User;
 import com.flow.platform.api.envs.EnvUtil;
 import com.flow.platform.api.exception.DuplicateExeption;
+import com.flow.platform.api.service.CurrentUser;
+import com.flow.platform.api.service.user.UserFlowService;
 import com.flow.platform.core.exception.NotFoundException;
 import java.util.List;
 import java.util.Map;
@@ -35,13 +38,16 @@ import org.springframework.transaction.annotation.Transactional;
  * @author yang
  */
 @Service
-public class FlowServiceImpl implements FlowService {
+public class FlowServiceImpl extends CurrentUser implements FlowService {
 
     @Autowired
     private FlowDao flowDao;
 
     @Autowired
     private YmlDao ymlDao;
+
+    @Autowired
+    private UserFlowService userFlowService;
 
     @Override
     @Transactional
@@ -50,6 +56,11 @@ public class FlowServiceImpl implements FlowService {
         if (!Objects.isNull(exist)) {
             throw new DuplicateExeption("The flow name is duplicated");
         }
+
+        User user = currentUser();
+        exist = new Flow(name);
+        exist.setCreatedBy(user.getEmail());
+        userFlowService.assign(user, exist);
 
         ymlDao.save(new FlowYml(name));
         return flowDao.save(new Flow(name));
@@ -90,6 +101,8 @@ public class FlowServiceImpl implements FlowService {
 
         ymlDao.delete(new FlowYml(name));
         flowDao.delete(flow);
+
+        userFlowService.unAssign(flow);
 
         return flow;
     }

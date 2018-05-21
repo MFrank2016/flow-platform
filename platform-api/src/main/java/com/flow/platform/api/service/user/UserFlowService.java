@@ -15,7 +15,7 @@
  */
 package com.flow.platform.api.service.user;
 
-import com.flow.platform.api.domain.node.Node;
+import com.flow.platform.api.domain.Flow;
 import com.flow.platform.api.domain.user.User;
 import java.util.List;
 
@@ -27,17 +27,17 @@ public interface UserFlowService {
     /**
      * List flows for user
      */
-    List<Node> list(User user);
+    List<Flow> list(User user);
 
     /**
      * List users for flow
      */
-    List<User> list(String flowPath);
+    List<User> list(String flowName);
 
     /**
      * Assign user to flow
      */
-    void assign(User user, Node flow);
+    void assign(User user, Flow flow);
 
     /**
      * Un-assign a user for all flows
@@ -47,11 +47,11 @@ public interface UserFlowService {
     /**
      * Un-assign a flow for all users
      */
-    void unAssign(Node flow);
+    void unAssign(Flow flow);
 
     /**
      * Un-assign a user form flow
      */
-    void unAssign(User user, Node flow);
+    void unAssign(User user, Flow flow);
 
 }

@@ -16,7 +16,6 @@
 package com.flow.platform.api.service.node;
 
 import com.flow.platform.api.config.AppConfig;
-import com.flow.platform.api.dao.FlowDao;
 import com.flow.platform.api.dao.job.JobNumberDao;
 import com.flow.platform.api.domain.Webhook;
 import com.flow.platform.api.domain.job.JobNumber;
@@ -29,15 +28,11 @@ import com.flow.platform.api.domain.user.SysRole;
 import com.flow.platform.api.domain.user.User;
 import com.flow.platform.api.envs.EnvUtil;
 import com.flow.platform.api.envs.FlowEnvs;
-import com.flow.platform.api.envs.FlowEnvs.StatusValue;
 import com.flow.platform.api.envs.FlowEnvs.YmlStatusValue;
-import com.flow.platform.api.envs.GitEnvs;
-import com.flow.platform.api.envs.GitToggleEnvs;
 import com.flow.platform.api.exception.YmlException;
 import com.flow.platform.api.service.CurrentUser;
 import com.flow.platform.api.service.job.JobService;
 import com.flow.platform.api.service.user.RoleService;
-import com.flow.platform.api.service.user.UserFlowService;
 import com.flow.platform.api.service.user.UserService;
 import com.flow.platform.api.util.NodeUtil;
 import com.flow.platform.api.util.PathUtil;
@@ -83,9 +78,6 @@ public class NodeServiceImpl extends CurrentUser implements NodeService {
     private YmlService ymlService;
 
     @Autowired
-    private FlowDao flowDao;
-
-    @Autowired
     private Path workspace;
 
     @Autowired
@@ -93,9 +85,6 @@ public class NodeServiceImpl extends CurrentUser implements NodeService {
 
     @Autowired
     private JobNumberDao jobNumberDao;
-
-    @Autowired
-    private UserFlowService userFlowService;
 
     @Autowired
     private JobService jobService;
@@ -193,7 +182,7 @@ public class NodeServiceImpl extends CurrentUser implements NodeService {
         Node flow = find(rootPath).root();
 
         // delete related userAuth
-        userFlowService.unAssign(flow);
+//        userFlowService.unAssign(flow);
 
         // delete job
         jobService.delete(rootPath);
@@ -225,34 +214,34 @@ public class NodeServiceImpl extends CurrentUser implements NodeService {
     @Override
     public Node createEmptyFlow(final String flowName) {
         Node flow = new Node(PathUtil.build(flowName), flowName);
-        getTreeCache().evict(flow.getPath());
-
-        if (!checkFlowName(flow.getName())) {
-            throw new IllegalParameterException("Illegal flow name");
-        }
-
-        if (exist(flow.getPath())) {
-            throw new IllegalParameterException("Flow name already existed");
-        }
-
-        // init env variables
-        flow.putEnv(FlowEnvs.FLOW_NAME, flowName);
-        flow.putEnv(FlowEnvs.FLOW_STATUS, StatusValue.PENDING);
-        flow.putEnv(FlowEnvs.FLOW_YML_STATUS, YmlStatusValue.NOT_FOUND);
-        flow.putEnv(GitEnvs.FLOW_GIT_WEBHOOK, hooksUrl(flow));
-        flow.putEnv(GitToggleEnvs.FLOW_GIT_PUSH_ENABLED, "true");
-        flow.putEnv(GitToggleEnvs.FLOW_GIT_PUSH_FILTER, GitToggleEnvs.DEFAULT_FILTER);
-        flow.putEnv(GitToggleEnvs.FLOW_GIT_TAG_ENABLED, "true");
-        flow.putEnv(GitToggleEnvs.FLOW_GIT_TAG_FILTER, GitToggleEnvs.DEFAULT_FILTER);
-        flow.putEnv(GitToggleEnvs.FLOW_GIT_PR_ENABLED, "true");
-
-        flow.setCreatedBy(currentUser().getEmail());
-//        flow = flowDao.save(flow);
-
-        // init job number for flow
-        jobNumberDao.save(new JobNumber(flow.getPath(), 0L));
-
-        userFlowService.assign(currentUser(), flow);
+//        getTreeCache().evict(flow.getPath());
+//
+//        if (!checkFlowName(flow.getName())) {
+//            throw new IllegalParameterException("Illegal flow name");
+//        }
+//
+//        if (exist(flow.getPath())) {
+//            throw new IllegalParameterException("Flow name already existed");
+//        }
+//
+//        // init env variables
+//        flow.putEnv(FlowEnvs.FLOW_NAME, flowName);
+//        flow.putEnv(FlowEnvs.FLOW_STATUS, StatusValue.PENDING);
+//        flow.putEnv(FlowEnvs.FLOW_YML_STATUS, YmlStatusValue.NOT_FOUND);
+//        flow.putEnv(GitEnvs.FLOW_GIT_WEBHOOK, hooksUrl(flow));
+//        flow.putEnv(GitToggleEnvs.FLOW_GIT_PUSH_ENABLED, "true");
+//        flow.putEnv(GitToggleEnvs.FLOW_GIT_PUSH_FILTER, GitToggleEnvs.DEFAULT_FILTER);
+//        flow.putEnv(GitToggleEnvs.FLOW_GIT_TAG_ENABLED, "true");
+//        flow.putEnv(GitToggleEnvs.FLOW_GIT_TAG_FILTER, GitToggleEnvs.DEFAULT_FILTER);
+//        flow.putEnv(GitToggleEnvs.FLOW_GIT_PR_ENABLED, "true");
+//
+//        flow.setCreatedBy(currentUser().getEmail());
+////        flow = flowDao.save(flow);
+//
+//        // init job number for flow
+//        jobNumberDao.save(new JobNumber(flow.getPath(), 0L));
+//
+//        userFlowService.assign(currentUser(), flow);
         return flow;
     }
 
@@ -279,7 +268,7 @@ public class NodeServiceImpl extends CurrentUser implements NodeService {
         if (roles.contains(roleService.find(SysRole.ADMIN.name()))) {
 //            return flowDao.list();
         } else {
-            return userFlowService.list(currentUser());
+//            return userFlowService.list(currentUser());
         }
 
         return null;
@@ -306,8 +295,8 @@ public class NodeServiceImpl extends CurrentUser implements NodeService {
 
         Node flow = find(rootPath).root();
         for (User user : users) {
-            userFlowService.unAssign(user, flow);
-            userFlowService.assign(user, flow);
+//            userFlowService.unAssign(user, flow);
+//            userFlowService.assign(user, flow);
             user.setRoles(roleService.list(user));
             user.setFlows(paths);
         }

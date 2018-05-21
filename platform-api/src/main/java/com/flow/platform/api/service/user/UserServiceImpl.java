@@ -311,31 +311,31 @@ public class UserServiceImpl extends CurrentUser implements UserService {
     }
 
     private void assignRoleToUser(User user, List<String> roles, List<String> flowsList) {
-        for (String rootPath : flowsList) {
-            NodeTree nodeTree;
-            try {
-                nodeTree = nodeService.find(rootPath);
-            } catch (IllegalParameterException e) {
-                continue;
-            }
-
-            Node flow = nodeTree.root();
-            if (flow == null) {
-                continue;
-            }
-
-            userFlowService.assign(user, flow);
-        }
-
-        if (roles == null || roles.isEmpty()) {
-            return;
-        }
-
-        // assign user to role
-        for (String roleName : roles) {
-            Role targetRole = roleService.find(roleName);
-            roleService.assign(user, targetRole);
-        }
+//        for (String rootPath : flowsList) {
+//            NodeTree nodeTree;
+//            try {
+//                nodeTree = nodeService.find(rootPath);
+//            } catch (IllegalParameterException e) {
+//                continue;
+//            }
+//
+//            Node flow = nodeTree.root();
+//            if (flow == null) {
+//                continue;
+//            }
+//
+//            userFlowService.assign(user, flow);
+//        }
+//
+//        if (roles == null || roles.isEmpty()) {
+//            return;
+//        }
+//
+//        // assign user to role
+//        for (String roleName : roles) {
+//            Role targetRole = roleService.find(roleName);
+//            roleService.assign(user, targetRole);
+//        }
     }
 
     private void checkUserInfoIsLegal(User user) {
