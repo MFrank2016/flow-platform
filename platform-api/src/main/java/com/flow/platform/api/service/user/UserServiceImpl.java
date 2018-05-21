@@ -5,6 +5,7 @@ import com.flow.platform.api.dao.user.UserDao;
 import com.flow.platform.api.dao.user.UserFlowDao;
 import com.flow.platform.api.dao.user.UserRoleDao;
 import com.flow.platform.api.domain.EmailSettingContent;
+import com.flow.platform.api.domain.Flow;
 import com.flow.platform.api.domain.MessageType;
 import com.flow.platform.api.domain.node.Node;
 import com.flow.platform.api.domain.node.NodeTree;
@@ -15,10 +16,11 @@ import com.flow.platform.api.domain.user.User;
 import com.flow.platform.api.security.token.TokenGenerator;
 import com.flow.platform.api.service.CurrentUser;
 import com.flow.platform.api.service.MessageService;
-import com.flow.platform.api.service.node.NodeService;
+import com.flow.platform.api.service.v1.FlowService;
 import com.flow.platform.api.util.SmtpUtil;
 import com.flow.platform.api.util.StringEncodeUtil;
 import com.flow.platform.core.exception.IllegalParameterException;
+import com.flow.platform.util.CollectionUtil;
 import com.flow.platform.util.ExceptionUtil;
 import com.flow.platform.util.http.HttpURL;
 import java.io.StringWriter;
@@ -53,13 +55,13 @@ public class UserServiceImpl extends CurrentUser implements UserService {
     private UserDao userDao;
 
     @Autowired
+    private FlowService flowService;
+
+    @Autowired
     private TokenGenerator tokenGenerator;
 
     @Autowired
     private RoleService roleService;
-
-    @Autowired
-    private NodeService nodeService;
 
     @Autowired
     private UserFlowService userFlowService;
@@ -311,31 +313,20 @@ public class UserServiceImpl extends CurrentUser implements UserService {
     }
 
     private void assignRoleToUser(User user, List<String> roles, List<String> flowsList) {
-//        for (String rootPath : flowsList) {
-//            NodeTree nodeTree;
-//            try {
-//                nodeTree = nodeService.find(rootPath);
-//            } catch (IllegalParameterException e) {
-//                continue;
-//            }
-//
-//            Node flow = nodeTree.root();
-//            if (flow == null) {
-//                continue;
-//            }
-//
-//            userFlowService.assign(user, flow);
-//        }
-//
-//        if (roles == null || roles.isEmpty()) {
-//            return;
-//        }
-//
-//        // assign user to role
-//        for (String roleName : roles) {
-//            Role targetRole = roleService.find(roleName);
-//            roleService.assign(user, targetRole);
-//        }
+        for (String flowName : flowsList) {
+            Flow flow = flowService.find(flowName);
+            userFlowService.assign(user, flow);
+        }
+
+        if (CollectionUtil.isNullOrEmpty(roles)) {
+            return;
+        }
+
+        // assign user to role
+        for (String roleName : roles) {
+            Role targetRole = roleService.find(roleName);
+            roleService.assign(user, targetRole);
+        }
     }
 
     private void checkUserInfoIsLegal(User user) {
