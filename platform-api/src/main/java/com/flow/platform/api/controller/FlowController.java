@@ -17,22 +17,14 @@
 package com.flow.platform.api.controller;
 
 import com.flow.platform.api.domain.Flow;
-import com.flow.platform.api.domain.FlowYml;
 import com.flow.platform.api.domain.node.Node;
-import com.flow.platform.api.domain.node.Yml;
 import com.flow.platform.api.domain.permission.Actions;
 import com.flow.platform.api.domain.request.ListParam;
 import com.flow.platform.api.domain.request.TriggerParam;
-import com.flow.platform.api.domain.response.BooleanValue;
 import com.flow.platform.api.domain.user.User;
-import com.flow.platform.api.envs.EnvUtil;
 import com.flow.platform.api.security.WebSecurity;
 import com.flow.platform.api.service.GitService;
-import com.flow.platform.api.service.node.YmlService;
 import com.flow.platform.api.service.v1.FlowService;
-import com.flow.platform.core.exception.IllegalParameterException;
-import com.flow.platform.util.StringUtil;
-import com.google.common.base.Strings;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -52,9 +44,6 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping(path = "/flows")
 public class FlowController extends NodeController {
-
-    @Autowired
-    private YmlService ymlService;
 
     @Autowired
     private GitService gitService;

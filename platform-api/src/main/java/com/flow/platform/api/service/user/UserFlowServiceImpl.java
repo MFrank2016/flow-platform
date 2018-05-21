@@ -42,9 +42,6 @@ public class UserFlowServiceImpl extends CurrentUser implements UserFlowService 
     @Autowired
     private UserDao userDao;
 
-    @Autowired
-    private FlowDao flowDao;
-
     @Override
     public List<User> list(String flowPath) {
         List<String> userEmails = userFlowDao.listByFlowPath(flowPath);

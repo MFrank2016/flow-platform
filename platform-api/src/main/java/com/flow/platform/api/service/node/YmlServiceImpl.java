@@ -16,8 +16,6 @@
 
 package com.flow.platform.api.service.node;
 
-import com.flow.platform.api.config.AppConfig;
-import com.flow.platform.api.dao.YmlDao;
 import com.flow.platform.api.domain.node.Node;
 import com.flow.platform.api.domain.node.Yml;
 import com.flow.platform.api.domain.request.ThreadConfigParam;
@@ -30,12 +28,9 @@ import com.flow.platform.api.util.NodeUtil;
 import com.flow.platform.core.context.ContextEvent;
 import com.flow.platform.core.exception.IllegalParameterException;
 import com.flow.platform.core.exception.IllegalStatusException;
-import com.flow.platform.core.exception.NotFoundException;
 import com.flow.platform.core.util.ThreadUtil;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ExecutionException;
@@ -43,7 +38,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
 import org.springframework.core.task.TaskRejectedException;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
@@ -75,10 +69,7 @@ public class YmlServiceImpl implements YmlService, ContextEvent {
     @Autowired
     private NodeService nodeService;
 
-    @Autowired
-    private YmlDao ymlDao;
-
-    @Override
+    o@Override
     public void start() {
         // ignore
     }
