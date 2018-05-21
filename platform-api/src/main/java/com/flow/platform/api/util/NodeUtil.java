@@ -15,6 +15,7 @@
  */
 package com.flow.platform.api.util;
 
+import com.flow.platform.api.domain.Flow;
 import com.flow.platform.api.domain.node.Node;
 import com.flow.platform.api.exception.NodeFormatException;
 import com.flow.platform.api.exception.YmlException;
@@ -80,6 +81,10 @@ public class NodeUtil {
      */
     public static Path workspacePath(Path base, Node node) {
         return Paths.get(base.toString(), node.getName());
+    }
+
+    public static Path workspacePath(Path base, Flow flow) {
+        return Paths.get(base.toString(), flow.getName());
     }
 
     /**

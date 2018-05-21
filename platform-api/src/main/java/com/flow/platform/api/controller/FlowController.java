@@ -202,13 +202,9 @@ public class FlowController extends NodeController {
      *  ]
      */
     @GetMapping("/{root}/branches")
-    public List<String> listBranches(@RequestParam(required = false) Boolean refresh) {
-        if (refresh == null) {
-            refresh = false;
-        }
-
-        Node root = nodeService.find(flowName.get()).root();
-        return gitService.branches(root, refresh);
+    public List<String> listBranches(@RequestParam(required = false, defaultValue = "false") Boolean refresh) {
+        Flow flow = flowService.find(flowName.get());
+        return gitService.branches(flow, refresh);
     }
 
     /**
@@ -225,8 +221,8 @@ public class FlowController extends NodeController {
      */
     @GetMapping("/{root}/tags")
     public List<String> listTags() {
-        Node root = nodeService.find(flowName.get()).root();
-        return gitService.tags(root, false);
+        Flow flow = flowService.find(flowName.get());
+        return gitService.tags(flow, false);
     }
 
     /**
@@ -294,10 +290,7 @@ public class FlowController extends NodeController {
      *      }
      */
     @PostMapping("/{root}/trigger")
-    public Node trigger(@RequestBody TriggerParam triggerParam) {
-        String path = flowName.get();
-        Node flow = nodeService.find(path).root();
-        envService.save(flow, triggerParam.toEnv(), true);
-        return flow;
+    public Flow trigger(@RequestBody TriggerParam triggerParam) {
+        return flowService.merge(flowName.get(), triggerParam.toEnv());
     }
 }

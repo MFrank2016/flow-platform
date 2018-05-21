@@ -16,7 +16,7 @@
 
 package com.flow.platform.api.service;
 
-import com.flow.platform.api.domain.node.Node;
+import com.flow.platform.api.domain.Flow;
 import com.flow.platform.api.envs.EnvUtil;
 import com.flow.platform.api.envs.GitEnvs;
 import com.flow.platform.api.git.GitClientBuilder;
@@ -95,15 +95,15 @@ public class GitServiceImpl implements GitService {
     }
 
     @Override
-    public String fetch(Node node, String filePath, ProgressListener progressListener) throws GitException {
-        GitClient client = gitClientInstance(node);
+    public String fetch(Flow flow, String filePath, ProgressListener progressListener) throws GitException {
+        GitClient client = gitClientInstance(flow);
 
         if (progressListener == null) {
             progressListener = new EmptyProgressListener();
         }
 
         progressListener.onStart();
-        String branch = node.getEnv(GitEnvs.FLOW_GIT_BRANCH, "master");
+        String branch = flow.getContext(GitEnvs.FLOW_GIT_BRANCH.name(), "master");
         return client.fetch(branch, filePath, new GitCloneProgressMonitor(progressListener));
     }
 
@@ -133,9 +133,9 @@ public class GitServiceImpl implements GitService {
     }
 
     @Override
-    @Cacheable(value = "git.branches", key = "#node.getPath()", condition = "#refresh == false")
-    public List<String> branches(Node node, boolean refresh) {
-        GitClient client = gitClientInstance(node);
+    @Cacheable(value = "git.branches", key = "#flow.getName()", condition = "#refresh == false")
+    public List<String> branches(Flow flow, boolean refresh) {
+        GitClient client = gitClientInstance(flow);
         try {
             return client.branches();
         } catch (GitException e) {
@@ -144,9 +144,9 @@ public class GitServiceImpl implements GitService {
     }
 
     @Override
-    @Cacheable(value = "git.tags", key = "#node.getPath()", condition = "#refresh == false")
-    public List<String> tags(Node node, boolean refresh) {
-        GitClient client = gitClientInstance(node);
+    @Cacheable(value = "git.tags", key = "#flow.getName()", condition = "#refresh == false")
+    public List<String> tags(Flow flow, boolean refresh) {
+        GitClient client = gitClientInstance(flow);
         try {
             return client.tags();
         } catch (GitException e) {
@@ -155,9 +155,10 @@ public class GitServiceImpl implements GitService {
     }
 
     @Override
-    public GitCommit latestCommit(Node node) {
-        GitClient client = gitClientInstance(node);
-        String branch = node.getEnv(GitEnvs.FLOW_GIT_BRANCH, "master");
+    public GitCommit latestCommit(Flow flow) {
+        GitClient client = gitClientInstance(flow);
+        String branch = flow.getContext(GitEnvs.FLOW_GIT_BRANCH.name(), "master");
+
         try {
             return client.commit(branch);
         } catch (GitException e) {
@@ -165,8 +166,8 @@ public class GitServiceImpl implements GitService {
         }
     }
 
-    private void checkRequiredEnv(Node node) {
-        if (!EnvUtil.hasRequiredEnvKey(node, REQUIRED_ENVS)) {
+    private void checkRequiredEnv(Flow node) {
+        if (!EnvUtil.hasRequired(node, REQUIRED_ENVS)) {
             throw new IllegalParameterException("Missing required env variables");
         }
     }
@@ -225,10 +226,10 @@ public class GitServiceImpl implements GitService {
      * - FLOW_GITLAB_TOKEN
      * - FLOW_GITLAB_PROJECT
      */
-    private GitClient gitClientInstance(Node node) {
-        checkRequiredEnv(node);
+    private GitClient gitClientInstance(Flow flow) {
+        checkRequiredEnv(flow);
 
-        GitSource source = GitSource.valueOf(node.getEnv(GitEnvs.FLOW_GIT_SOURCE));
+        GitSource source = GitSource.valueOf(flow.getContext(GitEnvs.FLOW_GIT_SOURCE.name()));
         Class<? extends GitClientBuilder> builderClass = clientBuilderType.get(source);
         if (builderClass == null) {
             throw new UnsupportedException(String.format("Git source %s not supported yet", source));
@@ -237,8 +238,8 @@ public class GitServiceImpl implements GitService {
         GitClientBuilder builder;
         try {
             builder = builderClass
-                .getConstructor(Node.class, Path.class)
-                .newInstance(node, gitSourcePath(node));
+                .getConstructor(Flow.class, Path.class)
+                .newInstance(flow, gitSourcePath(flow));
         } catch (Throwable e) {
             throw new IllegalStatusException("Fail to create GitClientBuilder instance: " + e.getMessage());
         }
@@ -255,8 +256,8 @@ public class GitServiceImpl implements GitService {
     /**
      * Get git source code folder path of flow workspace
      */
-    private Path gitSourcePath(Node node) throws IOException {
-        Path flowWorkspace = NodeUtil.workspacePath(workspace, node);
+    private Path gitSourcePath(Flow flow) throws IOException {
+        Path flowWorkspace = NodeUtil.workspacePath(workspace, flow);
         Files.createDirectories(flowWorkspace);
         return Paths.get(flowWorkspace.toString(), SOURCE_FOLDER_NAME);
     }

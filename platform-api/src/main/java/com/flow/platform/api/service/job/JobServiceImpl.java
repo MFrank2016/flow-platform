@@ -680,33 +680,33 @@ public class JobServiceImpl extends ApplicationEventService implements JobServic
 
         @Override
         public void accept(Yml yml) {
-            log.trace("Yml content has been loaded for path: " + path);
-            Node root = nodeService.find(PathUtil.rootPath(path)).root();
-
-            // set git commit info to job env
-            if (job.getCategory() == JobCategory.MANUAL
-                || job.getCategory() == JobCategory.SCHEDULER
-                || job.getCategory() == JobCategory.API) {
-
-                try {
-                    GitCommit gitCommit = gitService.latestCommit(root);
-                    Map<String, String> envFromCommit = GitEventEnvConverter.convert(gitCommit);
-                    EnvUtil.merge(envFromCommit, job.getEnvs(), true);
-                    jobDao.update(job);
-                } catch (IllegalStatusException exceptionFromGit) {
-                    log.warn(exceptionFromGit.getMessage());
-                }
-            }
-
-            createJobNodesAndCreateSession(job, yml.getFile());
-
-            try {
-                if (onJobCreated != null) {
-                    onJobCreated.accept(job);
-                }
-            } catch (Throwable e) {
-                log.warn("Fail to create job for path {}: {} ", path, ExceptionUtil.findRootCause(e).getMessage());
-            }
+//            log.trace("Yml content has been loaded for path: " + path);
+//            Node root = nodeService.find(PathUtil.rootPath(path)).root();
+//
+//            // set git commit info to job env
+//            if (job.getCategory() == JobCategory.MANUAL
+//                || job.getCategory() == JobCategory.SCHEDULER
+//                || job.getCategory() == JobCategory.API) {
+//
+//                try {
+//                    GitCommit gitCommit = gitService.latestCommit(root);
+//                    Map<String, String> envFromCommit = GitEventEnvConverter.convert(gitCommit);
+//                    EnvUtil.merge(envFromCommit, job.getEnvs(), true);
+//                    jobDao.update(job);
+//                } catch (IllegalStatusException exceptionFromGit) {
+//                    log.warn(exceptionFromGit.getMessage());
+//                }
+//            }
+//
+//            createJobNodesAndCreateSession(job, yml.getFile());
+//
+//            try {
+//                if (onJobCreated != null) {
+//                    onJobCreated.accept(job);
+//                }
+//            } catch (Throwable e) {
+//                log.warn("Fail to create job for path {}: {} ", path, ExceptionUtil.findRootCause(e).getMessage());
+//            }
         }
     }
 

@@ -16,8 +16,8 @@
 
 package com.flow.platform.api.git;
 
+import com.flow.platform.api.domain.Flow;
 import com.flow.platform.api.envs.GitEnvs;
-import com.flow.platform.api.domain.node.Node;
 import com.flow.platform.util.git.GitClient;
 import com.flow.platform.util.git.GitException;
 import com.flow.platform.util.git.GitLabClient;
@@ -34,11 +34,11 @@ public class GitLabClientBuilder extends GitClientBuilder {
 
     private final String project;
 
-    public GitLabClientBuilder(Node node, Path sourceFolder) {
-        super(node, sourceFolder);
-        host = node.getEnv(GitEnvs.FLOW_GIT_URL);
-        token = node.getEnv(GitEnvs.FLOW_GITLAB_TOKEN);
-        project = node.getEnv(GitEnvs.FLOW_GITLAB_PROJECT);
+    public GitLabClientBuilder(Flow flow, Path sourceFolder) {
+        super(flow, sourceFolder);
+        host = flow.getContext(GitEnvs.FLOW_GIT_URL.name());
+        token = flow.getContext(GitEnvs.FLOW_GITLAB_TOKEN.name());
+        project = flow.getContext(GitEnvs.FLOW_GITLAB_PROJECT.name());
     }
 
     @Override

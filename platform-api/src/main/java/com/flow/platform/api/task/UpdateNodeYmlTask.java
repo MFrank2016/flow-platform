@@ -83,7 +83,7 @@ public class UpdateNodeYmlTask implements Runnable {
         try {
             // set file to empty since do not load yml from git
             String ymlFileName = root.getEnv(FlowEnvs.FLOW_YML_FILE, StringUtil.EMPTY);
-            yml = gitService.fetch(root, ymlFileName, new GitProgressListener());
+//            yml = gitService.fetch(root, ymlFileName, new GitProgressListener());
 
             nodeService.updateYmlState(root, YmlStatusValue.GIT_LOADED, null);
         } catch (Throwable e) {
@@ -98,15 +98,15 @@ public class UpdateNodeYmlTask implements Runnable {
             return;
         }
 
-        try {
-            nodeService.updateByYml(root.getPath(), yml);
-        } catch (Throwable e) {
-            log.warn("Fail to create or update yml in node: {}", ExceptionUtil.findRootCause(e).getMessage());
-            onError.accept(e);
-        }
+//        try {
+////            nodeService.updateByYml(root.getPath(), yml);
+//        } catch (Throwable e) {
+//            log.warn("Fail to create or update yml in node: {}", ExceptionUtil.findRootCause(e).getMessage());
+//            onError.accept(e);
+//        }
 
         log.trace("Node {} FLOW_YML_STATUS is: {}", root.getName(), root.getEnv(FlowEnvs.FLOW_YML_STATUS));
-        onSuccess.accept(new Yml(root.getPath(), yml));
+//        onSuccess.accept(new Yml(root.getPath(), yml));
     }
 
     private class GitProgressListener implements GitService.ProgressListener {

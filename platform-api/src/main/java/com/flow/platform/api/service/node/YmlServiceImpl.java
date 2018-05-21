@@ -69,7 +69,7 @@ public class YmlServiceImpl implements YmlService, ContextEvent {
     @Autowired
     private NodeService nodeService;
 
-    o@Override
+    @Override
     public void start() {
         // ignore
     }
@@ -140,32 +140,33 @@ public class YmlServiceImpl implements YmlService, ContextEvent {
 
     @Override
     public Node startLoad(final Node root, final Consumer<Yml> onSuccess, final Consumer<Throwable> onError) {
-        if (!EnvUtil.hasRequiredEnvKey(root, GitService.REQUIRED_ENVS)) {
-            throw new IllegalParameterException("Missing git settings: FLOW_GIT_URL and FLOW_GIT_SOURCE");
-        }
-
-        if (isYmlLoading(root)) {
-            throw new IllegalStatusException("Yml file is loading");
-        }
-
-        // update FLOW_YML_STATUS to LOADING
-        nodeService.updateYmlState(root, YmlStatusValue.GIT_CONNECTING, null);
-
-        try {
-            ThreadPoolTaskExecutor executor = findThreadPoolFromCache(root.getPath());
-
-            // async to load yml file
-            executor.execute(new UpdateNodeYmlTask(root, nodeService, gitService, onSuccess, onError));
-        } catch (ExecutionException | TaskRejectedException e) {
-            log.warn("Fail to get task executor for node: " + root.getPath());
-            nodeService.updateYmlState(root, YmlStatusValue.ERROR, e.getMessage());
-
-            if (onError != null) {
-                onError.accept(e);
-            }
-        }
-
-        return root;
+//        if (!EnvUtil.hasRequiredEnvKey(root, GitService.REQUIRED_ENVS)) {
+//            throw new IllegalParameterException("Missing git settings: FLOW_GIT_URL and FLOW_GIT_SOURCE");
+//        }
+//
+//        if (isYmlLoading(root)) {
+//            throw new IllegalStatusException("Yml file is loading");
+//        }
+//
+//        // update FLOW_YML_STATUS to LOADING
+//        nodeService.updateYmlState(root, YmlStatusValue.GIT_CONNECTING, null);
+//
+//        try {
+//            ThreadPoolTaskExecutor executor = findThreadPoolFromCache(root.getPath());
+//
+//            // async to load yml file
+//            executor.execute(new UpdateNodeYmlTask(root, nodeService, gitService, onSuccess, onError));
+//        } catch (ExecutionException | TaskRejectedException e) {
+//            log.warn("Fail to get task executor for node: " + root.getPath());
+//            nodeService.updateYmlState(root, YmlStatusValue.ERROR, e.getMessage());
+//
+//            if (onError != null) {
+//                onError.accept(e);
+//            }
+//        }
+//
+//        return root;
+        return null;
     }
 
     @Override

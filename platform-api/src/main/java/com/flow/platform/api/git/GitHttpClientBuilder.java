@@ -16,8 +16,8 @@
 
 package com.flow.platform.api.git;
 
+import com.flow.platform.api.domain.Flow;
 import com.flow.platform.api.envs.GitEnvs;
-import com.flow.platform.api.domain.node.Node;
 import com.flow.platform.util.StringUtil;
 import com.flow.platform.util.git.GitClient;
 import com.flow.platform.util.git.GitHttpClient;
@@ -32,11 +32,10 @@ public class GitHttpClientBuilder extends GitClientBuilder {
 
     private String pass;
 
-    public GitHttpClientBuilder(Node node, Path sourceFolder) {
-        super(node, sourceFolder);
-
-        user = node.getEnv(GitEnvs.FLOW_GIT_HTTP_USER);
-        pass = node.getEnv(GitEnvs.FLOW_GIT_HTTP_PASS);
+    public GitHttpClientBuilder(Flow flow, Path sourceFolder) {
+        super(flow, sourceFolder);
+        user = flow.getContext(GitEnvs.FLOW_GIT_HTTP_USER.name());
+        pass = flow.getContext(GitEnvs.FLOW_GIT_HTTP_PASS.name());
     }
 
     @Override

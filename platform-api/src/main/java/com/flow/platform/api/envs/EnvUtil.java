@@ -16,6 +16,7 @@
 
 package com.flow.platform.api.envs;
 
+import com.flow.platform.api.domain.Flow;
 import com.flow.platform.api.domain.node.Node;
 import com.flow.platform.util.CommandUtil.Unix;
 import com.google.common.base.Strings;
@@ -27,6 +28,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -78,6 +80,21 @@ public class EnvUtil {
 
             Object requiredValue = node.getEnvs().get(requiredKey);
             if (requiredValue == null || Strings.isNullOrEmpty(requiredValue.toString().trim())) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    public static boolean hasRequired(Flow flow, Collection<String> requiredKeys) {
+        for (String requiredKey : requiredKeys) {
+            if (!flow.getContext().containsKey(requiredKey)) {
+                return false;
+            }
+
+            Object requiredValue = flow.getContext().get(requiredKey);
+            if (Objects.isNull(requiredKey) || Strings.isNullOrEmpty(requiredValue.toString().trim())) {
                 return false;
             }
         }

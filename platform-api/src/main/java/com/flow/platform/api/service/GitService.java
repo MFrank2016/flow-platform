@@ -16,8 +16,7 @@
 
 package com.flow.platform.api.service;
 
-import com.flow.platform.api.domain.node.Node;
-import com.flow.platform.api.envs.EnvKey;
+import com.flow.platform.api.domain.Flow;
 import com.flow.platform.api.envs.GitEnvs;
 import com.flow.platform.util.git.GitException;
 import com.flow.platform.util.git.model.GitCommit;
@@ -36,7 +35,10 @@ public interface GitService {
     // the folder in the flow workspace
     String SOURCE_FOLDER_NAME = "source";
 
-    Set<EnvKey> REQUIRED_ENVS = ImmutableSet.of(GitEnvs.FLOW_GIT_URL, GitEnvs.FLOW_GIT_SOURCE);
+    Set<String> REQUIRED_ENVS = ImmutableSet.of(
+        GitEnvs.FLOW_GIT_URL.name(),
+        GitEnvs.FLOW_GIT_SOURCE.name()
+    );
 
     interface ProgressListener {
 
@@ -52,12 +54,12 @@ public interface GitService {
     /**
      * Fetch file content from git repo by git clone
      *
-     * @param node node instance which includes git repo info
+     * @param flow node instance which includes git repo info
      * @param filePath target file path in git repo
      * @param progress listener for git progress
      * @return file content
      */
-    String fetch(Node node, String filePath, ProgressListener progress) throws GitException;
+    String fetch(Flow flow, String filePath, ProgressListener progress) throws GitException;
 
     /**
      * List repos from git workspace
@@ -67,17 +69,17 @@ public interface GitService {
     /**
      * Fetch branches from git repo
      */
-    List<String> branches(Node node, boolean refresh);
+    List<String> branches(Flow flow, boolean refresh);
 
     /**
      * Fetch tags from git repo
      */
-    List<String> tags(Node node, boolean refresh);
+    List<String> tags(Flow flow, boolean refresh);
 
     /**
      * Fetch latest commit from git repo
      *
      * - For UNDEFINED_SSH or UNDEFINED_HTTP will be load from git local git repo, so use together with clone
      */
-    GitCommit latestCommit(Node node);
+    GitCommit latestCommit(Flow flow);
 }

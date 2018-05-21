@@ -22,6 +22,7 @@ import com.google.gson.annotations.Expose;
 import java.time.ZonedDateTime;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -77,4 +78,20 @@ public final class Flow extends Jsonable {
         this.name = NodePath.create(name).toString();
     }
 
+    public String getContext(String key) {
+        return context.get(key);
+    }
+
+    public String getContext(String key, String defaultVal) {
+        String val = context.get(key);
+        return Objects.isNull(val) ? defaultVal : val;
+    }
+
+    public void putContext(String key, String val) {
+        context.put(key, val);
+    }
+
+    public void removeContext(String key) {
+        context.remove(key);
+    }
 }

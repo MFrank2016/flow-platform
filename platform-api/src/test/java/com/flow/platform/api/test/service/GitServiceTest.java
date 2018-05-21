@@ -17,8 +17,8 @@
 package com.flow.platform.api.test.service;
 
 import com.flow.platform.api.config.AppConfig;
+import com.flow.platform.api.domain.Flow;
 import com.flow.platform.api.envs.GitEnvs;
-import com.flow.platform.api.domain.node.Node;
 import com.flow.platform.api.service.GitService;
 import com.flow.platform.api.service.GitService.ProgressListener;
 import com.flow.platform.api.test.TestBase;
@@ -26,9 +26,7 @@ import com.flow.platform.util.git.model.GitCommit;
 import com.flow.platform.util.git.model.GitSource;
 import java.io.File;
 import java.net.URL;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 import java.util.List;
 import java.util.Map;
 import org.apache.commons.io.FileUtils;
@@ -55,15 +53,15 @@ public class GitServiceTest extends TestBase {
     @Autowired
     private Path gitWorkspace;
 
-    private Node node;
+    private Flow flow;
 
     @Before
     public void initNodeWithGitInfo() throws Throwable {
-        node = new Node("flow_test", "flow_test");
-        node.putEnv(GitEnvs.FLOW_GIT_SOURCE, GitSource.UNDEFINED_SSH.name());
-        node.putEnv(GitEnvs.FLOW_GIT_URL, TestBase.GITHUB_TEST_REPO_SSH);
-        node.putEnv(GitEnvs.FLOW_GIT_SSH_PRIVATE_KEY, getResourceContent("ssh_private_key"));
-        node.putEnv(GitEnvs.FLOW_GIT_BRANCH, "master");
+        flow = new Flow("flow_test");
+        flow.putContext(GitEnvs.FLOW_GIT_SOURCE.name(), GitSource.UNDEFINED_SSH.name());
+        flow.putContext(GitEnvs.FLOW_GIT_URL.name(), TestBase.GITHUB_TEST_REPO_SSH);
+        flow.putContext(GitEnvs.FLOW_GIT_SSH_PRIVATE_KEY.name(), getResourceContent("ssh_private_key"));
+        flow.putContext(GitEnvs.FLOW_GIT_BRANCH.name(), "master");
     }
 
     @Test
@@ -92,7 +90,7 @@ public class GitServiceTest extends TestBase {
 
     @Test
     public void should_clone_git_file_with_ssh_pk() throws Throwable {
-        String content = gitService.fetch(node, AppConfig.DEFAULT_YML_FILE, new ProgressListener() {
+        String content = gitService.fetch(flow, AppConfig.DEFAULT_YML_FILE, new ProgressListener() {
 
             @Override
             public void onStart() {
@@ -119,7 +117,7 @@ public class GitServiceTest extends TestBase {
         Assert.assertNotNull(content);
 
         // get latest commit from local git repo
-        GitCommit gitCommit = gitService.latestCommit(node);
+        GitCommit gitCommit = gitService.latestCommit(flow);
         Assert.assertNotNull(gitCommit);
         Assert.assertNotNull(gitCommit.getMessage());
         Assert.assertNotNull(gitCommit.getAuthor());
@@ -128,23 +126,23 @@ public class GitServiceTest extends TestBase {
 
     @Test
     public void should_list_branches_of_git_repo() {
-        List<String> branches = gitService.branches(node, false);
+        List<String> branches = gitService.branches(flow, false);
         Assert.assertNotNull(branches);
         Assert.assertEquals("develop", branches.get(0));
         Assert.assertEquals("master", branches.get(1));
 
         // should load branches from cache
-        branches = gitService.branches(node, false);
+        branches = gitService.branches(flow, false);
         Assert.assertNotNull(branches);
 
         // should load branched from git repo for refresh
-        branches = gitService.branches(node, true);
+        branches = gitService.branches(flow, true);
         Assert.assertNotNull(branches);
     }
 
     @Test
     public void should_list_tags_of_git_repo() {
-        List<String> tags = gitService.tags(node, false);
+        List<String> tags = gitService.tags(flow, false);
         Assert.assertNotNull(tags);
     }
 
