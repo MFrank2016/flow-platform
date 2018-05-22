@@ -17,6 +17,8 @@
 package com.flow.platform.tree.test;
 
 import com.flow.platform.tree.Node;
+import com.flow.platform.tree.NodePath;
+import com.flow.platform.tree.NodeTree;
 import com.flow.platform.tree.YmlHelper;
 import com.google.common.io.Files;
 import java.io.File;
@@ -48,14 +50,12 @@ public class YmlHelperTest {
 
         // verify flow
         Assert.assertEquals("root", node.getName());
-
-        // verify flow envs
         Assert.assertEquals("echo hello", node.get("FLOW_WORKSPACE"));
         Assert.assertEquals("echo version", node.get("FLOW_VERSION"));
 
         // verify steps
         List<Node> steps = node.getChildren();
-        Assert.assertEquals(2, steps.size());;
+        Assert.assertEquals(2, steps.size());
 
         Node step1 = steps.get(0);
         Assert.assertEquals("step1", step1.getName());
@@ -78,13 +78,40 @@ public class YmlHelperTest {
         Node step2 = steps.get(1);
         Assert.assertEquals("step2", step2.getName());
         Assert.assertNull(step2.getCondition());
+    }
 
-        // verify parent node relationship
-//        Assert.assertEquals(node, step1.getParent());
-//        Assert.assertEquals(node, step2.getParent());
+    @Test
+    public void should_get_correct_relationship_on_node_tree() {
+        Node root = YmlHelper.buildFromYml(content);
+        NodeTree tree = NodeTree.create(root);
+        Assert.assertEquals(root, tree.getRoot());
 
-        // verify prev next node relationship
-//        Assert.assertEquals(step2, step1.getNext());
-//        Assert.assertEquals(step1, step2.getPrev());
+        // verify parent / child relationship
+        Node step1 = tree.get(NodePath.create("root/step1"));
+        Assert.assertNotNull(step1);
+        Assert.assertEquals(2, step1.getChildren().size());
+        Assert.assertEquals(root, step1.getParent());
+
+        Node step11 = tree.get(NodePath.create("root/step1/step11"));
+        Assert.assertNotNull(step11);
+        Assert.assertTrue(step11.getChildren().isEmpty());
+        Assert.assertEquals(step1, step11.getParent());
+
+        Node step12 = tree.get(NodePath.create("root/step1/step12"));
+        Assert.assertNotNull(step12);
+        Assert.assertTrue(step12.getChildren().isEmpty());
+        Assert.assertEquals(step1, step12.getParent());
+
+        Node step2 = tree.get(NodePath.create("root/step2"));
+        Assert.assertNotNull(step2);
+        Assert.assertTrue(step2.getChildren().isEmpty());
+        Assert.assertEquals(root, step2.getParent());
+
+        // verify next / previous relationship
+        Assert.assertEquals(step11, tree.next(root.getPath()));
+        Assert.assertEquals(step12, tree.next(step11.getPath()));
+        Assert.assertEquals(step1, tree.next(step12.getPath()));
+        Assert.assertEquals(step2, tree.next(step1.getPath()));
+        Assert.assertNull(tree.next(step2.getPath()));
     }
 }
