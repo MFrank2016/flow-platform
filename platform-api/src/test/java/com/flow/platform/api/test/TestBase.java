@@ -30,7 +30,6 @@ import com.flow.platform.api.dao.FlowDao;
 import com.flow.platform.api.dao.LocalFileResourceDao;
 import com.flow.platform.api.dao.MessageSettingDao;
 import com.flow.platform.api.dao.YmlDao;
-import com.flow.platform.api.dao.job.JobDao;
 import com.flow.platform.api.dao.job.JobNumberDao;
 import com.flow.platform.api.dao.job.JobYmlDao;
 import com.flow.platform.api.dao.job.NodeResultDao;
@@ -40,7 +39,7 @@ import com.flow.platform.api.dao.user.RoleDao;
 import com.flow.platform.api.dao.user.UserDao;
 import com.flow.platform.api.dao.user.UserFlowDao;
 import com.flow.platform.api.dao.user.UserRoleDao;
-import com.flow.platform.api.dao.v1.JobV1Dao;
+import com.flow.platform.api.dao.v1.JobDao;
 import com.flow.platform.api.domain.Flow;
 import com.flow.platform.api.domain.job.Job;
 import com.flow.platform.api.domain.job.JobCategory;
@@ -119,10 +118,10 @@ public abstract class TestBase {
     protected LocalFileResourceDao localFileResourceDao;
 
     @Autowired
-    protected JobDao jobDao;
+    protected com.flow.platform.api.dao.job.JobDao jobDao;
 
     @Autowired
-    protected JobV1Dao jobV1Dao;
+    protected JobDao jobDaoV1;
 
     @Autowired
     protected UserDao userDao;
@@ -297,8 +296,7 @@ public abstract class TestBase {
         artifactDao.deleteAll();
         localFileResourceDao.deleteAll();
         flowDao.deleteAll();
-        jobDao.deleteAll();
-        jobV1Dao.deleteAll();
+        jobDaoV1.deleteAll();
         ymlDao.deleteAll();
         jobYmlDao.deleteAll();
         nodeResultDao.deleteAll();

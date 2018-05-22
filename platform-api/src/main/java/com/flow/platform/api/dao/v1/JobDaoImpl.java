@@ -16,8 +16,8 @@
 
 package com.flow.platform.api.dao.v1;
 
-import com.flow.platform.api.domain.job.JobKeyV1;
-import com.flow.platform.api.domain.job.JobV1;
+import com.flow.platform.api.domain.v1.JobKey;
+import com.flow.platform.api.domain.v1.JobV1;
 import com.flow.platform.core.dao.AbstractBaseDao;
 import com.flow.platform.core.domain.Pageable;
 import java.util.Collection;
@@ -27,8 +27,8 @@ import org.springframework.stereotype.Repository;
 /**
  * @author yang
  */
-@Repository(value = "jobV1Dao")
-public class JobV1DaoImpl extends AbstractBaseDao<JobKeyV1, JobV1> implements JobV1Dao {
+@Repository(value = "jobDaoV1")
+public class JobDaoImpl extends AbstractBaseDao<JobKey, JobV1> implements JobDao {
 
     private final static String DEFAULT_SELECT_COLUMN =
         "select key, category, status, createdAt, updatedAt, createdBy";

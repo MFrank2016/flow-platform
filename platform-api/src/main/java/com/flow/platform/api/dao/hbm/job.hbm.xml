@@ -6,8 +6,8 @@
 <hibernate-mapping package="com.flow.platform.api.domain">
 
   <!--Job V1 Class-->
-  <class name="com.flow.platform.api.domain.job.JobV1" table="job_v1">
-    <composite-id name="key" class="com.flow.platform.api.domain.job.JobKeyV1">
+  <class name="com.flow.platform.api.domain.v1.JobV1" table="job_v1">
+    <composite-id name="key" class="com.flow.platform.api.domain.v1.JobKey">
       <key-property name="flow" type="string" column="flow_name"/>
       <key-property name="number" type="long" column="build_number"/>
     </composite-id>

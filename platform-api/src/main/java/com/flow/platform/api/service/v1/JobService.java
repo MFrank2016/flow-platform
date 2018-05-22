@@ -14,23 +14,22 @@
  * limitations under the License.
  */
 
-package com.flow.platform.api.dao.v1;
+package com.flow.platform.api.service.v1;
 
-import com.flow.platform.api.domain.job.JobKeyV1;
-import com.flow.platform.api.domain.job.JobV1;
-import com.flow.platform.core.dao.BaseDao;
-import com.flow.platform.core.domain.Pageable;
-import java.util.Collection;
-import java.util.List;
+import com.flow.platform.api.domain.Flow;
+import com.flow.platform.api.domain.job.JobCategory;
+import com.flow.platform.api.domain.v1.JobKey;
+import com.flow.platform.api.domain.v1.JobV1;
+import com.flow.platform.api.domain.user.User;
+import java.util.Map;
 
 /**
  * @author yang
  */
-public interface JobV1Dao extends BaseDao<JobKeyV1, JobV1> {
+public interface JobService {
 
-    List<JobV1> listLatestByFlows(Collection<String> flows);
+    JobV1 find(JobKey key);
 
-    List<JobV1> listByFlow(String flow, Pageable pageable);
+    JobV1 create(Flow flow, JobCategory eventType, Map<String, String> envs, User creator);
 
-    void deleteByFlow(String flow);
 }

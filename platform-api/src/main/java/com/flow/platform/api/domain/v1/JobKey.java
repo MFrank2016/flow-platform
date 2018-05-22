@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.flow.platform.api.domain.job;
+package com.flow.platform.api.domain.v1;
 
 import com.flow.platform.domain.Jsonable;
 import java.util.Objects;
@@ -30,7 +30,7 @@ import lombok.ToString;
 @ToString
 @NoArgsConstructor
 @EqualsAndHashCode(of = {"flow", "number"}, callSuper = false)
-public class JobKeyV1 extends Jsonable {
+public class JobKey extends Jsonable {
 
     @Getter
     @Setter
@@ -40,7 +40,7 @@ public class JobKeyV1 extends Jsonable {
     @Setter
     private Long number;
 
-    public JobKeyV1(String flow, Long number) {
+    public JobKey(String flow, Long number) {
         Objects.requireNonNull(flow);
         Objects.requireNonNull(number);
 

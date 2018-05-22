@@ -14,8 +14,10 @@
  * limitations under the License.
  */
 
-package com.flow.platform.api.domain.job;
+package com.flow.platform.api.domain.v1;
 
+import com.flow.platform.api.domain.job.JobCategory;
+import com.flow.platform.api.domain.job.JobStatus;
 import com.flow.platform.domain.Jsonable;
 import com.flow.platform.tree.NodeTree;
 import com.google.gson.annotations.Expose;
@@ -37,7 +39,7 @@ public class JobV1 extends Jsonable {
     @Expose
     @Getter
     @Setter
-    private JobKeyV1 key;
+    private JobKey key;
 
     @Getter
     @Setter
@@ -68,11 +70,11 @@ public class JobV1 extends Jsonable {
     @Setter
     private String createdBy;
 
-    public JobV1(JobKeyV1 key) {
+    public JobV1(JobKey key) {
         this.key = key;
     }
 
     public JobV1(String flow, Long number) {
-        this.key = new JobKeyV1(flow, number);
+        this.key = new JobKey(flow, number);
     }
 }

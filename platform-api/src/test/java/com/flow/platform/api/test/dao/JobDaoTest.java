@@ -18,8 +18,8 @@ package com.flow.platform.api.test.dao;
 
 import com.flow.platform.api.domain.Flow;
 import com.flow.platform.api.domain.FlowYml;
-import com.flow.platform.api.domain.job.JobKeyV1;
-import com.flow.platform.api.domain.job.JobV1;
+import com.flow.platform.api.domain.v1.JobKey;
+import com.flow.platform.api.domain.v1.JobV1;
 import com.flow.platform.api.test.FlowHelper;
 import com.flow.platform.api.test.TestBase;
 import com.flow.platform.tree.NodeTree;
@@ -57,9 +57,9 @@ public class JobDaoTest extends TestBase {
         JobV1 job = new JobV1(flow.getName(), 0L);
         job.setTree(tree);
         job.setCreatedBy("admin@flow.ci");
-        jobV1Dao.save(job);
+        jobDaoV1.save(job);
 
-        JobV1 loaded = jobV1Dao.get(new JobKeyV1(flow.getName(), 0L));
+        JobV1 loaded = jobDaoV1.get(new JobKey(flow.getName(), 0L));
         Assert.assertNotNull(loaded.getTree());
         Assert.assertEquals(job, loaded);
     }
