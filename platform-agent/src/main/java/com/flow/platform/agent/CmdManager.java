@@ -38,6 +38,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 import lombok.extern.log4j.Log4j2;
 
 /**
@@ -150,6 +151,15 @@ public class CmdManager {
      * @param cmd Cmd object
      */
     public void execute(final Cmd cmd) {
+        doExecute(cmd, callback -> {
+        });
+    }
+
+    public void execute(final Cmd cmd, Consumer consumer) {
+        doExecute(cmd, consumer);
+    }
+
+    private void doExecute(final Cmd cmd, Consumer consumer) {
         if (cmd.getType() == CmdType.RUN_SHELL) {
             // check max concurrent proc
             int max = cmdExecutor.getMaximumPoolSize();
@@ -162,7 +172,7 @@ public class CmdManager {
                 return;
             }
 
-            cmdExecutor.execute(new TaskRunner(cmd) {
+            cmdExecutor.execute(new TaskRunner(cmd, consumer) {
                 @Override
                 public void run() {
                     log.debug("start cmd ...");
@@ -188,6 +198,8 @@ public class CmdManager {
                         CmdResult result = new CmdResult();
                         result.getExceptions().add(e);
                         procEventHandler.onException(result);
+                    } finally {
+                        consumer.accept(true);
                     }
                 }
             });
@@ -315,8 +327,11 @@ public class CmdManager {
 
         private final Cmd cmd;
 
-        public TaskRunner(Cmd cmd) {
+        private final Consumer consumer;
+
+        public TaskRunner(Cmd cmd, Consumer consumer) {
             this.cmd = cmd;
+            this.consumer = consumer;
         }
 
         public Cmd getCmd() {

@@ -25,7 +25,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.verify;
 
 import com.flow.platform.cc.config.QueueCCConfig;
 import com.flow.platform.cc.domain.CmdStatusItem;
-import com.flow.platform.agent.manager.service.AgentCCService;
+import com.flow.platform.agent.manager.service.AgentManagerService;
 import com.flow.platform.cc.service.CmdCCService;
 import com.flow.platform.cc.service.ZoneService;
 import com.flow.platform.cc.test.TestBase;
@@ -63,7 +63,7 @@ public class CmdQueueConsumerTest extends TestBase {
     public WireMockRule wireMockRule = new WireMockRule(8088);
 
     @Autowired
-    private AgentCCService agentService;
+    private AgentManagerService agentService;
 
     @Autowired
     private ZoneService zoneService;

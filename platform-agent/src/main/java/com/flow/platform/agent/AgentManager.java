@@ -16,10 +16,11 @@
 
 package com.flow.platform.agent;
 
+import com.flow.platform.domain.AgentStatus;
 import com.flow.platform.domain.Cmd;
+import com.flow.platform.domain.CmdType;
 import com.flow.platform.domain.Jsonable;
 import com.flow.platform.util.zk.ZKClient;
-import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
 import lombok.Getter;
@@ -54,12 +55,24 @@ public class AgentManager implements Runnable, TreeCacheListener, AutoCloseable 
     private final String nodePath;    // zk node path, /flow-agents/{zone}/{name}
 
     @Getter
+    private final String statusPath;
+
+    @Getter
+    private final String nodeStatusPath;
+
+    private final static String STATUS = "STATUS";
+
+    private final static String SPLITCHARS = "---";
+
+    @Getter
     private final List<Cmd> cmdHistory = new LinkedList<>();
 
     public AgentManager(String zkHost, int zkTimeout, String zone, String name) {
         this.zkClient = new ZKClient(zkHost, ZK_RETRY_PERIOD, ZK_RECONNECT_TIME);
         this.zonePath = ZKPaths.makePath(Config.ZK_ROOT, zone);
         this.nodePath = ZKPaths.makePath(this.zonePath, name);
+        this.statusPath = ZKPaths.makePath(Config.ZK_ROOT, STATUS);
+        this.nodeStatusPath = ZKPaths.makePath(statusPath, zone + SPLITCHARS + name);
     }
 
     /**
@@ -150,7 +163,14 @@ public class AgentManager implements Runnable, TreeCacheListener, AutoCloseable 
 
             cmdHistory.add(cmd);
             log.trace("Received command: " + cmd.toString());
-            CmdManager.getInstance().execute(cmd);
+
+            if (cmd.getType() == CmdType.RUN_SHELL) {
+                zkClient.setData(nodeStatusPath, AgentStatus.BUSY.toString().getBytes());
+            }
+
+            CmdManager.getInstance().execute(cmd, callback -> {
+                zkClient.setData(nodeStatusPath, AgentStatus.IDLE.toString().getBytes());
+            });
 
         } catch (Throwable e) {
             log.error("Invalid cmd from server", e);
@@ -167,10 +187,13 @@ public class AgentManager implements Runnable, TreeCacheListener, AutoCloseable 
     private String registerZkNodeAndWatch() {
         String path = zkClient.createEphemeral(nodePath, null);
         zkClient.watchTree(path, this);
+        // Create node status node and set data IDLE
+        zkClient.createEphemeral(nodeStatusPath, AgentStatus.IDLE.toString().getBytes());
         return path;
     }
 
     private void removeZkNode() {
         zkClient.deleteWithoutGuaranteed(nodePath, false);
+        zkClient.deleteWithoutGuaranteed(nodeStatusPath, false);
     }
 }

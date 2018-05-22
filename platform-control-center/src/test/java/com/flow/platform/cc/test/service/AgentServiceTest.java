@@ -24,7 +24,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.verify;
 
 import com.flow.platform.agent.manager.exception.AgentErr;
-import com.flow.platform.agent.manager.service.AgentCCService;
+import com.flow.platform.agent.manager.service.AgentManagerService;
 import com.flow.platform.cc.service.ZoneService;
 import com.flow.platform.cc.test.TestBase;
 import com.flow.platform.cc.util.ZKHelper;
@@ -61,7 +61,7 @@ public class AgentServiceTest extends TestBase {
     public WireMockRule wireMockRule = new WireMockRule(8088);
 
     @Autowired
-    private AgentCCService agentService;
+    private AgentManagerService agentService;
 
     @Autowired
     private ZoneService zoneService;

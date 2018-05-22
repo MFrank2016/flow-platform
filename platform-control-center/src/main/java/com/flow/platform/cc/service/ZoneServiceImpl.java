@@ -16,7 +16,7 @@
 
 package com.flow.platform.cc.service;
 
-import com.flow.platform.agent.manager.service.AgentCCService;
+import com.flow.platform.agent.manager.service.AgentManagerService;
 import com.flow.platform.cc.config.TaskConfig;
 import com.flow.platform.cc.util.ZKHelper;
 import com.flow.platform.cloud.InstanceManager;
@@ -54,7 +54,7 @@ import org.springframework.stereotype.Service;
 public class ZoneServiceImpl implements ZoneService, ContextEvent {
 
     @Autowired
-    private AgentCCService agentService;
+    private AgentManagerService agentService;
 
     @Autowired
     private CmdCCService cmdService;
@@ -79,10 +79,13 @@ public class ZoneServiceImpl implements ZoneService, ContextEvent {
 
     private final Map<Zone, ZoneEventListener> zoneEventWatchers = new HashMap<>();
 
+    private final static String STATUS = "STATUS";
+
     @Override
     public void start() {
         // init root node
         String path = createRoot();
+        createStatus();
         log.trace("Root zookeeper node initialized: {}", path);
 
         // init zone nodes
@@ -101,6 +104,11 @@ public class ZoneServiceImpl implements ZoneService, ContextEvent {
     public String createRoot() {
         String rootPath = ZKHelper.buildPath(null, null);
         return zkClient.create(rootPath, null);
+    }
+
+    public String createStatus() {
+        String statusPath = ZKHelper.buildPath(STATUS, null);
+        return zkClient.create(statusPath, null);
     }
 
     @Override

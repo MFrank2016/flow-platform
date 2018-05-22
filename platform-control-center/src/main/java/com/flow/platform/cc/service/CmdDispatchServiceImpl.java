@@ -16,7 +16,7 @@
 
 package com.flow.platform.cc.service;
 
-import com.flow.platform.agent.manager.service.AgentCCService;
+import com.flow.platform.agent.manager.service.AgentManagerService;
 import com.flow.platform.cc.config.TaskConfig;
 import com.flow.platform.cc.domain.CmdStatusItem;
 import com.flow.platform.agent.manager.event.AgentResourceEvent;
@@ -68,7 +68,7 @@ public class CmdDispatchServiceImpl extends ApplicationEventService implements C
     private CmdCCService cmdService;
 
     @Autowired
-    private AgentCCService agentService;
+    private AgentManagerService agentService;
 
     @Autowired
     protected ZKClient zkClient;

@@ -25,7 +25,7 @@ import com.flow.platform.api.domain.job.NodeStatus;
 import com.flow.platform.api.domain.sync.SyncTask;
 import com.flow.platform.api.events.AgentStatusChangeEvent;
 import com.flow.platform.api.service.job.JobService;
-import com.flow.platform.agent.manager.service.AgentCCService;
+import com.flow.platform.agent.manager.service.AgentManagerService;
 import com.flow.platform.core.service.ApplicationEventService;
 import com.flow.platform.domain.Agent;
 import com.flow.platform.domain.AgentStatus;
@@ -46,7 +46,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 @Log4j2
-public class AgentServiceImpl extends ApplicationEventService implements AgentService {
+public class AgentServiceImpl extends ApplicationEventService implements com.flow.platform.api.service.AgentService {
 
     @Value(value = "${api.zone.default}")
     private String zone;
@@ -61,7 +61,7 @@ public class AgentServiceImpl extends ApplicationEventService implements AgentSe
     private SyncService syncService;
 
     @Autowired
-    private AgentCCService agentCCService;
+    private AgentManagerService agentCCService;
 
     @Override
     public List<Agent> list() {

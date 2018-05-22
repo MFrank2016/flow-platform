@@ -20,7 +20,7 @@ import static junit.framework.TestCase.fail;
 
 import com.flow.platform.cc.domain.CmdStatusItem;
 import com.flow.platform.agent.manager.exception.AgentErr;
-import com.flow.platform.agent.manager.service.AgentCCService;
+import com.flow.platform.agent.manager.service.AgentManagerService;
 import com.flow.platform.cc.service.CmdDispatchService;
 import com.flow.platform.cc.service.CmdCCService;
 import com.flow.platform.cc.service.ZoneService;
@@ -68,7 +68,7 @@ public class CmdServiceTest extends TestBase {
     private CmdDispatchService cmdDispatchService;
 
     @Autowired
-    private AgentCCService agentService;
+    private AgentManagerService agentService;
 
     @Autowired
     private ZoneService zoneService;

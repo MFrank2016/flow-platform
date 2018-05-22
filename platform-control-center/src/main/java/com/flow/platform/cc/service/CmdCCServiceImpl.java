@@ -23,7 +23,7 @@ import static com.flow.platform.domain.CmdType.RUN_SHELL;
 import static com.flow.platform.domain.CmdType.SHUTDOWN;
 import static com.flow.platform.domain.CmdType.STOP;
 
-import com.flow.platform.agent.manager.service.AgentCCService;
+import com.flow.platform.agent.manager.service.AgentManagerService;
 import com.flow.platform.cc.config.QueueCCConfig;
 import com.flow.platform.cc.dao.CmdDao;
 import com.flow.platform.cc.dao.CmdLogDao;
@@ -75,7 +75,7 @@ import org.springframework.web.multipart.MultipartFile;
 public class CmdCCServiceImpl extends WebhookServiceImplBase implements CmdCCService {
 
     @Autowired
-    private AgentCCService agentService;
+    private AgentManagerService agentService;
 
     @Autowired
     private ZoneService zoneService;

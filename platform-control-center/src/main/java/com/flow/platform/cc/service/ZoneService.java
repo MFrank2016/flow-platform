@@ -35,6 +35,12 @@ public interface ZoneService {
     String createRoot();
 
     /**
+     * Create zk status node
+     * @return
+     */
+    String createStatus();
+
+    /**
      * Create zk node for agent zone
      *
      * @return zk node path of zone

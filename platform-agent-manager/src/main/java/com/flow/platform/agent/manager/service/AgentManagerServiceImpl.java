@@ -27,13 +27,17 @@ import com.flow.platform.domain.AgentPath;
 import com.flow.platform.domain.AgentSettings;
 import com.flow.platform.domain.AgentStatus;
 import com.flow.platform.util.DateUtil;
+import com.flow.platform.util.zk.ZKClient;
 import com.google.common.base.Strings;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 import lombok.extern.log4j.Log4j2;
+import org.apache.zookeeper.data.Stat;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -44,13 +48,23 @@ import org.springframework.transaction.annotation.Transactional;
 @Log4j2
 @Service
 @Transactional
-public class AgentCCServiceImpl extends WebhookServiceImplBase implements AgentCCService {
+public class AgentManagerServiceImpl extends WebhookServiceImplBase implements AgentManagerService {
 
     @Autowired
     private AgentDao agentDao;
 
     @Autowired
+    protected ZKClient zkClient;
+
+    @Autowired
     private AgentSettings agentSettings;
+
+    @Value("${zk.node.root}")
+    private String rootNodeName;
+
+    private final static String STATUS = "STATUS";
+
+    private final static String SPLITCHARS = "---";
 
     @Override
     public void report(AgentPath path, AgentStatus status) {
@@ -209,6 +223,37 @@ public class AgentCCServiceImpl extends WebhookServiceImplBase implements AgentC
         } catch (Throwable e) {
             throw new UnsupportedOperationException("delete agent failure " + e.getMessage());
         }
+    }
 
+    public List<Agent> agentsFromZookeeper() {
+
+        String statusPath = statusNode();
+        List<Agent> agents = agentDao.list();
+        List<String> children = zkClient.getChildren(statusPath);
+
+        for (String child : children) {
+            String childPath = statusPath + "/" + child;
+
+            AgentPath agentPath = new AgentPath(child.split(SPLITCHARS)[0], child.split(SPLITCHARS)[1]);
+            Agent agent = findByPath(agents, agentPath);
+            if (!Objects.isNull(agent)) {
+                Stat stat = new Stat();
+                agent.setStatus(AgentStatus.valueOf(new String(zkClient.getData(childPath, stat))));
+            }
+        }
+        return agents;
+    }
+
+    private String statusNode() {
+        return "/" + rootNodeName + "/" + STATUS;
+    }
+
+    private Agent findByPath(List<Agent> agents, AgentPath agentPath) {
+        for (Agent agent : agents) {
+            if (Objects.equals(agent.getPath(), agentPath)) {
+                return agent;
+            }
+        }
+        return null;
     }
 }

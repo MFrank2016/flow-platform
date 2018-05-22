@@ -27,7 +27,7 @@ import java.util.List;
 /**
  * @author gy@fir.im
  */
-public interface AgentCCService extends WebhookService {
+public interface AgentManagerService extends WebhookService {
 
     int SESSION_TIMEOUT_TASK_HEARTBEAT = 60 * 1000; // millisecond
 
@@ -101,6 +101,9 @@ public interface AgentCCService extends WebhookService {
      * delete agent
      */
     void delete(Agent agent);
+
+
+    List<Agent> agentsFromZookeeper();
 
 //    /**
 //     * To check agent session timeout

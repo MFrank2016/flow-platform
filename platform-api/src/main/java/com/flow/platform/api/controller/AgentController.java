@@ -20,9 +20,8 @@ import com.flow.platform.api.domain.agent.AgentItem;
 import com.flow.platform.api.domain.permission.Actions;
 import com.flow.platform.api.domain.response.BooleanValue;
 import com.flow.platform.api.security.WebSecurity;
-import com.flow.platform.api.service.AgentService;
 import com.flow.platform.api.service.job.CmdService;
-import com.flow.platform.agent.manager.service.AgentCCService;
+import com.flow.platform.agent.manager.service.AgentManagerService;
 import com.flow.platform.core.exception.IllegalParameterException;
 import com.flow.platform.core.exception.IllegalStatusException;
 import com.flow.platform.domain.Agent;
@@ -58,10 +57,10 @@ public class AgentController {
     private String apiDomain;
 
     @Autowired
-    private AgentService agentService;
+    private com.flow.platform.api.service.AgentService agentService;
 
     @Autowired
-    private AgentCCService agentCCService;
+    private AgentManagerService agentCCService;
 
     @Autowired
     private CmdService cmdService;
@@ -89,6 +88,12 @@ public class AgentController {
     @WebSecurity(action = Actions.AGENT_SHOW)
     public List<AgentItem> index() {
         return agentService.listItems();
+    }
+
+
+    @GetMapping("/zookeeper")
+    public List<Agent> agentsFromZookeeper() {
+        return agentCCService.agentsFromZookeeper();
     }
 
     /**
