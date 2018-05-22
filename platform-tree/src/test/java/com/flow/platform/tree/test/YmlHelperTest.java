@@ -19,7 +19,7 @@ package com.flow.platform.tree.test;
 import com.flow.platform.tree.Node;
 import com.flow.platform.tree.NodePath;
 import com.flow.platform.tree.NodeTree;
-import com.flow.platform.tree.YmlHelper;
+import com.flow.platform.tree.yml.YmlHelper;
 import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
@@ -46,7 +46,7 @@ public class YmlHelperTest {
 
     @Test
     public void should_get_node_from_yml() {
-        Node node = YmlHelper.buildFromYml(content);
+        Node node = YmlHelper.build(content);
 
         // verify flow
         Assert.assertEquals("root", node.getName());
@@ -82,7 +82,7 @@ public class YmlHelperTest {
 
     @Test
     public void should_get_correct_relationship_on_node_tree() {
-        Node root = YmlHelper.buildFromYml(content);
+        Node root = YmlHelper.build(content);
         NodeTree tree = NodeTree.create(root);
         Assert.assertEquals(root, tree.getRoot());
 
@@ -113,5 +113,12 @@ public class YmlHelperTest {
         Assert.assertEquals(step1, tree.next(step12.getPath()));
         Assert.assertEquals(step2, tree.next(step1.getPath()));
         Assert.assertNull(tree.next(step2.getPath()));
+    }
+
+    @Test
+    public void should_parse_to_yml_from_node() {
+        Node root = YmlHelper.build(content);
+        String parsed = YmlHelper.toYml(root);
+        Assert.assertNotNull(parsed);
     }
 }

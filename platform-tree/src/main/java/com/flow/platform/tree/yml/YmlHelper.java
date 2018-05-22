@@ -14,14 +14,22 @@
  * limitations under the License.
  */
 
-package com.flow.platform.tree;
+package com.flow.platform.tree.yml;
 
+import com.flow.platform.tree.Node;
+import com.google.common.collect.Lists;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import org.yaml.snakeyaml.DumperOptions;
+import org.yaml.snakeyaml.DumperOptions.FlowStyle;
+import org.yaml.snakeyaml.DumperOptions.LineBreak;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.constructor.Constructor;
 import org.yaml.snakeyaml.error.YAMLException;
+import org.yaml.snakeyaml.representer.Representer;
 
 /**
  * @author yang
@@ -30,10 +38,24 @@ public class YmlHelper {
 
     private final static Constructor ROOT_YML_CONSTRUCTOR = new Constructor(RootYmlWrapper.class);
 
+    private final static Representer ORDERED_SKIP_EMPTY_REPRESENTER = new OrderedSkipEmptyRepresenter();
+
+    private final static DumperOptions DUMPER_OPTIONS = new DumperOptions();
+
+    private final static LineBreak LINE_BREAK = LineBreak.getPlatformLineBreak();
+
+    static {
+        DUMPER_OPTIONS.setIndent(4);
+        DUMPER_OPTIONS.setIndicatorIndent(2);
+        DUMPER_OPTIONS.setExplicitStart(true);
+        DUMPER_OPTIONS.setDefaultFlowStyle(FlowStyle.BLOCK);
+        DUMPER_OPTIONS.setLineBreak(LINE_BREAK);
+    }
+
     /**
      * Create Node instance from yml
      */
-    public static Node buildFromYml(String yml) {
+    public static Node build(String yml) {
         Yaml yaml = new Yaml(ROOT_YML_CONSTRUCTOR);
         RootYmlWrapper node = yaml.load(yml);
 
@@ -58,24 +80,57 @@ public class YmlHelper {
         return flow.toNode();
     }
 
+    public static String toYml(Node root) {
+        RootNodeWrapper rootWrapper = RootNodeWrapper.fromNode(root);
+        RootYmlWrapper ymlWrapper = new RootYmlWrapper(rootWrapper);
+
+        Yaml yaml = new Yaml(ROOT_YML_CONSTRUCTOR, ORDERED_SKIP_EMPTY_REPRESENTER, DUMPER_OPTIONS);
+        String dump = yaml.dump(ymlWrapper);
+        dump = dump.substring(dump.indexOf(LINE_BREAK.getString()) + 1);
+        return dump;
+    }
+
     /**
      * Represent YML root flow
      */
     private static class RootYmlWrapper {
 
         public List<RootNodeWrapper> flow;
+
+        public RootYmlWrapper() {
+        }
+
+        public RootYmlWrapper(RootNodeWrapper root) {
+            this.flow = Lists.newArrayList(root);
+        }
     }
 
     private static class RootNodeWrapper {
 
         private final static String DEFAULT_ROOT_NAME = "root";
 
+        public static RootNodeWrapper fromNode(Node node) {
+            RootNodeWrapper wrapper = new RootNodeWrapper();
+
+            // set envs
+            for (Map.Entry<String, String> entry : node.all()) {
+                wrapper.envs.put(entry.getKey(), entry.getValue());
+            }
+
+            // set children
+            for (Node child : node.getChildren()) {
+                wrapper.steps.add(ChildNodeWrapper.fromNode(child));
+            }
+
+            return wrapper;
+        }
+
         /**
          * Environment variables
          */
-        public Map<String, String> envs;
+        public Map<String, String> envs = new LinkedHashMap<>();
 
-        public List<ChildNodeWrapper> steps;
+        public List<ChildNodeWrapper> steps = new LinkedList<>();
 
         public Node toNode() {
             Node node = new Node(DEFAULT_ROOT_NAME);
@@ -85,20 +140,12 @@ public class YmlHelper {
         }
 
         protected void setEnvs(Node node) {
-            if (Objects.isNull(envs)) {
-                return;
-            }
-
             for (Map.Entry<String, String> entry : envs.entrySet()) {
                 node.put(entry.getKey(), entry.getValue());
             }
         }
 
         protected void setChildren(Node node) {
-            if (Objects.isNull(steps)) {
-                return;
-            }
-
             for (ChildNodeWrapper child : steps) {
                 node.getChildren().add(child.toNode());
             }
@@ -106,6 +153,28 @@ public class YmlHelper {
     }
 
     private static class ChildNodeWrapper extends RootNodeWrapper {
+
+        public static ChildNodeWrapper fromNode(Node node) {
+            ChildNodeWrapper wrapper = new ChildNodeWrapper();
+
+            // set envs
+            for (Map.Entry<String, String> entry : node.all()) {
+                wrapper.envs.put(entry.getKey(), entry.getValue());
+            }
+
+            wrapper.name = node.getName();
+            wrapper.script = node.getContent();
+            wrapper.plugin = node.getPlugin();
+            wrapper.allowFailure = node.isAllowFailure() == Node.ALLOW_FAILURE_DEFAULT ? null : node.isAllowFailure();
+            wrapper.isFinal = node.isFinal() == Node.IS_FINAL_DEFAULT ? null : node.isFinal();
+            wrapper.condition = node.getCondition();
+
+            for (Node child : node.getChildren()) {
+                wrapper.steps.add(ChildNodeWrapper.fromNode(child));
+            }
+
+            return wrapper;
+        }
 
         public String name;
 

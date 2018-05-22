@@ -30,6 +30,10 @@ import lombok.ToString;
 @EqualsAndHashCode(of = {"path"}, callSuper = false)
 public final class Node extends Context {
 
+    public final static boolean IS_FINAL_DEFAULT = false;
+
+    public final static boolean ALLOW_FAILURE_DEFAULT = false;
+
     /**
      * Name of node
      */
