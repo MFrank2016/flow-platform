@@ -62,11 +62,22 @@ public final class Node extends Context {
     private String condition;
 
     /**
+     * Plugin name
+     */
+    @Getter
+    @Setter
+    private String plugin;
+
+    /**
      * Allow failure on node
      */
     @Getter
     @Setter
     private boolean allowFailure;
+
+    @Getter
+    @Setter
+    private boolean isFinal;
 
     @Getter
     @Setter

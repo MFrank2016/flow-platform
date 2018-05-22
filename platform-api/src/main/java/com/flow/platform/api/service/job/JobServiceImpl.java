@@ -122,9 +122,6 @@ public class JobServiceImpl extends ApplicationEventService implements JobServic
     private GitService gitService;
 
     @Autowired
-    private NodeService nodeService;
-
-    @Autowired
     private EnvService envService;
 
     @Autowired

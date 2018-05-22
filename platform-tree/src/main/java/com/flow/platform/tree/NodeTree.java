@@ -31,13 +31,6 @@ public class NodeTree {
     private final static int DEFAULT_SIZE = 20;
 
     /**
-     * Create node tree from yml
-     */
-    public static NodeTree create(String yml) {
-        throw new UnsupportedOperationException();
-    }
-
-    /**
      * Create node tree from Node object
      * @param root
      * @return
