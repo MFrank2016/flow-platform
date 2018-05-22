@@ -19,6 +19,7 @@ package com.flow.platform.tree;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Range;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -28,7 +29,7 @@ import lombok.EqualsAndHashCode;
  * @author yang
  */
 @EqualsAndHashCode(of = {"pathInStr"})
-public class NodePath {
+public class NodePath implements Serializable {
 
     private final static String PATH_SEPARATOR = "/";
 

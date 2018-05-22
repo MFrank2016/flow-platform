@@ -17,12 +17,13 @@
 package com.flow.platform.core.dao.adaptor;
 
 
+import com.flow.platform.util.ObjectUtil;
 import java.lang.reflect.Type;
-import java.nio.charset.Charset;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
+import java.util.Objects;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
@@ -49,18 +50,17 @@ public class ByteAdaptor extends BaseAdaptor {
     @Override
     public Object nullSafeGet(ResultSet rs, String[] names, SharedSessionContractImplementor session, Object owner)
         throws HibernateException, SQLException {
+
         byte[] bytes = rs.getBytes(names[0]);
-        if (bytes == null) {
-            return null;
-        }
-        return byteToString(bytes);
+        return Objects.isNull(bytes) ? null : ObjectUtil.fromBytes(bytes);
     }
 
     @Override
     public void nullSafeSet(PreparedStatement st, Object value, int index, SharedSessionContractImplementor session)
         throws HibernateException, SQLException {
+
         // set to null
-        if (value == null) {
+        if (Objects.isNull(value)) {
             st.setBytes(index, null);
             return;
         }
@@ -71,18 +71,8 @@ public class ByteAdaptor extends BaseAdaptor {
             return;
         }
 
-        byte[] bytes = stringToByte((String) value);
+        byte[] bytes = ObjectUtil.toBytes(value);
         st.setBytes(index, bytes);
 
-    }
-
-    private String byteToString(byte[] bytes) {
-        String str = new String(bytes, Charset.forName("UTF-8"));
-        return str;
-    }
-
-    private byte[] stringToByte(String str) {
-        byte[] bytes = str.getBytes(Charset.forName("UTF-8"));
-        return bytes;
     }
 }

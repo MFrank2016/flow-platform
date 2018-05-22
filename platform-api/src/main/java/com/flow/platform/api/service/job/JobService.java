@@ -17,13 +17,10 @@ package com.flow.platform.api.service.job;
 
 import com.flow.platform.api.domain.CmdCallbackQueueItem;
 import com.flow.platform.api.domain.Flow;
-import com.flow.platform.api.domain.FlowYml;
 import com.flow.platform.api.domain.job.Job;
 import com.flow.platform.api.domain.job.JobCategory;
 import com.flow.platform.api.domain.job.JobStatus;
 import com.flow.platform.api.domain.user.User;
-import com.flow.platform.api.envs.EnvKey;
-import com.flow.platform.api.envs.FlowEnvs;
 import com.flow.platform.api.envs.GitEnvs;
 import com.flow.platform.core.domain.Page;
 import com.flow.platform.core.domain.Pageable;
@@ -32,7 +29,6 @@ import java.math.BigInteger;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Consumer;
 
 /**
  * @author yh@firim

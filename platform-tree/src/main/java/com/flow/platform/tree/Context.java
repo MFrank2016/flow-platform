@@ -16,6 +16,7 @@
 
 package com.flow.platform.tree;
 
+import java.io.Serializable;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -26,7 +27,7 @@ import java.util.Set;
  *
  * @author yang
  */
-public class Context {
+public class Context implements Serializable {
 
     protected final Map<String, String> context = new LinkedHashMap<>();
 

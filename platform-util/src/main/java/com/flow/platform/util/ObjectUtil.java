@@ -16,12 +16,19 @@
 
 package com.flow.platform.util;
 
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.*;
-import org.apache.logging.log4j.util.ReflectionUtil;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * @author gy@fir.im
@@ -64,14 +71,13 @@ public class ObjectUtil {
             method = clazz.getDeclaredMethod(name, field.getType());
         } catch (NoSuchMethodException e) {
             clazz = clazz.getSuperclass();
-            if(clazz == null){
+            if (clazz == null) {
                 throw new NoSuchFieldException(name);
             }
             method = getDeclaredMethod(clazz, name, field);
         }
         return method;
     }
-
 
 
     private static Object convertType(Field field, Object value) {
@@ -83,7 +89,7 @@ public class ObjectUtil {
             return Integer.parseInt(value.toString());
         }
 
-        if(field.getType().isAssignableFrom(value.getClass())){
+        if (field.getType().isAssignableFrom(value.getClass())) {
             return value;
         }
 
@@ -184,5 +190,27 @@ public class ObjectUtil {
 
     public static String fieldNameForSetterGetter(String fieldName) {
         return Character.toUpperCase(fieldName.charAt(0)) + fieldName.substring(1);
+    }
+
+    public static byte[] toBytes(Object source) {
+        try (ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
+            try (ObjectOutputStream oos = new ObjectOutputStream(bos)) {
+                oos.writeObject(source);
+                oos.flush();
+            }
+            return bos.toByteArray();
+        } catch (IOException e) {
+            return null;
+        }
+    }
+
+    public static Object fromBytes(byte[] bytes) {
+        try (ByteArrayInputStream bis = new ByteArrayInputStream(bytes)) {
+            try (ObjectInput in = new ObjectInputStream(bis)) {
+                return in.readObject();
+            }
+        } catch (IOException | ClassNotFoundException e) {
+            return null;
+        }
     }
 }

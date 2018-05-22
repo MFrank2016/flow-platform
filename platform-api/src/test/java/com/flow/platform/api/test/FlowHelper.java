@@ -42,7 +42,7 @@ public class FlowHelper {
         return flow;
     }
 
-    protected String getResourceContent(String fileName) throws IOException {
+    private String getResourceContent(String fileName) throws IOException {
         ClassLoader classLoader = TestBase.class.getClassLoader();
         URL resource = classLoader.getResource(fileName);
         File path = new File(resource.getFile());

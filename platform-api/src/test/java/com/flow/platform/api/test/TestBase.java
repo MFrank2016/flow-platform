@@ -40,6 +40,7 @@ import com.flow.platform.api.dao.user.RoleDao;
 import com.flow.platform.api.dao.user.UserDao;
 import com.flow.platform.api.dao.user.UserFlowDao;
 import com.flow.platform.api.dao.user.UserRoleDao;
+import com.flow.platform.api.dao.v1.JobV1Dao;
 import com.flow.platform.api.domain.Flow;
 import com.flow.platform.api.domain.job.Job;
 import com.flow.platform.api.domain.job.JobCategory;
@@ -119,6 +120,9 @@ public abstract class TestBase {
 
     @Autowired
     protected JobDao jobDao;
+
+    @Autowired
+    protected JobV1Dao jobV1Dao;
 
     @Autowired
     protected UserDao userDao;
@@ -294,6 +298,7 @@ public abstract class TestBase {
         localFileResourceDao.deleteAll();
         flowDao.deleteAll();
         jobDao.deleteAll();
+        jobV1Dao.deleteAll();
         ymlDao.deleteAll();
         jobYmlDao.deleteAll();
         nodeResultDao.deleteAll();

@@ -25,6 +25,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
+import java.util.Objects;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.usertype.UserType;
@@ -65,15 +66,11 @@ public abstract class BaseAdaptor implements UserType {
      * @throws SQLException
      */
     @Override
-    public Object nullSafeGet(ResultSet rs,
-        String[] names,
-        SharedSessionContractImplementor session,
-        Object owner) throws HibernateException, SQLException {
+    public Object nullSafeGet(ResultSet rs, String[] names, SharedSessionContractImplementor session, Object owner)
+        throws HibernateException, SQLException {
+
         String str = rs.getString(names[0]);
-        if (str == null) {
-            return null;
-        }
-        return jsonToObject(str);
+        return Objects.isNull(str) ? null : jsonToObject(str);
     }
 
     /**
@@ -85,13 +82,11 @@ public abstract class BaseAdaptor implements UserType {
      * @throws SQLException
      */
     @Override
-    public void nullSafeSet(PreparedStatement st,
-        Object value,
-        int index,
-        SharedSessionContractImplementor session) throws HibernateException, SQLException {
+    public void nullSafeSet(PreparedStatement st, Object value, int index, SharedSessionContractImplementor session)
+        throws HibernateException, SQLException {
 
         // set to null
-        if (value == null) {
+        if (Objects.isNull(value)) {
             st.setString(index, null);
             return;
         }

@@ -5,6 +5,41 @@
 
 <hibernate-mapping package="com.flow.platform.api.domain">
 
+  <!--Job V1 Class-->
+  <class name="com.flow.platform.api.domain.job.JobV1" table="job_v1">
+    <composite-id name="key" class="com.flow.platform.api.domain.job.JobKeyV1">
+      <key-property name="flow" type="string" column="flow_name"/>
+      <key-property name="number" type="long" column="build_number"/>
+    </composite-id>
+
+    <property name="tree" type="com.flow.platform.core.dao.adaptor.ByteAdaptor" not-null="true"/>
+
+    <property name="category" column="job_category" length="20" not-null="true">
+      <type name="org.hibernate.type.EnumType">
+        <param name="enumClass">com.flow.platform.api.domain.job.JobCategory</param>
+        <param name="useNamed">true</param>
+      </type>
+    </property>
+
+    <property name="status" column="job_status" length="20" not-null="true">
+      <type name="org.hibernate.type.EnumType">
+        <param name="enumClass">com.flow.platform.api.domain.job.JobStatus</param>
+        <param name="useNamed">true</param>
+      </type>
+    </property>
+
+    <property name="createdAt" type="java.time.ZonedDateTime" update="false">
+      <column name="created_at" sql-type="timestamp" default="CURRENT_TIMESTAMP"/>
+    </property>
+
+    <property name="updatedAt" type="java.time.ZonedDateTime">
+      <column name="updated_at" sql-type="timestamp" default="CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"/>
+    </property>
+
+    <property name="createdBy" type="string" column="created_by"/>
+  </class>
+
+
   <!--Job Class-->
   <class name="com.flow.platform.api.domain.job.Job" table="job">
     <id name="id" type="big_integer">

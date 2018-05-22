@@ -16,17 +16,20 @@
 
 package com.flow.platform.tree;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 /**
  * @author yang
  */
-public class NodeTree {
+@NoArgsConstructor
+public class NodeTree implements Serializable {
 
     private final static int DEFAULT_SIZE = 20;
 
@@ -48,19 +51,12 @@ public class NodeTree {
     private final Context sharedContext = new Context();
 
     @Getter
-    private final Node root;
+    private Node root;
 
-    private NodeTree(Node root) {
+    public NodeTree(Node root) {
         buildTree(root);
         ordered.remove(root);
         this.root = root;
-    }
-
-    /**
-     * Parse to tree to yml string
-     */
-    public String toYml() {
-        throw new UnsupportedOperationException();
     }
 
     /**
@@ -137,7 +133,7 @@ public class NodeTree {
         cached.put(root.getPath(), new NodeWithIndex(root, ordered.size() - 1));
     }
 
-    private class NodeWithIndex {
+    private class NodeWithIndex implements Serializable {
 
         Node node;
 
