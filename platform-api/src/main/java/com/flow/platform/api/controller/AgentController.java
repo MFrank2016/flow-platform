@@ -93,7 +93,7 @@ public class AgentController {
 
     @GetMapping("/zookeeper")
     public List<Agent> agentsFromZookeeper() {
-        return agentCCService.agentsFromZookeeper();
+        return agentCCService.agentsFromZookeeper(null);
     }
 
     /**

@@ -48,6 +48,14 @@ public class Agent extends Webhookable {
     private Integer concurrentProc = 1;
 
     /**
+     * zookeeper data version
+     */
+    @Setter
+    @Getter
+    @Expose
+    private Integer version;
+
+    /**
      * Agent busy or idle
      */
     @Setter

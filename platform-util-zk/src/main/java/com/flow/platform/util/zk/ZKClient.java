@@ -358,6 +358,10 @@ public class ZKClient implements Closeable {
         }
     }
 
+    public CuratorFramework getClient() {
+        return client;
+    }
+
     private static ZkException checkException(String defaultMessage, Throwable e) {
         if (e instanceof KeeperException) {
             KeeperException zkException = (KeeperException) e;

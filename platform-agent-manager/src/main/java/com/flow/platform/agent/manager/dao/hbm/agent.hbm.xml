@@ -16,12 +16,12 @@
     <property name="token" column="token"/>
     <property name="webhook" column="webhook"/>
 
-    <property name="status" column="status" length="10" not-null="true">
-      <type name="org.hibernate.type.EnumType">
-        <param name="enumClass">com.flow.platform.domain.AgentStatus</param>
-        <param name="useNamed">true</param>
-      </type>
-    </property>
+    <!--<property name="status" column="status" length="10" not-null="true">-->
+      <!--<type name="org.hibernate.type.EnumType">-->
+        <!--<param name="enumClass">com.flow.platform.domain.AgentStatus</param>-->
+        <!--<param name="useNamed">true</param>-->
+      <!--</type>-->
+    <!--</property>-->
 
     <property name="createdDate" type="java.time.ZonedDateTime">
       <column name="created_date" sql-type="timestamp" default="CURRENT_TIMESTAMP"/>

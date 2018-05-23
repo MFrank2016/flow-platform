@@ -22,6 +22,7 @@ import com.flow.platform.cc.util.ZKHelper;
 import com.flow.platform.cloud.InstanceManager;
 import com.flow.platform.core.context.ContextEvent;
 import com.flow.platform.core.context.SpringContext;
+import com.flow.platform.core.util.ThreadUtil;
 import com.flow.platform.domain.Agent;
 import com.flow.platform.domain.AgentPath;
 import com.flow.platform.domain.AgentSettings;
@@ -118,14 +119,14 @@ public class ZoneServiceImpl implements ZoneService, ContextEvent {
 
         zkClient.create(zonePath, agentSettings.toBytes());
 
-        List<String> agents = zkClient.getChildren(zonePath);
-
-        if (!agents.isEmpty()) {
-            for (String agent : agents) {
-                agentService.report(new AgentPath(zone.getName(), agent), AgentStatus.IDLE);
-            }
-        }
-
+//        List<String> agents = zkClient.getChildren(zonePath);
+//
+//        if (!agents.isEmpty()) {
+//            for (String agent : agents) {
+//                agentService.report(new AgentPath(zone.getName(), agent), AgentStatus.IDLE);
+//            }
+//        }
+//
         ZoneEventListener zoneEventWatcher = zoneEventWatchers.computeIfAbsent(zone, ZoneEventListener::new);
         zkClient.watchChildren(zonePath, zoneEventWatcher);
         return zonePath;
@@ -145,7 +146,7 @@ public class ZoneServiceImpl implements ZoneService, ContextEvent {
     @Override
     public void deleteZone(String zoneName) {
         Zone zone = getZone(zoneName);
-        if(!Objects.isNull(zone)) {
+        if (!Objects.isNull(zone)) {
             zoneEventWatchers.remove(zone);
         }
     }
@@ -253,7 +254,10 @@ public class ZoneServiceImpl implements ZoneService, ContextEvent {
             final String name = ZKHelper.getNameFromPath(path);
             log.debug("Receive zookeeper event {} {}", eventType, path);
 
-            if (eventType == Type.CHILD_ADDED || eventType == Type.CHILD_UPDATED) {
+            if (eventType == Type.CHILD_ADDED) {
+
+                // add buffer time
+                ThreadUtil.sleep(1000);
                 agentService.report(new AgentPath(zone.getName(), name), AgentStatus.IDLE);
                 return;
             }

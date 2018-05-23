@@ -31,6 +31,7 @@ import com.flow.platform.util.zk.ZKClient;
 import com.google.common.base.Strings;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -38,7 +39,6 @@ import lombok.extern.log4j.Log4j2;
 import org.apache.zookeeper.data.Stat;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -70,66 +70,44 @@ public class AgentManagerServiceImpl extends WebhookServiceImplBase implements A
     public void report(AgentPath path, AgentStatus status) {
         Agent exist = find(path);
 
-        // For agent offline status
-        if (status == AgentStatus.OFFLINE) {
-            saveWithStatus(exist, AgentStatus.OFFLINE);
+        if (status == AgentStatus.IDLE) {
+            saveWithStatus(exist, AgentStatus.IDLE);
             return;
         }
 
-        // create new agent with idle status
-        if (exist == null) {
-            try {
-                exist = create(path, null);
-                log.trace("Create agent {} from report", path);
-            } catch (DataIntegrityViolationException ignore) {
-                // agent been created at some other threads
-                return;
-            }
-        }
-
-        // update exist offline agent to idle status
-        if (exist.getStatus() == AgentStatus.OFFLINE) {
+        // For agent offline status
+        if (status == AgentStatus.OFFLINE) {
             exist.setSessionId(null);
-            saveWithStatus(exist, AgentStatus.IDLE);
-        }
-
-        // do not update agent status when its busy
-        if (exist.getStatus() == AgentStatus.BUSY) {
-            // do nothing
+            saveWithStatus(exist, AgentStatus.OFFLINE);
+            return;
         }
     }
 
     @Override
     @Transactional(readOnly = true)
     public Agent find(AgentPath key) {
-        return agentDao.get(key);
+        return appendStatusToAgent(agentDao.get(key));
     }
 
     @Override
     @Transactional(readOnly = true)
     public Agent find(String sessionId) {
-        return agentDao.get(sessionId);
+        return appendStatusToAgent(agentDao.get(sessionId));
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<Agent> findAvailable(String zone) {
-        return agentDao.list(zone, "updatedDate", AgentStatus.IDLE);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public List<Agent> listForOnline(String zone) {
-        return agentDao.list(zone, "createdDate", AgentStatus.IDLE, AgentStatus.BUSY);
+        return agentsFromZookeeper(AgentStatus.IDLE);
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<Agent> list(String zone) {
         if (Strings.isNullOrEmpty(zone)) {
-            return agentDao.list();
+            return appendStatusToAgents(agentDao.list());
         }
-        return agentDao.list(zone, "createdDate");
+        return appendStatusToAgents(agentDao.list(zone, "createdDate"));
     }
 
     @Override
@@ -145,13 +123,12 @@ public class AgentManagerServiceImpl extends WebhookServiceImplBase implements A
         boolean statusIsChanged = !agent.getStatus().equals(status);
 
         agent.setStatus(status);
-        agentDao.update(agent);
         log.trace("Agent status been updated to '{}'", status);
 
         // send webhook if status changed
-        if (statusIsChanged) {
+//        if (statusIsChanged) {
             this.webhookCallback(agent);
-        }
+//        }
 
         // boardcast AgentResourceEvent for release
         if (agent.getStatus() == AgentStatus.IDLE) {
@@ -179,7 +156,6 @@ public class AgentManagerServiceImpl extends WebhookServiceImplBase implements A
         agent = new Agent(agentPath);
         agent.setCreatedDate(DateUtil.now());
         agent.setUpdatedDate(DateUtil.now());
-        agent.setStatus(AgentStatus.OFFLINE);
         agent.setWebhook(webhook);
 
         //random token
@@ -225,35 +201,56 @@ public class AgentManagerServiceImpl extends WebhookServiceImplBase implements A
         }
     }
 
-    public List<Agent> agentsFromZookeeper() {
+    public List<Agent> agentsFromZookeeper(AgentStatus status) {
 
-        String statusPath = statusNode();
         List<Agent> agents = agentDao.list();
-        List<String> children = zkClient.getChildren(statusPath);
+        List<Agent> result = new ArrayList<>(agents.size());
 
-        for (String child : children) {
-            String childPath = statusPath + "/" + child;
+        appendStatusToAgents(agents);
 
-            AgentPath agentPath = new AgentPath(child.split(SPLITCHARS)[0], child.split(SPLITCHARS)[1]);
-            Agent agent = findByPath(agents, agentPath);
-            if (!Objects.isNull(agent)) {
-                Stat stat = new Stat();
-                agent.setStatus(AgentStatus.valueOf(new String(zkClient.getData(childPath, stat))));
+        if (!Objects.isNull(status)) {
+            for (Agent agent : agents) {
+                if (Objects.equals(agent.getStatus(), status)) {
+                    result.add(agent);
+                }
             }
+
+            return result;
+        }
+
+        return agents;
+    }
+
+    @Override
+    public String statusNode(Agent agent) {
+        return zkStatusNode() + "/" + agent.getPath().getZone() + SPLITCHARS + agent.getPath().getName();
+    }
+
+    private List<Agent> appendStatusToAgents(List<Agent> agents) {
+        for (Agent agent : agents) {
+            appendStatusToAgent(agent);
         }
         return agents;
     }
 
-    private String statusNode() {
-        return "/" + rootNodeName + "/" + STATUS;
+    private Agent appendStatusToAgent(Agent agent) {
+        String childPath = statusNode(agent);
+        if (!Objects.isNull(agent)) {
+            Stat stat = new Stat();
+            String data;
+            try {
+                data = new String(zkClient.getData(childPath, stat));
+                agent.setVersion(stat.getVersion());
+            } catch (Throwable throwable) {
+                data = AgentStatus.OFFLINE.toString();
+            }
+            agent.setStatus(AgentStatus.valueOf(data));
+        }
+
+        return agent;
     }
 
-    private Agent findByPath(List<Agent> agents, AgentPath agentPath) {
-        for (Agent agent : agents) {
-            if (Objects.equals(agent.getPath(), agentPath)) {
-                return agent;
-            }
-        }
-        return null;
+    private String zkStatusNode() {
+        return "/" + rootNodeName + "/" + STATUS;
     }
 }

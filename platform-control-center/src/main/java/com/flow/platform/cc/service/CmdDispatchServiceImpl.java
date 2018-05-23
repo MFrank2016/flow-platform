@@ -16,13 +16,13 @@
 
 package com.flow.platform.cc.service;
 
-import com.flow.platform.agent.manager.service.AgentManagerService;
-import com.flow.platform.cc.config.TaskConfig;
-import com.flow.platform.cc.domain.CmdStatusItem;
 import com.flow.platform.agent.manager.event.AgentResourceEvent;
 import com.flow.platform.agent.manager.event.AgentResourceEvent.Category;
 import com.flow.platform.agent.manager.exception.AgentErr;
 import com.flow.platform.agent.manager.exception.AgentErr.NotAvailableException;
+import com.flow.platform.agent.manager.service.AgentManagerService;
+import com.flow.platform.cc.config.TaskConfig;
+import com.flow.platform.cc.domain.CmdStatusItem;
 import com.flow.platform.cc.util.ZKHelper;
 import com.flow.platform.core.exception.FlowException;
 import com.flow.platform.core.exception.IllegalParameterException;
@@ -216,10 +216,34 @@ public class CmdDispatchServiceImpl extends ApplicationEventService implements C
         List<Agent> availableList = agentService.findAvailable(zone);
 
         if (availableList.size() > 0) {
-            return availableList.get(0);
+            Agent agent = availableList.get(0);
+            // lock agent
+            lockAgent(agent);
+
+            return agent;
         }
 
         throw new AgentErr.NotAvailableException(zone);
+    }
+
+    /**
+     * lock agent from zookeeper transaction
+     * @param agent
+     */
+    private void lockAgent(Agent agent) {
+
+        try {
+            zkClient.getClient().inTransaction()
+                .check()
+                .forPath(agentService.statusNode(agent))
+                .and()
+                .setData().withVersion(agent.getVersion())
+                .forPath(agentService.statusNode(agent), AgentStatus.BUSY.toString().getBytes())
+                .and()
+                .commit();
+        } catch (Throwable e) {
+            throw new AgentErr.NotAvailableException( "Lock agent failure: " + agent.toString());
+        }
     }
 
     /**

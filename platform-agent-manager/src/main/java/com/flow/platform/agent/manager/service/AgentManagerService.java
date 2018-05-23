@@ -44,11 +44,6 @@ public interface AgentManagerService extends WebhookService {
     List<Agent> list(String zone);
 
     /**
-     * Get online agent set by zone
-     */
-    List<Agent> listForOnline(String zone);
-
-    /**
      * Find agent by zone and agent name from online list
      *
      * @param key AgentKey object
@@ -103,7 +98,9 @@ public interface AgentManagerService extends WebhookService {
     void delete(Agent agent);
 
 
-    List<Agent> agentsFromZookeeper();
+    List<Agent> agentsFromZookeeper(AgentStatus status);
+
+    String statusNode(Agent agent);
 
 //    /**
 //     * To check agent session timeout

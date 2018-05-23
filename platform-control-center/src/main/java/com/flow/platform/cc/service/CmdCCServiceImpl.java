@@ -242,11 +242,6 @@ public class CmdCCServiceImpl extends WebhookServiceImplBase implements CmdCCSer
             cmd.setCmdResult(inputResult);
         }
 
-        // update agent status
-        if (statusItem.isUpdateAgentStatus()) {
-            updateAgentStatusFromCmd(cmd);
-        }
-
         if (statusItem.isCallWebhook()) {
             webhookCallback(cmd);
         }
@@ -267,40 +262,6 @@ public class CmdCCServiceImpl extends WebhookServiceImplBase implements CmdCCSer
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-    }
-
-    /**
-     * Update agent status when report cmd status and result
-     * - DONOT update agent status if cmd with session, since it controlled by session cmd
-     * - busy or idle by Cmd.Type.RUN_SHELL while report cmd status
-     *
-     * @param cmd Cmd object
-     */
-    private void updateAgentStatusFromCmd(Cmd cmd) {
-        if (cmd.hasSession()) {
-            return;
-        }
-
-        AgentPath agentPath = cmd.getAgentPath();
-        boolean isAgentBusy = false;
-
-        for (Cmd tmp : listByAgentPath(agentPath)) {
-            if (tmp.getType() != CmdType.RUN_SHELL) {
-                continue;
-            }
-
-            if (!tmp.getAgentPath().equals(agentPath)) {
-                continue;
-            }
-
-            if (tmp.isCurrent()) {
-                isAgentBusy = true;
-                break;
-            }
-        }
-
-        Agent agent = agentService.find(agentPath);
-        agentService.saveWithStatus(agent, isAgentBusy ? AgentStatus.BUSY : AgentStatus.IDLE);
     }
 
     /**
