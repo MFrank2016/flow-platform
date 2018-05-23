@@ -17,8 +17,8 @@
 package com.flow.platform.api.service.job;
 
 import com.flow.platform.api.domain.SearchCondition;
-import com.flow.platform.api.envs.GitEnvs;
 import com.flow.platform.api.domain.job.Job;
+import com.flow.platform.api.envs.GitEnvs;
 import com.flow.platform.core.domain.Page;
 import com.flow.platform.core.domain.Pageable;
 import com.flow.platform.util.CollectionUtil;
@@ -66,11 +66,11 @@ public class JobSearchServiceImpl implements JobSearchService {
             List<Job> jobs = jobService.list(paths, false);
             List<Job> list = match(searchCondition, jobs);
 
-            Integer pageSize = pageable.getPageSize();
-            Integer pageNumber = pageable.getPageNumber();
+            Integer pageSize = pageable.getSize();
+            Integer pageNumber = pageable.getNumber();
             List<Job> subList = CollectionUtil.subList(list, pageSize, pageNumber);
 
-            return new Page<Job>(subList, pageSize, pageNumber, list.size());
+            return new Page<>(subList, pageSize, pageNumber, list.size());
         }
     }
 

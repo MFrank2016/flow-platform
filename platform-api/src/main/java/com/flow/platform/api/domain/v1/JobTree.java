@@ -16,12 +16,9 @@
 
 package com.flow.platform.api.domain.v1;
 
-import com.flow.platform.api.domain.job.JobCategory;
-import com.flow.platform.api.domain.job.JobStatus;
+
 import com.flow.platform.domain.Jsonable;
 import com.flow.platform.tree.NodeTree;
-import com.google.gson.annotations.Expose;
-import java.time.ZonedDateTime;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -31,42 +28,21 @@ import lombok.ToString;
 /**
  * @author yang
  */
-@NoArgsConstructor
 @ToString(of = {"key"})
+@NoArgsConstructor
 @EqualsAndHashCode(of = {"key"}, callSuper = false)
-public class JobV1 extends Jsonable {
+public class JobTree extends Jsonable {
 
-    @Expose
     @Getter
     @Setter
     private JobKey key;
 
-    @Expose
     @Getter
     @Setter
-    private JobCategory category = JobCategory.MANUAL;
+    private NodeTree tree;
 
-    @Expose
-    @Getter
-    @Setter
-    private JobStatus status = JobStatus.CREATED;
-
-    @Expose
-    @Getter
-    @Setter
-    private ZonedDateTime createdAt;
-
-    @Expose
-    @Getter
-    @Setter
-    private ZonedDateTime updatedAt;
-
-    @Expose
-    @Getter
-    @Setter
-    private String createdBy;
-
-    public JobV1(String flow, Long number) {
-        this.key = new JobKey(flow, number);
+    public JobTree(JobKey key, NodeTree tree) {
+        this.key = key;
+        this.tree = tree;
     }
 }

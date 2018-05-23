@@ -16,12 +16,16 @@
 
 package com.flow.platform.api.service.v1;
 
+import com.flow.platform.api.dao.v1.JobDao;
 import com.flow.platform.api.domain.Flow;
 import com.flow.platform.api.domain.job.JobCategory;
+import com.flow.platform.api.domain.user.User;
 import com.flow.platform.api.domain.v1.JobKey;
 import com.flow.platform.api.domain.v1.JobV1;
-import com.flow.platform.api.domain.user.User;
+import com.flow.platform.core.exception.NotFoundException;
 import java.util.Map;
+import java.util.Objects;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 /**
@@ -30,9 +34,19 @@ import org.springframework.stereotype.Service;
 @Service(value = "jobServiceV1")
 public class JobServiceImpl implements JobService {
 
+    @Autowired
+    private JobDao jobDaoV1;
+
     @Override
     public JobV1 find(JobKey key) {
-        return null;
+        Objects.requireNonNull(key, "JobKey is required");
+        JobV1 job = jobDaoV1.get(key);
+
+        if (Objects.isNull(job)) {
+            throw new NotFoundException("Job not found for: " + key.toString());
+        }
+
+        return job;
     }
 
     @Override

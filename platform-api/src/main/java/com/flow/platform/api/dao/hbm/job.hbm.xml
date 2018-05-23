@@ -12,8 +12,6 @@
       <key-property name="number" type="long" column="build_number"/>
     </composite-id>
 
-    <property name="tree" type="com.flow.platform.core.dao.adaptor.ByteAdaptor" not-null="true"/>
-
     <property name="category" column="job_category" length="20" not-null="true">
       <type name="org.hibernate.type.EnumType">
         <param name="enumClass">com.flow.platform.api.domain.job.JobCategory</param>
@@ -37,6 +35,16 @@
     </property>
 
     <property name="createdBy" type="string" column="created_by"/>
+  </class>
+
+  <!--JobTree V1 Class-->
+  <class name="com.flow.platform.api.domain.v1.JobTree" table="job_tree_v1">
+    <composite-id name="key" class="com.flow.platform.api.domain.v1.JobKey">
+      <key-property name="flow" type="string" column="flow_name"/>
+      <key-property name="number" type="long" column="build_number"/>
+    </composite-id>
+
+    <property name="tree" type="com.flow.platform.core.dao.adaptor.ByteAdaptor" not-null="true"/>
   </class>
 
 

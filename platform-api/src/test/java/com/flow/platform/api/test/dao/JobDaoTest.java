@@ -22,9 +22,10 @@ import com.flow.platform.api.domain.v1.JobKey;
 import com.flow.platform.api.domain.v1.JobV1;
 import com.flow.platform.api.test.FlowHelper;
 import com.flow.platform.api.test.TestBase;
-import com.flow.platform.tree.NodeTree;
-import com.flow.platform.tree.yml.YmlHelper;
+import com.flow.platform.core.domain.Pageable;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -40,28 +41,54 @@ public class JobDaoTest extends TestBase {
 
     private Flow flow;
 
-    private FlowYml flowYml;
-
     @Before
     public void init() throws IOException {
         flow = flowHelper.createFlowWithYml("job_dao_test", "yml/for_job_test.yml");
         Assert.assertNotNull(flow);
 
-        flowYml = ymlDao.get(flow.getName());
+        FlowYml flowYml = ymlDao.get(flow.getName());
         Assert.assertNotNull(flowYml);
     }
 
     @Test
     public void should_create_and_get_job() {
-        NodeTree tree = NodeTree.create(YmlHelper.build(flowYml.getContent()));
-        JobV1 job = new JobV1(flow.getName(), 0L);
-        job.setTree(tree);
-        job.setCreatedBy("admin@flow.ci");
-        jobDaoV1.save(job);
-
+        JobV1 job = createJobs(flow.getName(), 1).get(0);
         JobV1 loaded = jobDaoV1.get(new JobKey(flow.getName(), 0L));
-        Assert.assertNotNull(loaded.getTree());
         Assert.assertEquals(job, loaded);
+    }
+
+    @Test
+    public void should_list_job_by_flow_name() {
+        List<JobV1> inits = createJobs(flow.getName(), 2);
+        JobV1 first = inits.get(0);
+        JobV1 second = inits.get(1);
+
+        List<JobV1> jobs = jobDaoV1.listByFlow(flow.getName(), new Pageable(1, 1));
+        Assert.assertNotNull(jobs);
+        Assert.assertEquals(1, jobs.size());
+        Assert.assertEquals(first, jobs.get(0));
+
+        jobs = jobDaoV1.listByFlow(flow.getName(), new Pageable(2, 1));
+        Assert.assertNotNull(jobs);
+        Assert.assertEquals(1, jobs.size());
+        Assert.assertEquals(second, jobs.get(0));
+    }
+
+    @Test
+    public void should_delete_jobs_by_flow_name() {
+        createJobs(flow.getName(), 10);
+        Assert.assertEquals(10, jobDaoV1.list().size());
+
+        jobDaoV1.deleteByFlow(flow.getName());
+        Assert.assertEquals(0, jobDaoV1.list().size());
+    }
+
+    private List<JobV1> createJobs(String name, int size) {
+        List<JobV1> jobs = new ArrayList<>(size);
+        for (int i = 0; i < size; i++) {
+            jobs.add(jobDaoV1.save(new JobV1(name, (long) i)));
+        }
+        return jobs;
     }
 
 }

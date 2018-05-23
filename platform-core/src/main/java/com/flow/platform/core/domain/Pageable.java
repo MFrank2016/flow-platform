@@ -18,16 +18,24 @@ package com.flow.platform.core.domain;
 
 import com.flow.platform.util.StringUtil;
 import java.util.Objects;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 /**
  * @author gyfirim
  */
-public class Pageable{
+@NoArgsConstructor
+public class Pageable {
 
-    public final static Pageable DEFAULT = new Pageable(1,20);
+    public final static Pageable DEFAULT = new Pageable(1, 20);
 
+    @Getter
+    @Setter
     private int number;
 
+    @Getter
+    @Setter
     private int size;
 
     public Pageable(int number, int size) {
@@ -35,34 +43,14 @@ public class Pageable{
         this.size = size;
     }
 
-    public Pageable (){
-
-    }
-
-    public int getPageNumber() {
-        return number;
-    }
-
-    public int getPageSize() {
-        return size;
-    }
-
     public int getOffset() {
-        return (number-1) * size;
-    }
-
-    public void setSize(int size) {
-        this.size = size;
-    }
-
-    public void setNumber(int number) {
-        this.number = number;
+        return (number - 1) * size;
     }
 
     public boolean isEmpty() {
         return StringUtil.isNullOrEmptyForItems(
-            String.valueOf(getPageNumber()), String.valueOf(getPageSize()))
-            || (getPageSize() == 0 || getPageNumber() == 0);
+            String.valueOf(getNumber()), String.valueOf(getSize()))
+            || (getSize() == 0 || getNumber() == 0);
     }
 
     public static boolean isEmpty(Pageable pageable) {

@@ -96,7 +96,7 @@ public class JobDaoImpl extends AbstractBaseDao<BigInteger, Job> implements JobD
 
             NativeQuery nativeQuery = builder.createNativeQuery(session);
             nativeQuery.setFirstResult(pageable.getOffset());
-            nativeQuery.setMaxResults(pageable.getPageSize());
+            nativeQuery.setMaxResults(pageable.getSize());
             nativeQuery.setResultSetMapping("MappingJobResult");
             List<Object[]> objects = nativeQuery.list();
             List<Job> jobs = JobConvertUtil.convert(objects);
@@ -104,7 +104,7 @@ public class JobDaoImpl extends AbstractBaseDao<BigInteger, Job> implements JobD
             NativeQuery countNativeQuery = builder.select(countSelect).createNativeQuery(session);
             long totalSize = Long.valueOf(countNativeQuery.uniqueResult().toString());
 
-            return new Page<>(jobs, pageable.getPageSize(), pageable.getPageNumber(), totalSize);
+            return new Page<>(jobs, pageable.getSize(), pageable.getNumber(), totalSize);
         });
     }
 
@@ -166,7 +166,7 @@ public class JobDaoImpl extends AbstractBaseDao<BigInteger, Job> implements JobD
 
             NativeQuery nativeQuery = builder.createNativeQuery(session);
             nativeQuery.setFirstResult(pageable.getOffset());
-            nativeQuery.setMaxResults(pageable.getPageSize());
+            nativeQuery.setMaxResults(pageable.getSize());
             nativeQuery.setResultSetMapping("MappingJobResult");
             List<Object[]> objects = nativeQuery.list();
             List<Job> jobs = JobConvertUtil.convert(objects);
@@ -174,7 +174,7 @@ public class JobDaoImpl extends AbstractBaseDao<BigInteger, Job> implements JobD
             NativeQuery countNativeQuery = builder.select(countSelect).createNativeQuery(session);
             long totalSize = Long.valueOf(countNativeQuery.uniqueResult().toString());
 
-            return new Page<>(jobs, pageable.getPageSize(), pageable.getPageNumber(), totalSize);
+            return new Page<>(jobs, pageable.getSize(), pageable.getNumber(), totalSize);
         });
     }
 
@@ -218,14 +218,14 @@ public class JobDaoImpl extends AbstractBaseDao<BigInteger, Job> implements JobD
             NativeQuery nativeQuery = builder.createNativeQuery(session);
             nativeQuery.setResultSetMapping("MappingJobResult");
             nativeQuery.setFirstResult(pageable.getOffset());
-            nativeQuery.setMaxResults(pageable.getPageSize());
+            nativeQuery.setMaxResults(pageable.getSize());
             List<Object[]> objects = nativeQuery.list();
             List<Job> jobs = JobConvertUtil.convert(objects);
 
             NativeQuery countNativeQuery = builder.select(countSelect).createNativeQuery(session);
             long totalSize = Long.valueOf(countNativeQuery.uniqueResult().toString());
 
-            return new Page<>(jobs, pageable.getPageSize(), pageable.getPageNumber(), totalSize);
+            return new Page<>(jobs, pageable.getSize(), pageable.getNumber(), totalSize);
         });
     }
 

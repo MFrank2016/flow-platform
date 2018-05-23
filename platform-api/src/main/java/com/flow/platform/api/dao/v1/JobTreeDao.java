@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 flow.ci
+ * Copyright 2018 fir.im
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,20 +14,15 @@
  * limitations under the License.
  */
 
-package com.flow.platform.core.dao;
+package com.flow.platform.api.dao.v1;
 
-import com.flow.platform.core.domain.Page;
-import com.flow.platform.core.domain.Pageable;
-import javax.persistence.TypedQuery;
+import com.flow.platform.api.domain.v1.JobKey;
+import com.flow.platform.api.domain.v1.JobTree;
+import com.flow.platform.core.dao.BaseDao;
 
 /**
- * @author yh@firim
+ * @author yang
  */
-public class PageUtil {
+public interface JobTreeDao extends BaseDao<JobKey, JobTree> {
 
-    public static <T> Page<T> buildPage(TypedQuery query, Pageable pageable, long totalSize) {
-        query.setFirstResult(pageable.getOffset());
-        query.setMaxResults(pageable.getSize());
-        return new Page<T>(query.getResultList(), pageable.getSize(), pageable.getNumber(), totalSize);
-    }
 }

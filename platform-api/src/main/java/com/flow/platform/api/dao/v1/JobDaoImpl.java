@@ -30,9 +30,6 @@ import org.springframework.stereotype.Repository;
 @Repository(value = "jobDaoV1")
 public class JobDaoImpl extends AbstractBaseDao<JobKey, JobV1> implements JobDao {
 
-    private final static String DEFAULT_SELECT_COLUMN =
-        "select key, category, status, createdAt, updatedAt, createdBy";
-
     @Override
     protected Class<JobV1> getEntityClass() {
         return JobV1.class;
@@ -51,13 +48,19 @@ public class JobDaoImpl extends AbstractBaseDao<JobKey, JobV1> implements JobDao
     @Override
     public List<JobV1> listByFlow(String flow, Pageable pageable) {
         return execute(session -> session
-            .createQuery(DEFAULT_SELECT_COLUMN + " from JobV1 where key.flow = :flow", JobV1.class)
+            .createQuery("from JobV1 where key.flow = :flow", JobV1.class)
             .setParameter("flow", flow)
-            .list());
+            .setFirstResult(pageable.getOffset())
+            .setMaxResults(pageable.getSize())
+            .getResultList());
     }
 
     @Override
     public void deleteByFlow(String flow) {
-
+        execute(session -> {
+            return session.createQuery("delete from JobV1 where key.flow = :flow")
+                .setParameter("flow", flow)
+                .executeUpdate();
+        });
     }
 }
