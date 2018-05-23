@@ -41,10 +41,16 @@ public class JobServiceV1Test extends TestBase {
     private JobService jobServiceV1;
 
     @Test
-    public void should_create_job() throws Throwable {
+    public void should_create_and_delete_job() throws Throwable {
         Flow flow = createRootFlow("flow-job", "yml/demo_flow2.yaml");
         JobV1 job = jobServiceV1.create(flow, JobCategory.MANUAL, null, mockUser);
-        Assert.assertNotNull(job);
+
+        Assert.assertNotNull(jobDaoV1.get(job.getKey()));
+        Assert.assertNotNull(jobTreeDao.get(job.getKey()));
+
+        jobServiceV1.delete(flow);
+        Assert.assertNull(jobDaoV1.get(job.getKey()));
+        Assert.assertNull(jobTreeDao.get(job.getKey()));
     }
 
     @Test

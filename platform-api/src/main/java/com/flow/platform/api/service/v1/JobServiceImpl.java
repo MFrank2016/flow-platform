@@ -111,4 +111,13 @@ public class JobServiceImpl implements JobService {
 
         return job;
     }
+
+    @Override
+    @Transactional
+    public void delete(Flow flow) {
+        Objects.requireNonNull(flow, "Flow must be defined");
+
+        jobDaoV1.deleteByFlow(flow.getName());
+        jobTreeDao.deleteByFlow(flow.getName());
+    }
 }

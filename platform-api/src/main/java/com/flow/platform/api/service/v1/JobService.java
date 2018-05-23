@@ -28,8 +28,18 @@ import java.util.Map;
  */
 public interface JobService {
 
+    /**
+     * Find job by job key
+     */
     JobV1 find(JobKey key);
 
+    /**
+     * Create a new job
+     */
     JobV1 create(Flow flow, JobCategory eventType, Map<String, String> envs, User creator);
 
+    /**
+     * Delete job by flow
+     */
+    void delete(Flow flow);
 }

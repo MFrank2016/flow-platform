@@ -71,4 +71,10 @@ public class JobTreeDaoTest extends TestBase {
         Assert.assertEquals("WORLD", jobTreeDao.get(key).getTree().getSharedContext().get("HELLO"));
     }
 
+    @Test
+    public void should_delete_by_flow_name() {
+        jobTreeDao.deleteByFlow(key.getFlow());
+        Assert.assertEquals(0, jobTreeDao.list().size());
+    }
+
 }

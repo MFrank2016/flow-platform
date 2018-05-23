@@ -36,4 +36,11 @@ public class JobTreeDaoImpl extends AbstractBaseDao<JobKey, JobTree> implements 
     protected String getKeyName() {
         return "key";
     }
+
+    @Override
+    public void deleteByFlow(String flow) {
+        execute(session -> session.createQuery("delete from JobTree where key.flow = :flow")
+            .setParameter("flow", flow)
+            .executeUpdate());
+    }
 }

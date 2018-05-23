@@ -25,4 +25,5 @@ import com.flow.platform.core.dao.BaseDao;
  */
 public interface JobTreeDao extends BaseDao<JobKey, JobTree> {
 
+    void deleteByFlow(String flow);
 }
