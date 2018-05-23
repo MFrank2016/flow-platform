@@ -18,8 +18,10 @@ package com.flow.platform.api.service.v1;
 
 import com.flow.platform.api.dao.FlowDao;
 import com.flow.platform.api.dao.YmlDao;
+import com.flow.platform.api.dao.job.JobNumberDao;
 import com.flow.platform.api.domain.Flow;
 import com.flow.platform.api.domain.FlowYml;
+import com.flow.platform.api.domain.job.JobNumber;
 import com.flow.platform.api.domain.user.User;
 import com.flow.platform.api.envs.EnvUtil;
 import com.flow.platform.api.exception.DuplicateExeption;
@@ -47,6 +49,9 @@ public class FlowServiceImpl extends CurrentUser implements FlowService {
     private YmlDao ymlDao;
 
     @Autowired
+    private JobNumberDao jobNumberDao;
+
+    @Autowired
     private UserFlowService userFlowService;
 
     @Override
@@ -64,7 +69,10 @@ public class FlowServiceImpl extends CurrentUser implements FlowService {
         userFlowService.assign(user, exist);
 
         ymlDao.save(new FlowYml(name));
-        return flowDao.save(new Flow(name));
+        jobNumberDao.save(new JobNumber(name));
+        flowDao.save(exist);
+
+        return exist;
     }
 
     @Override
@@ -102,6 +110,7 @@ public class FlowServiceImpl extends CurrentUser implements FlowService {
 
         ymlDao.delete(new FlowYml(name));
         flowDao.delete(flow);
+        jobNumberDao.delete(new JobNumber(name));
 
         userFlowService.unAssign(flow);
 

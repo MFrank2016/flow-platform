@@ -16,6 +16,7 @@
 
 package com.flow.platform.tree;
 
+import com.flow.platform.tree.yml.YmlHelper;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -39,6 +40,11 @@ public class NodeTree implements Serializable {
      * @return
      */
     public static NodeTree create(Node root) {
+        return new NodeTree(root);
+    }
+
+    public static NodeTree create(String yml) {
+        Node root = YmlHelper.build(yml);
         return new NodeTree(root);
     }
 

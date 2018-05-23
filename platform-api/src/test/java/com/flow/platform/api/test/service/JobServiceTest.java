@@ -82,26 +82,6 @@ public class JobServiceTest extends TestBase {
     }
 
     @Test
-    public void should_create_job_with_unique_job_number() throws Throwable {
-        // given:
-        final Flow flow = createRootFlow("flow-job-number", "yml/demo_flow2.yaml");
-        final int numOfJob = 10;
-        final CountDownLatch countDown = new CountDownLatch(numOfJob);
-
-        // when:
-        for (int i = 0; i < numOfJob; i++) {
-            taskExecutor.execute(() -> {
-                jobService.create(flow, JobCategory.MANUAL, null, mockUser);
-                countDown.countDown();
-            });
-        }
-
-        // then:
-        countDown.await(30, TimeUnit.SECONDS);
-        Assert.assertEquals(numOfJob, jobDao.numOfJob(flow.getName()).intValue());
-    }
-
-    @Test
     public void should_job_failure_since_cannot_create_session() throws Throwable {
         // given: clean up all mock url to simulate create session cmd failure
         wireMockRule.resetAll();

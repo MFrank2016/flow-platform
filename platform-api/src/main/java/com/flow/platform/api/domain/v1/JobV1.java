@@ -16,10 +16,9 @@
 
 package com.flow.platform.api.domain.v1;
 
+import com.flow.platform.api.domain.EnvObject;
 import com.flow.platform.api.domain.job.JobCategory;
 import com.flow.platform.api.domain.job.JobStatus;
-import com.flow.platform.domain.Jsonable;
-import com.flow.platform.tree.NodeTree;
 import com.google.gson.annotations.Expose;
 import java.time.ZonedDateTime;
 import lombok.EqualsAndHashCode;
@@ -34,7 +33,7 @@ import lombok.ToString;
 @NoArgsConstructor
 @ToString(of = {"key"})
 @EqualsAndHashCode(of = {"key"}, callSuper = false)
-public class JobV1 extends Jsonable {
+public class JobV1 extends EnvObject {
 
     @Expose
     @Getter

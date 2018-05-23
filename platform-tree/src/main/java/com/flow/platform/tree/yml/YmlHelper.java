@@ -55,7 +55,7 @@ public class YmlHelper {
     /**
      * Create Node instance from yml
      */
-    public static Node build(String yml) {
+    public static synchronized Node build(String yml) {
         Yaml yaml = new Yaml(ROOT_YML_CONSTRUCTOR);
         RootYmlWrapper node = yaml.load(yml);
 
@@ -80,7 +80,7 @@ public class YmlHelper {
         return flow.toNode();
     }
 
-    public static String toYml(Node root) {
+    public static synchronized String toYml(Node root) {
         RootNodeWrapper rootWrapper = RootNodeWrapper.fromNode(root);
         RootYmlWrapper ymlWrapper = new RootYmlWrapper(rootWrapper);
 
