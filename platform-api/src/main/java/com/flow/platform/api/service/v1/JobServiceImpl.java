@@ -98,11 +98,11 @@ public class JobServiceImpl implements JobService {
         Objects.requireNonNull(creator, "User must be defined while create job");
 
         // parse yml content to NodeTree
-        FlowYml flowYml = flowService.findYml(flow.getName());
+        FlowYml flowYml = flowService.findYml(flow);
         NodeTree tree = NodeTree.create(flowYml.getContent());
 
         // create job with job number
-        JobNumber jobNumber = jobNumberDao.increase(flow.getName());
+        JobNumber jobNumber = jobNumberDao.increase(flow.getId());
         JobV1 job = new JobV1(flow.getName(), jobNumber.getNumber());
         job.setCategory(eventType);
         job.setCreatedBy(creator.getEmail());

@@ -30,8 +30,13 @@ import lombok.ToString;
  */
 @NoArgsConstructor
 @ToString(of = {"name"})
-@EqualsAndHashCode(of = {"name"}, callSuper = false)
+@EqualsAndHashCode(of = {"id"}, callSuper = false)
 public final class Flow extends EnvObject {
+
+    @Expose
+    @Getter
+    @Setter
+    private Long id;
 
     /**
      * Unique name of flow

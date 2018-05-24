@@ -17,6 +17,7 @@
 package com.flow.platform.api.controller;
 
 import com.flow.platform.api.config.AppConfig;
+import com.flow.platform.api.domain.Flow;
 import com.flow.platform.api.domain.FlowYml;
 import com.flow.platform.api.domain.permission.Actions;
 import com.flow.platform.api.security.WebSecurity;
@@ -60,7 +61,8 @@ public class FlowYmlController extends NodeController {
     @GetMapping
     @WebSecurity(action = Actions.FLOW_SHOW)
     public String getYml() {
-        FlowYml root = flowService.findYml(flowName.get());
+        Flow flow = flowService.find(flowName.get());
+        FlowYml root = flowService.findYml(flow);
         return root.getContent();
     }
 
@@ -78,13 +80,14 @@ public class FlowYmlController extends NodeController {
     @GetMapping("/download")
     @WebSecurity(action = Actions.FLOW_CREATE)
     public Resource downloadYml(HttpServletResponse httpResponse) throws IOException {
-        FlowYml flow = flowService.findYml(flowName.get());
+        Flow flow = flowService.find(flowName.get());
+        FlowYml flowYml = flowService.findYml(flow);
 
         httpResponse.setHeader(
             "Content-Disposition",
             String.format("attachment; filename=%s", flow.getName() + ".yml"));
 
-        try (InputStream is = new ByteArrayInputStream(flow.getContent().getBytes(AppConfig.DEFAULT_CHARSET))) {
+        try (InputStream is = new ByteArrayInputStream(flowYml.getContent().getBytes(AppConfig.DEFAULT_CHARSET))) {
             return new InputStreamResource(is);
         }
     }
@@ -109,7 +112,8 @@ public class FlowYmlController extends NodeController {
     @PostMapping
     @WebSecurity(action = Actions.FLOW_CREATE)
     public String updateYml(@RequestBody String yml) {
-        flowService.updateYml(flowName.get(), yml);
+        Flow flow = flowService.find(flowName.get());
+        flowService.updateYml(flow, yml);
         return yml;
     }
 }

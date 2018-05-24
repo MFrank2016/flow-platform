@@ -57,22 +57,22 @@ public class FlowServiceImpl extends CurrentUser implements FlowService {
     @Override
     @Transactional
     public Flow save(String name) {
-        Flow exist = flowDao.get(name);
-        if (!Objects.isNull(exist)) {
+        Flow flow = flowDao.get(name);
+        if (!Objects.isNull(flow)) {
             throw new DuplicateExeption("The flow name is duplicated");
         }
 
-        exist = new Flow(name);
+        // save flow get auto increased flow id
+        flow = flowDao.save(new Flow(name));
 
         User user = currentUser();
-        exist.setCreatedBy(user.getEmail());
-        userFlowService.assign(user, exist);
+        flow.setCreatedBy(user.getEmail());
+        userFlowService.assign(user, flow);
 
-        ymlDao.save(new FlowYml(name));
-        jobNumberDao.save(new JobNumber(name));
-        flowDao.save(exist);
+        ymlDao.save(new FlowYml(flow));
+        jobNumberDao.save(new JobNumber(flow));
 
-        return exist;
+        return flow;
     }
 
     @Override
@@ -85,17 +85,17 @@ public class FlowServiceImpl extends CurrentUser implements FlowService {
     }
 
     @Override
-    public FlowYml findYml(String name) {
-        FlowYml yml = ymlDao.get(name);
+    public FlowYml findYml(Flow flow) {
+        FlowYml yml = ymlDao.get(flow.getId());
         if (Objects.isNull(yml)) {
-            throw new NotFoundException("The yml of flow " + name + " is not found");
+            throw new NotFoundException("The yml of flow " + flow.getName() + " is not found");
         }
         return yml;
     }
 
     @Override
-    public FlowYml updateYml(String name, String yml) {
-        FlowYml flowYml = findYml(name);
+    public FlowYml updateYml(Flow flow, String yml) {
+        FlowYml flowYml = findYml(flow);
         flowYml.setContent(yml);
 
         // TODO: verify yml
@@ -108,12 +108,11 @@ public class FlowServiceImpl extends CurrentUser implements FlowService {
     public Flow delete(String name) {
         Flow flow = find(name);
 
-        ymlDao.delete(new FlowYml(name));
+        ymlDao.delete(new FlowYml(flow));
         flowDao.delete(flow);
-        jobNumberDao.delete(new JobNumber(name));
+        jobNumberDao.delete(new JobNumber(flow));
 
         userFlowService.unAssign(flow);
-
         return flow;
     }
 

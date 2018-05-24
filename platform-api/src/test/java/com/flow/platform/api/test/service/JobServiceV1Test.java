@@ -20,6 +20,7 @@ import com.flow.platform.api.domain.Flow;
 import com.flow.platform.api.domain.job.JobCategory;
 import com.flow.platform.api.domain.v1.JobV1;
 import com.flow.platform.api.service.v1.JobService;
+import com.flow.platform.api.test.FlowHelper;
 import com.flow.platform.api.test.TestBase;
 import com.flow.platform.core.domain.Page;
 import com.flow.platform.core.domain.Pageable;
@@ -42,9 +43,12 @@ public class JobServiceV1Test extends TestBase {
     @Autowired
     private JobService jobServiceV1;
 
+    @Autowired
+    private FlowHelper flowHelper;
+
     @Test
     public void should_create_and_delete_job() throws Throwable {
-        Flow flow = createRootFlow("flow-job", "yml/demo_flow2.yaml");
+        Flow flow = flowHelper.createFlowWithYml("flow-job", "yml/demo_flow2.yaml");
         JobV1 job = jobServiceV1.create(flow, JobCategory.MANUAL, null, mockUser);
 
         Assert.assertNotNull(jobDaoV1.get(job.getKey()));
@@ -60,7 +64,7 @@ public class JobServiceV1Test extends TestBase {
     @Test
     public void should_create_job_with_unique_build_number() throws Throwable {
         // given:
-        final Flow flow = createRootFlow("flow-job-number", "yml/demo_flow2.yaml");
+        final Flow flow = flowHelper.createFlowWithYml("flow-job-number", "yml/demo_flow2.yaml");
         final int numOfJob = 5;
         final CountDownLatch countDown = new CountDownLatch(numOfJob);
 

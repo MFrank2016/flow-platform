@@ -26,7 +26,12 @@ import java.util.List;
  *
  * @author yh@firim
  */
-public interface FlowDao extends BaseDao<String, Flow> {
+public interface FlowDao extends BaseDao<Long, Flow> {
+
+    /**
+     * Get flow by name
+     */
+    Flow get(String name);
 
     /**
      * List flow path by created by email

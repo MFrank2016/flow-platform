@@ -4,21 +4,25 @@
   "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
 
 <hibernate-mapping package="com.flow.platform.api.domain">
-  <class name="com.flow.platform.api.domain.Flow" table="flow">
-    <id name="name" length="100" column="name"/>
+  <class name="com.flow.platform.api.domain.Flow" table="flow_v1">
+    <id name="id" column="id" type="long">
+      <generator class="identity"/>
+    </id>
+    <property name="name" length="100" column="name" unique="true" not-null="true"/>
     <property name="envs" type="com.flow.platform.core.dao.adaptor.MapAdaptor" column="context"/>
     <property name="createdBy" column="created_by" length="100"/>
     <property name="createdAt" type="java.time.ZonedDateTime">
       <column name="created_at" sql-type="timestamp" default="CURRENT_TIMESTAMP"/>
     </property>
-
     <property name="updatedAt" type="java.time.ZonedDateTime" update="false">
       <column name="updated_at" sql-type="timestamp" default="CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"/>
     </property>
   </class>
 
-  <class name="com.flow.platform.api.domain.FlowYml" table="flow_yml">
-    <id name="name" length="100" column="name"/>
-    <property name="content" type="com.flow.platform.core.dao.adaptor.ByteAdaptor"/>
+  <class name="com.flow.platform.api.domain.FlowYml" table="flow_yml_v1">
+    <id name="flowId" column="flow_id" type="long">
+      <generator class="assigned"/>
+    </id>
+    <property name="content" type="com.flow.platform.core.dao.adaptor.ByteAdaptor" not-null="true"/>
   </class>
 </hibernate-mapping>

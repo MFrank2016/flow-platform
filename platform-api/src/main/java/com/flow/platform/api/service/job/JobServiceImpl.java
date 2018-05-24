@@ -188,12 +188,12 @@ public class JobServiceImpl extends ApplicationEventService implements JobServic
         }
 
         // increate flow job number
-        JobNumber jobNumber = jobNumberDao.get(flow.getName());
+        JobNumber jobNumber = jobNumberDao.get(0L);
         if (Objects.isNull(jobNumber)) {
             throw new IllegalStatusException("Job number not been initialized");
         }
 
-        jobNumber = jobNumberDao.increase(flow.getName());
+        jobNumber = jobNumberDao.increase(0L);
 
         // create job
         Job job = new Job(CommonUtil.randomId());

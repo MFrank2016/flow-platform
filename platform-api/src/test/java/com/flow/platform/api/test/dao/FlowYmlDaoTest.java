@@ -34,6 +34,13 @@ import org.junit.Test;
  */
 public class FlowYmlDaoTest extends TestBase {
 
+    private Flow mock = new Flow("mock");
+
+    @Before
+    public void init() {
+        mock.setId(10L);
+    }
+
     @Test
     public void should_save_and_get_yml_success() throws IOException {
         ClassLoader classLoader = FlowYmlDaoTest.class.getClassLoader();
@@ -41,21 +48,21 @@ public class FlowYmlDaoTest extends TestBase {
 
         File path = new File(resource.getFile());
         String ymlContent = Files.toString(path, AppConfig.DEFAULT_CHARSET);
-        FlowYml storage = new FlowYml("flow", ymlContent);
+        FlowYml storage = new FlowYml(mock, ymlContent);
         ymlDao.save(storage);
 
-        FlowYml yml = ymlDao.get("flow");
+        FlowYml yml = ymlDao.get(mock.getId());
         Assert.assertNotNull(yml);
         Assert.assertEquals(ymlContent, yml.getContent());
     }
 
     @Test
     public void should_delete_success() {
-        FlowYml storage = new FlowYml("flow", "Yml Body");
+        FlowYml storage = new FlowYml(mock, "Yml Body");
         ymlDao.save(storage);
-        Assert.assertNotNull(ymlDao.get("flow"));
+        Assert.assertNotNull(ymlDao.get(mock.getId()));
 
-        ymlDao.delete(new FlowYml("flow", null));
-        Assert.assertNull(ymlDao.get("flow"));
+        ymlDao.delete(new FlowYml(mock));
+        Assert.assertNull(ymlDao.get(mock.getId()));
     }
 }

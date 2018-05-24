@@ -74,7 +74,7 @@ public class FlowControllerTest extends ControllerTestWithoutAuth {
         // then: flow and flow yml been deleted
         Assert.assertEquals(flow, deleted);
         Assert.assertNull(flowDao.get(flowName));
-        Assert.assertNull(ymlDao.get(flowName));
+        Assert.assertNull(ymlDao.get(flow.getId()));
         flowService.find(flowName);
     }
 
@@ -111,7 +111,8 @@ public class FlowControllerTest extends ControllerTestWithoutAuth {
     public void should_get_yml_file_content() throws Throwable {
         // given:
         String yml = getResourceContent("yml/demo_flow.yaml");
-        flowService.updateYml(flowName, yml);
+        Flow flow = flowService.find(flowName);
+        flowService.updateYml(flow, yml);
 
         // when:
         String content = performRequestWith200Status(get("/flows/" + flowName + "/yml"));

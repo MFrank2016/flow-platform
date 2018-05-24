@@ -354,7 +354,7 @@ public class JobServiceTest extends TestBase {
         List<String> rootPath = Lists.newArrayList(rootForFlow.getName());
         List<Job> jobs = jobService.list(rootPath, true);
         Assert.assertEquals(1, jobs.size());
-        Assert.assertEquals(2L, jobNumberDao.get(rootForFlow.getName()).getNumber().longValue());
+        Assert.assertEquals(2L, jobNumberDao.get(0L).getNumber().longValue());
         Assert.assertEquals("2", jobs.get(0).getNumber().toString());
     }
 

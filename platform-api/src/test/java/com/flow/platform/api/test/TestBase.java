@@ -246,11 +246,12 @@ public abstract class TestBase {
         return Files.toString(path, AppConfig.DEFAULT_CHARSET);
     }
 
+    @Deprecated
     public Flow createRootFlow(String flowName, String ymlResourceName) throws IOException {
         Flow flow = flowService.save(flowName);
         String yml = getResourceContent(ymlResourceName);
         setRequiredJobEnvsForFlow(flow);
-        flowService.updateYml(flowName, yml);
+        flowService.updateYml(new Flow(), yml);
         return flow;
     }
 

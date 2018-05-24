@@ -40,12 +40,12 @@ public interface FlowService {
     /**
      * Get flow yml instance
      */
-    FlowYml findYml(String name);
+    FlowYml findYml(Flow flow);
 
     /**
      * Update yml content by flow name
      */
-    FlowYml updateYml(String name, String yml);
+    FlowYml updateYml(Flow flow, String yml);
 
     /**
      * Delete flow

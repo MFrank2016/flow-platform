@@ -24,7 +24,7 @@ import org.springframework.stereotype.Repository;
  * @author yh@firim
  */
 @Repository(value = "ymlDao")
-public class YmlDaoImpl extends AbstractBaseDao<String, FlowYml> implements YmlDao {
+public class YmlDaoImpl extends AbstractBaseDao<Long, FlowYml> implements YmlDao {
 
     @Override
     protected Class<FlowYml> getEntityClass() {
@@ -33,6 +33,6 @@ public class YmlDaoImpl extends AbstractBaseDao<String, FlowYml> implements YmlD
 
     @Override
     protected String getKeyName() {
-        return "name";
+        return "flowId";
     }
 }

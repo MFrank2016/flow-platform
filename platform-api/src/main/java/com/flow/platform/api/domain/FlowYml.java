@@ -16,6 +16,7 @@
 
 package com.flow.platform.api.domain;
 
+import com.flow.platform.domain.Jsonable;
 import com.flow.platform.util.StringUtil;
 import java.util.Objects;
 import lombok.EqualsAndHashCode;
@@ -28,24 +29,24 @@ import lombok.ToString;
  * @author yang
  */
 @NoArgsConstructor
-@EqualsAndHashCode(of = {"name"})
-@ToString(of = {"name"})
-public class FlowYml {
+@EqualsAndHashCode(of = {"flowId"}, callSuper = false)
+@ToString(of = {"flowId"})
+public final class FlowYml extends Jsonable {
 
     @Getter
     @Setter
-    private String name;
+    private Long flowId;
 
     @Getter
     @Setter
     private String content = StringUtil.EMPTY;
 
-    public FlowYml(String name) {
-        this.name = name;
+    public FlowYml(Flow flow) {
+        this.flowId = flow.getId();
     }
 
-    public FlowYml(String name, String content) {
-        this.name = name;
+    public FlowYml(Flow flow, String content) {
+        this(flow);
         this.content = content;
     }
 

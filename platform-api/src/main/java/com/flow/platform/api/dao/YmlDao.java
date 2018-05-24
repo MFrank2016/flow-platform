@@ -22,6 +22,6 @@ import com.flow.platform.core.dao.BaseDao;
 /**
  * @author yh@firim
  */
-public interface YmlDao extends BaseDao<String, FlowYml> {
+public interface YmlDao extends BaseDao<Long, FlowYml> {
 
 }

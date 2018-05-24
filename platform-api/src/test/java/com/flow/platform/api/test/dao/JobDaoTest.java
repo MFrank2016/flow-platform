@@ -48,7 +48,7 @@ public class JobDaoTest extends TestBase {
         flow = flowHelper.createFlowWithYml("job_dao_test", "yml/for_job_test.yml");
         Assert.assertNotNull(flow);
 
-        FlowYml flowYml = ymlDao.get(flow.getName());
+        FlowYml flowYml = ymlDao.get(flow.getId());
         Assert.assertNotNull(flowYml);
     }
 

@@ -38,7 +38,7 @@ public class FlowHelper {
     public Flow createFlowWithYml(String flowName, String ymlResourceName) throws IOException {
         Flow flow = flowService.save(flowName);
         String yml = getResourceContent(ymlResourceName);
-        flowService.updateYml(flow.getName(), yml);
+        flowService.updateYml(flow, yml);
         return flow;
     }
 

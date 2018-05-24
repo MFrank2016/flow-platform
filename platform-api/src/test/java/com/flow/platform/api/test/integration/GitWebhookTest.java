@@ -290,7 +290,7 @@ public class GitWebhookTest extends TestBase {
         Flow flow = flowService.save(flowName);
 
         // setup yml
-        flowService.updateYml(flow.getName(), getResourceContent("yml/for_git_webhook_test.yml"));
+        flowService.updateYml(flow, getResourceContent("yml/for_git_webhook_test.yml"));
 
         // set flow git related env
         Map<String, String> env = new HashMap<>();
@@ -326,7 +326,8 @@ public class GitWebhookTest extends TestBase {
         springContext.removeApplicationListener(listener);
 
         // verify yml is updated
-        Assert.assertNotNull(flowService.findYml(flowPath).getContent());
+        Flow flow = flowService.find(flowPath);
+        Assert.assertNotNull(flowService.findYml(flow).getContent());
 
         // verify job is created
         Job created = wrapper.getInstance();

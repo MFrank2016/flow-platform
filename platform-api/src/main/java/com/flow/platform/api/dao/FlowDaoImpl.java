@@ -27,7 +27,7 @@ import org.springframework.stereotype.Repository;
  * @author yh@firim
  */
 @Repository(value = "flowDao")
-public class FlowDaoImpl extends AbstractBaseDao<String, Flow> implements FlowDao {
+public class FlowDaoImpl extends AbstractBaseDao<Long, Flow> implements FlowDao {
 
     @Override
     protected Class<Flow> getEntityClass() {
@@ -37,6 +37,14 @@ public class FlowDaoImpl extends AbstractBaseDao<String, Flow> implements FlowDa
     @Override
     protected String getKeyName() {
         return "path";
+    }
+
+    @Override
+    public Flow get(String name) {
+        return execute(session -> session
+            .createQuery("from Flow where name = :name", Flow.class)
+            .setParameter("name", name)
+            .uniqueResult());
     }
 
     @Override

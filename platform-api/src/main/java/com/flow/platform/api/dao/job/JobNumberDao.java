@@ -22,8 +22,8 @@ import com.flow.platform.core.dao.BaseDao;
 /**
  * @author yang
  */
-public interface JobNumberDao extends BaseDao<String, JobNumber> {
+public interface JobNumberDao extends BaseDao<Long, JobNumber> {
 
-    JobNumber increase(String path);
+    JobNumber increase(Long flowId);
 
 }

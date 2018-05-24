@@ -61,7 +61,7 @@ public class UserFlowServiceImpl extends CurrentUser implements UserFlowService 
         if (flowPaths.isEmpty()) {
             return new ArrayList<>(0);
         }
-        return flowDao.list(Lists.newArrayList(user.getEmail()));
+        return flowDao.listByCreatedBy(Lists.newArrayList(user.getEmail()));
     }
 
     @Override
