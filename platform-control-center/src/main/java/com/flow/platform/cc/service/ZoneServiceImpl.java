@@ -119,14 +119,6 @@ public class ZoneServiceImpl implements ZoneService, ContextEvent {
 
         zkClient.create(zonePath, agentSettings.toBytes());
 
-//        List<String> agents = zkClient.getChildren(zonePath);
-//
-//        if (!agents.isEmpty()) {
-//            for (String agent : agents) {
-//                agentService.report(new AgentPath(zone.getName(), agent), AgentStatus.IDLE);
-//            }
-//        }
-//
         ZoneEventListener zoneEventWatcher = zoneEventWatchers.computeIfAbsent(zone, ZoneEventListener::new);
         zkClient.watchChildren(zonePath, zoneEventWatcher);
         return zonePath;

@@ -70,17 +70,13 @@ public class AgentManagerServiceImpl extends WebhookServiceImplBase implements A
     public void report(AgentPath path, AgentStatus status) {
         Agent exist = find(path);
 
-        if (status == AgentStatus.IDLE) {
-            saveWithStatus(exist, AgentStatus.IDLE);
-            return;
-        }
-
         // For agent offline status
         if (status == AgentStatus.OFFLINE) {
             exist.setSessionId(null);
-            saveWithStatus(exist, AgentStatus.OFFLINE);
-            return;
         }
+
+        saveWithStatus(exist, AgentStatus.IDLE);
+        return;
     }
 
     @Override
@@ -120,15 +116,10 @@ public class AgentManagerServiceImpl extends WebhookServiceImplBase implements A
             throw new AgentErr.NotFoundException(agent.getName());
         }
 
-        boolean statusIsChanged = !agent.getStatus().equals(status);
-
         agent.setStatus(status);
         log.trace("Agent status been updated to '{}'", status);
 
-        // send webhook if status changed
-//        if (statusIsChanged) {
-            this.webhookCallback(agent);
-//        }
+        this.webhookCallback(agent);
 
         // boardcast AgentResourceEvent for release
         if (agent.getStatus() == AgentStatus.IDLE) {
@@ -234,6 +225,11 @@ public class AgentManagerServiceImpl extends WebhookServiceImplBase implements A
     }
 
     private Agent appendStatusToAgent(Agent agent) {
+
+        if (Objects.isNull(agent)) {
+            return agent;
+        }
+
         String childPath = statusNode(agent);
         if (!Objects.isNull(agent)) {
             Stat stat = new Stat();
