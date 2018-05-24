@@ -28,6 +28,7 @@ import com.flow.platform.domain.Agent;
 import com.flow.platform.domain.AgentPath;
 import com.flow.platform.domain.AgentSettings;
 import com.flow.platform.domain.AgentStatus;
+import com.flow.platform.tree.Node;
 import com.flow.platform.util.zk.ZKClient;
 import java.util.HashMap;
 import java.util.List;
@@ -106,7 +107,8 @@ public class AgentManagerServiceImpl extends ApplicationEventService implements 
         JobV1 jobV1 = jobServiceV1.find(jobKey);
         JobTree jobTree = jobTreeDao.get(jobV1.getKey());
         Agent agent = selectAgent();
-        commonTemplate.convertAndSend(buildQueueName(agent.getPath()), jobTree);
+        Node node = jobTree.getTree().getRoot();
+        commonTemplate.convertAndSend(buildQueueName(agent.getPath()), node);
     }
 
     @Override
