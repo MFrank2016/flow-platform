@@ -28,17 +28,17 @@ public interface UserFlowDao extends BaseDao<UserFlowKey, UserFlow> {
     /**
      * List flow path for user email
      */
-    List<String> listByEmail(String email);
+    List<Long> listByEmail(String email);
 
     /**
      * List user emails for flow path
      */
-    List<String> listByFlowPath(String flowPath);
+    List<String> listByFlow(Long flowId);
 
     /**
      * Get number of user for flow
      */
-    Long numOfUser(String flowPath);
+    Long numOfUserByFlow(Long flowId);
 
     /**
      * Delete all user flow record by email
@@ -48,6 +48,6 @@ public interface UserFlowDao extends BaseDao<UserFlowKey, UserFlow> {
     /**
      * Delete all user flow record by flow path
      */
-    int deleteByFlowPath(String rootPath);
+    int deleteByFlow(Long flowId);
 
 }

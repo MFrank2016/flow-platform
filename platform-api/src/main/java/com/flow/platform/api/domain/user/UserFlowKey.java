@@ -19,10 +19,7 @@ import com.google.gson.annotations.Expose;
 import java.io.Serializable;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 /**
  * @author lhl
@@ -33,7 +30,7 @@ import lombok.Setter;
 public class UserFlowKey implements Serializable {
 
     @Expose
-    private String flowPath;
+    private Long flowId;
 
     @Expose
     private String email;

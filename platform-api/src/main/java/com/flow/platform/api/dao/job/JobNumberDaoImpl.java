@@ -24,7 +24,7 @@ import org.springframework.stereotype.Repository;
  * @author yang
  */
 @Repository
-public class JobNumberDaoImpl extends AbstractBaseDao<String, JobNumber> implements JobNumberDao {
+public class JobNumberDaoImpl extends AbstractBaseDao<Long, JobNumber> implements JobNumberDao {
 
     @Override
     protected Class<JobNumber> getEntityClass() {
@@ -33,23 +33,16 @@ public class JobNumberDaoImpl extends AbstractBaseDao<String, JobNumber> impleme
 
     @Override
     protected String getKeyName() {
-        return "nodePath";
+        return "flowId";
     }
 
     @Override
-    public JobNumber increase(final String path) {
+    public JobNumber increase(final Long flowId) {
         return execute(session -> {
-            final String sql =
-                "update job_number as a\n" +
-                "inner join job_number as b on a.node_path = b.node_path\n" +
-                "set a.build_number = (b.build_number + 1)\n" +
-                "where a.node_path = :nodePath";
+            final String sql = "update JobNumber set number = (number + 1) where flowId = :flowId";
+            session.createQuery(sql).setParameter("flowId", flowId).executeUpdate();
 
-            int numOfUpdated = session.createNativeQuery(sql)
-                .setParameter("nodePath", path)
-                .executeUpdate();
-
-            JobNumber number = session.get(getEntityClass(), path);
+            JobNumber number = session.get(getEntityClass(), flowId);
             session.refresh(number);
             return number;
         });

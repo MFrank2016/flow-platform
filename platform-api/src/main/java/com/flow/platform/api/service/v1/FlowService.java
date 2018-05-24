@@ -18,6 +18,7 @@ package com.flow.platform.api.service.v1;
 
 import com.flow.platform.api.domain.Flow;
 import com.flow.platform.api.domain.FlowYml;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -40,12 +41,12 @@ public interface FlowService {
     /**
      * Get flow yml instance
      */
-    FlowYml findYml(String name);
+    FlowYml findYml(Flow flow);
 
     /**
      * Update yml content by flow name
      */
-    FlowYml updateYml(String name, String yml);
+    FlowYml updateYml(Flow flow, String yml);
 
     /**
      * Delete flow
@@ -56,6 +57,11 @@ public interface FlowService {
      * List flows for current user only or all
      */
     List<Flow> list(boolean isOnlyCurrentUser);
+
+    /**
+     * List flow ids from name collection
+     */
+    List<Long> list(Collection<String> names);
 
     /**
      * Put new context env to flow

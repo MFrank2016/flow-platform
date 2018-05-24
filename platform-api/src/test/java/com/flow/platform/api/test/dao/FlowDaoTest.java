@@ -85,8 +85,10 @@ public class FlowDaoTest extends TestBase {
 
     @Test
     public void should_list_flow_by_created_by() {
-        List<Flow> flows = flowDao.listByCreatedBy(Sets.newHashSet("admin@flow.ci"));
-        Assert.assertEquals(1, flows.size());
+        List<Long> ids = flowDao.listByCreatedBy(Sets.newHashSet("admin@flow.ci"));
+        Assert.assertEquals(1, ids.size());
+
+        List<Flow> flows = flowDao.list(ids);
         Assert.assertEquals(flow, flows.get(0));
     }
 

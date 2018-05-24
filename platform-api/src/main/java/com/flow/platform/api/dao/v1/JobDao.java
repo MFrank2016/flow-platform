@@ -22,15 +22,16 @@ import com.flow.platform.core.dao.BaseDao;
 import com.flow.platform.core.domain.Page;
 import com.flow.platform.core.domain.Pageable;
 import java.util.Collection;
+import java.util.List;
 
 /**
  * @author yang
  */
 public interface JobDao extends BaseDao<JobKey, JobV1> {
 
-    Page<JobV1> listLatestByFlows(Collection<String> flows, Pageable pageable);
+    List<JobV1> listLatestByFlows(Collection<Long> flows);
 
-    Page<JobV1> listByFlow(Collection<String> flows, Pageable pageable);
+    Page<JobV1> listByFlow(Collection<Long> flows, Pageable pageable);
 
-    void deleteByFlow(String flow);
+    void deleteByFlow(Long flowId);
 }

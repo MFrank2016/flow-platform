@@ -134,7 +134,7 @@ public class NodePath implements Serializable {
             throw new IllegalArgumentException(errMsg);
         }
 
-        if (name.contains("*")) {
+        if (name.contains("*") || name.contains(".")) {
             throw new IllegalArgumentException(errMsg);
         }
     }

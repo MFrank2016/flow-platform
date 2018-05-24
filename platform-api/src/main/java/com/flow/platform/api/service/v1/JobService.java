@@ -18,7 +18,6 @@ package com.flow.platform.api.service.v1;
 
 import com.flow.platform.api.domain.Flow;
 import com.flow.platform.api.domain.job.JobCategory;
-import com.flow.platform.api.domain.user.User;
 import com.flow.platform.api.domain.v1.JobKey;
 import com.flow.platform.api.domain.v1.JobV1;
 import com.flow.platform.core.domain.Page;
@@ -37,14 +36,24 @@ public interface JobService {
     JobV1 find(JobKey key);
 
     /**
-     * List jobs or latest jobs by flows
+     * Get yml content for current job
      */
-    Page<JobV1> list(List<String> flows, boolean latestOnly, Pageable pageable);
+    String jobYml(JobKey key);
+
+    /**
+     * List jobs by flows
+     */
+    Page<JobV1> list(List<String> flows, Pageable pageable);
+
+    /**
+     * List latest job for flows
+     */
+    List<JobV1> listForLatest(List<String> flows);
 
     /**
      * Create a new job
      */
-    JobV1 create(Flow flow, JobCategory eventType, Map<String, String> envs, User creator);
+    JobV1 create(Flow flow, JobCategory eventType, Map<String, String> envs);
 
     /**
      * Delete job by flow

@@ -17,6 +17,10 @@
 package com.flow.platform.api.service.v1;
 
 import com.flow.platform.api.dao.v1.AgentDao;
+import com.flow.platform.api.dao.v1.JobTreeDao;
+import com.flow.platform.api.domain.v1.JobKey;
+import com.flow.platform.api.domain.v1.JobTree;
+import com.flow.platform.api.domain.v1.JobV1;
 import com.flow.platform.api.util.ZKHelper;
 import com.flow.platform.core.exception.FlowException;
 import com.flow.platform.core.service.ApplicationEventService;
@@ -50,16 +54,22 @@ import org.springframework.stereotype.Service;
 public class AgentManagerServiceImpl extends ApplicationEventService implements AgentManagerService {
 
     @Autowired
+    private JobService jobServiceV1;
+
+    @Autowired
+    private JobTreeDao jobTreeDao;
+
+    @Autowired
     private AgentDao agentDao;
 
     @Autowired
     private ZKClient zkClient;
 
     @Autowired
-    private RabbitTemplate rabbit;
+    private RabbitTemplate commonTemplate;
 
     @Autowired
-    private RabbitAdmin rabbitAdmin;
+    private RabbitAdmin amqpAdmin;
 
     private final static String ZK_ROOT_NODE = "/flow-agents";
 
@@ -89,6 +99,12 @@ public class AgentManagerServiceImpl extends ApplicationEventService implements 
     @Override
     public List<Agent> list() {
         return appendAgentsStatus(agentDao.list());
+    }
+
+    public void handleJob(JobKey jobKey) {
+        JobV1 jobV1 = jobServiceV1.find(jobKey);
+        JobTree jobTree = jobTreeDao.get(jobV1.getKey());
+        
     }
 
     @Override
@@ -141,7 +157,7 @@ public class AgentManagerServiceImpl extends ApplicationEventService implements 
         cmdQueueArgs.put("x-max-length", Integer.MAX_VALUE);
         cmdQueueArgs.put("x-max-priority", 255);
         Queue queue = new Queue(name, true, false, false, cmdQueueArgs);
-        rabbitAdmin.declareQueue(queue);
+        amqpAdmin.declareQueue(queue);
         return queue;
     }
 

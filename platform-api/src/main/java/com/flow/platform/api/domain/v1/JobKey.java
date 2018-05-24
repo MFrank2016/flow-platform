@@ -29,22 +29,22 @@ import lombok.ToString;
  */
 @ToString
 @NoArgsConstructor
-@EqualsAndHashCode(of = {"flow", "number"}, callSuper = false)
+@EqualsAndHashCode(of = {"flowId", "number"}, callSuper = false)
 public class JobKey extends Jsonable {
 
     @Getter
     @Setter
-    private String flow;
+    private Long flowId;
 
     @Getter
     @Setter
     private Long number;
 
-    public JobKey(String flow, Long number) {
-        Objects.requireNonNull(flow);
+    public JobKey(Long flowId, Long number) {
+        Objects.requireNonNull(flowId);
         Objects.requireNonNull(number);
 
-        this.flow = flow;
+        this.flowId = flowId;
         this.number = number;
     }
 }

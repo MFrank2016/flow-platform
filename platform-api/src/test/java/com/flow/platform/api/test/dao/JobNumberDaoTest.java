@@ -29,11 +29,11 @@ public class JobNumberDaoTest extends TestBase {
     @Test
     public void should_save_job_number() {
         // when:
-        String nodePath = "flow/path";
-        jobNumberDao.save(new JobNumber(nodePath));
+        Long flowId = 10L;
+        jobNumberDao.save(new JobNumber(flowId));
 
         // then:
-        JobNumber number = jobNumberDao.get(nodePath);
+        JobNumber number = jobNumberDao.get(flowId);
         Assert.assertNotNull(number);
         Assert.assertEquals(0L, number.getNumber().longValue());
     }
@@ -41,17 +41,17 @@ public class JobNumberDaoTest extends TestBase {
     @Test
     public void should_increase_job_number() {
         // given:
-        String nodePath = "flow/path-increase";
-        JobNumber number = jobNumberDao.save(new JobNumber(nodePath));
+        Long flowId = 1L;
+        JobNumber number = jobNumberDao.save(new JobNumber(flowId));
         Assert.assertEquals(0L, number.getNumber().longValue());
 
         // when:
-        JobNumber increased = jobNumberDao.increase(nodePath);
+        JobNumber increased = jobNumberDao.increase(flowId);
         Assert.assertNotNull(increased);
         Assert.assertEquals(1L, increased.getNumber().longValue());
 
         // when:
-        increased = jobNumberDao.increase(nodePath);
+        increased = jobNumberDao.increase(flowId);
         Assert.assertNotNull(increased);
         Assert.assertEquals(2L, increased.getNumber().longValue());
     }

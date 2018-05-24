@@ -16,29 +16,51 @@
 
 package com.flow.platform.api.config;
 
+import com.flow.platform.api.consumer.JobQueueConsumer;
 import com.flow.platform.api.service.SyncService;
 import com.flow.platform.core.queue.MemoryQueue;
 import com.flow.platform.core.queue.PriorityMessage;
 import com.flow.platform.core.queue.RabbitQueue;
 import com.flow.platform.queue.PlatformQueue;
+import org.springframework.amqp.core.AmqpAdmin;
+import org.springframework.amqp.core.Queue;
 import org.springframework.amqp.rabbit.connection.CachingConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitAdmin;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer;
+import org.springframework.amqp.rabbit.listener.adapter.MessageListenerAdapter;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Configurable;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 /**
+ * RabbitMQ configuration
+ *
  * @author yang
  */
-@Configurable
+@Configuration
 public class QueueConfig {
 
     public final static long DEFAULT_CMD_CALLBACK_QUEUE_PRIORITY = 1L;
 
+    private final static String JOB_QUEUE_NAME = "job.queue";
+
+    @Value("${api.queue.hosts}")
+    private String hosts;
+
+    @Value("${api.queue.username}")
+    private String username;
+
+    @Value("${api.queue.password}")
+    private String password;
+
     @Autowired
     private ThreadPoolTaskExecutor taskExecutor;
+
+    @Autowired
+    private JobQueueConsumer jobQueueConsumer;
 
     /**
      * Queue to process cmd callback task
@@ -64,19 +86,40 @@ public class QueueConfig {
     }
 
     @Bean
-    public RabbitTemplate rabbit() {
+    public RabbitTemplate commonTemplate() {
         RabbitTemplate template = new RabbitTemplate(connectionFactory());
         return template;
     }
 
     @Bean
-    public RabbitAdmin rabbitAdmin() {
-        RabbitAdmin rabbitAdmin = new RabbitAdmin(connectionFactory());
-        return rabbitAdmin;
+    public AmqpAdmin amqpAdmin() {
+        RabbitAdmin admin = new RabbitAdmin(connectionFactory());
+        admin.declareQueue(new Queue(JOB_QUEUE_NAME));
+        return admin;
+    }
+
+    @Bean
+    public RabbitTemplate jobQueueTemplate() {
+        RabbitTemplate template = new RabbitTemplate(connectionFactory());
+        template.setRoutingKey(JOB_QUEUE_NAME);
+        template.setQueue(JOB_QUEUE_NAME);
+        return template;
     }
 
     private CachingConnectionFactory connectionFactory() {
         CachingConnectionFactory connectionFactory = new CachingConnectionFactory("127.0.0.1");
+        connectionFactory.setUsername(username);
+        connectionFactory.setPassword(password);
         return connectionFactory;
+    }
+
+    @Bean
+    public SimpleMessageListenerContainer jobQueueListener() {
+        SimpleMessageListenerContainer container = new SimpleMessageListenerContainer();
+        container.setConnectionFactory(connectionFactory());
+        container.setQueueNames(JOB_QUEUE_NAME);
+        container.setConcurrentConsumers(1);
+        container.setMessageListener(new MessageListenerAdapter(jobQueueConsumer));
+        return container;
     }
 }

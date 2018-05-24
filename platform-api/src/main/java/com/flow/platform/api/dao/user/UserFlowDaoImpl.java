@@ -39,26 +39,26 @@ public class UserFlowDaoImpl extends AbstractBaseDao<UserFlowKey, UserFlow> impl
     }
 
     @Override
-    public List<String> listByEmail(String email) {
+    public List<Long> listByEmail(String email) {
         return execute(session -> session
-            .createQuery("select key.flowPath from UserFlow where key.email = ?", String.class)
+            .createQuery("select key.flowId from UserFlow where key.email = ?", Long.class)
             .setParameter(0, email)
             .list());
     }
 
     @Override
-    public List<String> listByFlowPath(String flowPath) {
+    public List<String> listByFlow(Long flowId) {
         return execute(session -> session
-            .createQuery("select key.email from UserFlow where key.flowPath = ?", String.class)
-            .setParameter(0, flowPath)
+            .createQuery("select key.email from UserFlow where key.flowId = ?", String.class)
+            .setParameter(0, flowId)
             .list());
     }
 
     @Override
-    public Long numOfUser(String flowPath) {
+    public Long numOfUserByFlow(Long flowId) {
         return execute(session -> session
-            .createQuery("select count(key.email) from UserFlow where key.flowPath = ?", Long.class)
-            .setParameter(0, flowPath)
+            .createQuery("select count(key.email) from UserFlow where key.flowId = ?", Long.class)
+            .setParameter(0, flowId)
             .uniqueResult());
     }
 
@@ -71,10 +71,10 @@ public class UserFlowDaoImpl extends AbstractBaseDao<UserFlowKey, UserFlow> impl
     }
 
     @Override
-    public int deleteByFlowPath(String rootPath) {
+    public int deleteByFlow(Long flowId) {
         return execute(session -> session
-            .createQuery("delete from UserFlow where key.flowPath = ?")
-            .setParameter(0, rootPath)
+            .createQuery("delete from UserFlow where key.flowId = ?")
+            .setParameter(0, flowId)
             .executeUpdate());
     }
 }

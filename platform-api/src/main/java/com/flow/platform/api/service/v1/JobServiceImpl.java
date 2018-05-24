@@ -23,13 +23,13 @@ import com.flow.platform.api.domain.Flow;
 import com.flow.platform.api.domain.FlowYml;
 import com.flow.platform.api.domain.job.JobCategory;
 import com.flow.platform.api.domain.job.JobNumber;
-import com.flow.platform.api.domain.user.User;
 import com.flow.platform.api.domain.v1.JobKey;
 import com.flow.platform.api.domain.v1.JobTree;
 import com.flow.platform.api.domain.v1.JobV1;
 import com.flow.platform.api.envs.EnvUtil;
 import com.flow.platform.api.envs.FlowEnvs;
 import com.flow.platform.api.envs.JobEnvs;
+import com.flow.platform.api.service.CurrentUser;
 import com.flow.platform.core.domain.Page;
 import com.flow.platform.core.domain.Pageable;
 import com.flow.platform.core.exception.NotFoundException;
@@ -38,6 +38,7 @@ import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -48,7 +49,7 @@ import org.springframework.transaction.annotation.Transactional;
  * @author yang
  */
 @Service(value = "jobServiceV1")
-public class JobServiceImpl implements JobService {
+public class JobServiceImpl extends CurrentUser implements JobService {
 
     @Value(value = "${domain.api}")
     private String apiDomain;
@@ -65,6 +66,9 @@ public class JobServiceImpl implements JobService {
     @Autowired
     private FlowService flowService;
 
+    @Autowired
+    private RabbitTemplate jobQueueTemplate;
+
     @Override
     public JobV1 find(JobKey key) {
         Objects.requireNonNull(key, "JobKey is required");
@@ -78,30 +82,39 @@ public class JobServiceImpl implements JobService {
     }
 
     @Override
-    public Page<JobV1> list(List<String> flows, boolean latestOnly, Pageable pageable) {
-        if (latestOnly) {
-            return jobDaoV1.listLatestByFlows(flows, pageable);
-        }
+    public String jobYml(JobKey key) {
+        Objects.requireNonNull(key, "JobKey is required");
+        JobTree jobTree = jobTreeDao.get(key);
+        return jobTree.getTree().toYml();
+    }
 
-        return jobDaoV1.listByFlow(flows, pageable);
+    @Override
+    public Page<JobV1> list(List<String> flows, Pageable pageable) {
+        List<Long> ids = flowService.list(flows);
+        return jobDaoV1.listByFlow(ids, pageable);
+    }
+
+    @Override
+    public List<JobV1> listForLatest(List<String> flows) {
+        List<Long> ids = flowService.list(flows);
+        return jobDaoV1.listLatestByFlows(ids);
     }
 
     @Override
     @Transactional(isolation = Isolation.REPEATABLE_READ)
-    public JobV1 create(Flow flow, JobCategory eventType, Map<String, String> envs, User creator) {
+    public JobV1 create(Flow flow, JobCategory eventType, Map<String, String> envs) {
         Objects.requireNonNull(flow, "Flow must be defined");
         Objects.requireNonNull(eventType, "Event type must be defined");
-        Objects.requireNonNull(creator, "User must be defined while create job");
 
         // parse yml content to NodeTree
-        FlowYml flowYml = flowService.findYml(flow.getName());
+        FlowYml flowYml = flowService.findYml(flow);
         NodeTree tree = NodeTree.create(flowYml.getContent());
 
         // create job with job number
-        JobNumber jobNumber = jobNumberDao.increase(flow.getName());
-        JobV1 job = new JobV1(flow.getName(), jobNumber.getNumber());
+        JobNumber jobNumber = jobNumberDao.increase(flow.getId());
+        JobV1 job = new JobV1(flow.getId(), jobNumber.getNumber());
         job.setCategory(eventType);
-        job.setCreatedBy(creator.getEmail());
+        job.setCreatedBy(currentUser().getEmail());
         job.setCreatedAt(ZonedDateTime.now());
         job.setUpdatedAt(ZonedDateTime.now());
 
@@ -118,9 +131,7 @@ public class JobServiceImpl implements JobService {
         // persistent job and job tree
         jobDaoV1.save(job);
         jobTreeDao.save(new JobTree(job.getKey(), tree));
-
-        // TODO: send job request to queue
-
+        jobQueueTemplate.convertAndSend(job.getKey());
         return job;
     }
 
@@ -128,8 +139,7 @@ public class JobServiceImpl implements JobService {
     @Transactional
     public void delete(Flow flow) {
         Objects.requireNonNull(flow, "Flow must be defined");
-
-        jobDaoV1.deleteByFlow(flow.getName());
-        jobTreeDao.deleteByFlow(flow.getName());
+        jobDaoV1.deleteByFlow(flow.getId());
+        jobTreeDao.deleteByFlow(flow.getId());
     }
 }

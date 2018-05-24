@@ -186,7 +186,7 @@ public class NodeServiceImpl extends CurrentUser implements NodeService {
         jobService.delete(rootPath);
 
         // delete job number
-        jobNumberDao.delete(new JobNumber(path));
+        jobNumberDao.delete(new JobNumber(0L));
 
         // delete flow
 //        flowDao.delete(flow);
@@ -296,7 +296,7 @@ public class NodeServiceImpl extends CurrentUser implements NodeService {
 //            userFlowService.unAssign(user, flow);
 //            userFlowService.assign(user, flow);
             user.setRoles(roleService.list(user));
-            user.setFlows(paths);
+//            user.setFlows(paths);
         }
         return users;
     }

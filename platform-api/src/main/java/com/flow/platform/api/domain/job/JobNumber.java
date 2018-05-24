@@ -16,14 +16,17 @@
 
 package com.flow.platform.api.domain.job;
 
+import com.flow.platform.api.domain.Flow;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 /**
  * @author yang
  */
-@EqualsAndHashCode(of = {"nodePath"})
+@NoArgsConstructor
+@EqualsAndHashCode(of = {"flowId"})
 public class JobNumber {
 
     /**
@@ -31,7 +34,7 @@ public class JobNumber {
      */
     @Getter
     @Setter
-    private String nodePath;
+    private Long flowId;
 
     /**
      * Job build number
@@ -40,15 +43,16 @@ public class JobNumber {
     @Setter
     private Long number = 0L;
 
-    public JobNumber() {
+    public JobNumber(Flow flow) {
+        this(flow.getId(), 0L);
     }
 
-    public JobNumber(String nodePath) {
-        this.nodePath = nodePath;
+    public JobNumber(Long flowId) {
+        this(flowId, 0L);
     }
 
-    public JobNumber(String nodePath, Long number) {
-        this.nodePath = nodePath;
+    public JobNumber(Long flowId, Long number) {
+        this.flowId = flowId;
         this.number = number;
     }
 }

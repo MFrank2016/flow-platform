@@ -17,7 +17,6 @@
 package com.flow.platform.api.dao;
 
 import com.flow.platform.api.domain.Flow;
-import com.flow.platform.api.domain.node.Node;
 import com.flow.platform.core.dao.AbstractBaseDao;
 import java.util.Collection;
 import java.util.List;
@@ -27,7 +26,7 @@ import org.springframework.stereotype.Repository;
  * @author yh@firim
  */
 @Repository(value = "flowDao")
-public class FlowDaoImpl extends AbstractBaseDao<String, Flow> implements FlowDao {
+public class FlowDaoImpl extends AbstractBaseDao<Long, Flow> implements FlowDao {
 
     @Override
     protected Class<Flow> getEntityClass() {
@@ -36,15 +35,30 @@ public class FlowDaoImpl extends AbstractBaseDao<String, Flow> implements FlowDa
 
     @Override
     protected String getKeyName() {
-        return "path";
+        return "id";
     }
 
     @Override
-    public List<Flow> listByCreatedBy(Collection<String> createdBy) {
+    public Flow get(String name) {
         return execute(session -> session
-            .createQuery("from Flow where createdBy in :createdByList", Flow.class)
+            .createQuery("from Flow where name = :name", Flow.class)
+            .setParameter("name", name)
+            .uniqueResult());
+    }
+
+    @Override
+    public List<Long> listByCreatedBy(Collection<String> createdBy) {
+        return execute(session -> session
+            .createQuery("select id from Flow where createdBy in :createdByList", Long.class)
             .setParameterList("createdByList", createdBy)
             .list());
     }
 
+    @Override
+    public List<Long> listByNames(Collection<String> names) {
+        return execute(session -> session
+            .createQuery("select id from Flow where name in :names", Long.class)
+            .setParameterList("names", names)
+            .list());
+    }
 }

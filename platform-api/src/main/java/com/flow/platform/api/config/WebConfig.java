@@ -93,7 +93,7 @@ public class WebConfig extends WebMvcConfigurerAdapter {
     }
 
     @Bean
-    public PropertySourcesPlaceholderConfigurer propertySourcesPlaceholderConfigurer() throws IOException {
+    public PropertySourcesPlaceholderConfigurer propertySourcesPlaceholderConfigurer() {
         AppResourceLoader propertyLoader = new PropertyResourceLoader();
         PropertySourcesPlaceholderConfigurer configurer = new PropertySourcesPlaceholderConfigurer();
         configurer.setIgnoreResourceNotFound(Boolean.FALSE);
@@ -108,8 +108,7 @@ public class WebConfig extends WebMvcConfigurerAdapter {
             new FlowMultipartMatcher("/local_file_resources", LOCAL_FILE_RESOURCE_MAX_UPLOAD_SIZE)
         );
 
-        FlowMultipartResolver resolver = new FlowMultipartResolver(matchers);
-        return resolver;
+        return new FlowMultipartResolver(matchers);
     }
 
     @Bean
