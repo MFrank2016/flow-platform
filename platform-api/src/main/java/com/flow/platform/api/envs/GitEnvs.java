@@ -85,6 +85,8 @@ public enum GitEnvs implements EnvKey {
 
     FLOW_GITLAB_PROJECT(true, false, null);
 
+    public final static String DEFAULT_BRANCH = "master";
+
     private boolean readonly;
 
     private boolean editable;

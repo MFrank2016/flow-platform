@@ -38,9 +38,9 @@ public class JobTreeDaoImpl extends AbstractBaseDao<JobKey, JobTree> implements 
     }
 
     @Override
-    public void deleteByFlow(String flow) {
-        execute(session -> session.createQuery("delete from JobTree where key.flow = :flow")
-            .setParameter("flow", flow)
+    public void deleteByFlow(Long flowId) {
+        execute(session -> session.createQuery("delete from JobTree where key.flowId = :flowId")
+            .setParameter("flowId", flowId)
             .executeUpdate());
     }
 }

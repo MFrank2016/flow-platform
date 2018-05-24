@@ -42,33 +42,32 @@ public class JobDaoImpl extends AbstractBaseDao<JobKey, JobV1> implements JobDao
     }
 
     @Override
-    public Page<JobV1> listByFlow(Collection<String> flows, Pageable pageable) {
+    public Page<JobV1> listByFlow(Collection<Long> flowIds, Pageable pageable) {
         List<JobV1> jobs = execute(session -> session
-            .createQuery("from JobV1 where key.flow in :flows", JobV1.class)
-            .setParameter("flows", flows)
+            .createQuery("from JobV1 where key.flowId in :flows", JobV1.class)
+            .setParameter("flows", flowIds)
             .setFirstResult(pageable.getOffset())
             .setMaxResults(pageable.getSize())
             .getResultList());
 
         Long totalSize = execute(session -> session
-            .createQuery("select count(*) from JobV1 where key.flow = :flows", Long.class)
-            .setParameter("flows", flows)
+            .createQuery("select count(*) from JobV1 where key.flowId = :flows", Long.class)
+            .setParameter("flows", flowIds)
             .uniqueResult());
 
         return new Page<>(jobs, jobs.size(), pageable.getNumber(), totalSize);
     }
 
     @Override
-    public Page<JobV1> listLatestByFlows(Collection<String> flows, Pageable pageable) {
+    public Page<JobV1> listLatestByFlows(Collection<Long> flowIds, Pageable pageable) {
         return null;
     }
 
     @Override
-    public void deleteByFlow(String flow) {
-        execute(session -> {
-            return session.createQuery("delete from JobV1 where key.flow = :flow")
-                .setParameter("flow", flow)
-                .executeUpdate();
-        });
+    public void deleteByFlow(Long flowId) {
+        execute(session -> session
+            .createQuery("delete from JobV1 where key.flowId = :flowId")
+            .setParameter("flowId", flowId)
+            .executeUpdate());
     }
 }

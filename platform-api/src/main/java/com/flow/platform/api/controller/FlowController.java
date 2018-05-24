@@ -226,35 +226,6 @@ public class FlowController extends NodeController {
     }
 
     /**
-     * @api {post} /flows/:root/users/auth
-     * @apiParam {String} root flow node name
-     * @apiParamExample {json} Request-Body:
-     *     {
-     *         	"arrays" : ["test1@fir.im", "hl@fir.im"]
-     *     }
-     * @apiGroup Flows
-     *
-     * @apiSuccessExample {list} Success-Response
-     *  [
-     *    {
-     *      email: "xxxx",
-     *      username: "xxxx",
-     *      flows: [
-     *        "aaa"
-     *      ]
-     *      createdAt: 15123123
-     *      updatedAt: 15123123
-     *    },
-     *    {}
-     *  ]
-     */
-    @PostMapping("/{root}/users/auth")
-    @WebSecurity(action = Actions.FLOW_AUTH)
-    public List<User> flowAuthUsers(@RequestBody ListParam<String> listParam) {
-        return nodeService.authUsers(listParam.getArrays(), flowName.get());
-    }
-
-    /**
      * @api {post} /flows/:root/trigger
      * @apiParam {String} root
      * @apiParamExample {json} Request-Body:
@@ -292,5 +263,10 @@ public class FlowController extends NodeController {
     @PostMapping("/{root}/trigger")
     public Flow trigger(@RequestBody TriggerParam triggerParam) {
         return flowService.merge(flowName.get(), triggerParam.toEnv());
+    }
+
+    @PostMapping("/{root}/git/try")
+    public void tryToConnectGit(@RequestBody(required = false) Map<String, String> envs) {
+
     }
 }

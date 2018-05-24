@@ -37,6 +37,11 @@ public interface JobService {
     JobV1 find(JobKey key);
 
     /**
+     * Get yml content for current job
+     */
+    String jobYml(JobKey key);
+
+    /**
      * List jobs or latest jobs by flows
      */
     Page<JobV1> list(List<String> flows, boolean latestOnly, Pageable pageable);

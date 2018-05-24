@@ -38,4 +38,8 @@ public interface FlowDao extends BaseDao<Long, Flow> {
      */
     List<Flow> listByCreatedBy(Collection<String> createdBy);
 
+    /**
+     * List flow ids by name collection
+     */
+    List<Long> listByNames(Collection<String> names);
 }

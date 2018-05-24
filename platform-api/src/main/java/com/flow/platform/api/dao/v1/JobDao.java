@@ -28,9 +28,9 @@ import java.util.Collection;
  */
 public interface JobDao extends BaseDao<JobKey, JobV1> {
 
-    Page<JobV1> listLatestByFlows(Collection<String> flows, Pageable pageable);
+    Page<JobV1> listLatestByFlows(Collection<Long> flows, Pageable pageable);
 
-    Page<JobV1> listByFlow(Collection<String> flows, Pageable pageable);
+    Page<JobV1> listByFlow(Collection<Long> flows, Pageable pageable);
 
-    void deleteByFlow(String flow);
+    void deleteByFlow(Long flowId);
 }

@@ -22,17 +22,24 @@ import com.flow.platform.api.dao.job.JobNumberDao;
 import com.flow.platform.api.domain.Flow;
 import com.flow.platform.api.domain.FlowYml;
 import com.flow.platform.api.domain.job.JobNumber;
+import com.flow.platform.api.domain.user.Role;
+import com.flow.platform.api.domain.user.SysRole;
 import com.flow.platform.api.domain.user.User;
 import com.flow.platform.api.envs.EnvUtil;
+import com.flow.platform.api.envs.GitEnvs;
 import com.flow.platform.api.exception.DuplicateExeption;
 import com.flow.platform.api.service.CurrentUser;
+import com.flow.platform.api.service.user.RoleService;
 import com.flow.platform.api.service.user.UserFlowService;
 import com.flow.platform.core.exception.NotFoundException;
+import com.flow.platform.util.http.HttpURL;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -41,6 +48,9 @@ import org.springframework.transaction.annotation.Transactional;
  */
 @Service
 public class FlowServiceImpl extends CurrentUser implements FlowService {
+
+    @Value(value = "${domain.api}")
+    private String apiDomain;
 
     @Autowired
     private FlowDao flowDao;
@@ -54,6 +64,9 @@ public class FlowServiceImpl extends CurrentUser implements FlowService {
     @Autowired
     private UserFlowService userFlowService;
 
+    @Autowired
+    private RoleService roleService;
+
     @Override
     @Transactional
     public Flow save(String name) {
@@ -64,6 +77,8 @@ public class FlowServiceImpl extends CurrentUser implements FlowService {
 
         // save flow get auto increased flow id
         flow = flowDao.save(new Flow(name));
+        flow.putEnv(GitEnvs.FLOW_GIT_WEBHOOK, hooksUrl(flow));
+        flow.putEnv(GitEnvs.FLOW_GIT_BRANCH, GitEnvs.DEFAULT_BRANCH);
 
         User user = currentUser();
         flow.setCreatedBy(user.getEmail());
@@ -118,7 +133,22 @@ public class FlowServiceImpl extends CurrentUser implements FlowService {
 
     @Override
     public List<Flow> list(boolean isOnlyCurrentUser) {
-        return null;
+        if (!isOnlyCurrentUser) {
+            return flowDao.list();
+        }
+
+        List<Role> roles = roleService.list(currentUser());
+
+        if (roles.contains(roleService.find(SysRole.ADMIN.name()))) {
+            return flowDao.list();
+        }
+
+        return userFlowService.list(currentUser());
+    }
+
+    @Override
+    public List<Long> list(Collection<String> names) {
+        return flowDao.listByNames(names);
     }
 
     @Override
@@ -140,5 +170,9 @@ public class FlowServiceImpl extends CurrentUser implements FlowService {
 
         flowDao.update(flow);
         return flow;
+    }
+
+    private String hooksUrl(final Flow flow) {
+        return HttpURL.build(apiDomain).append("/hooks/git/").append(flow.getName()).toString();
     }
 }

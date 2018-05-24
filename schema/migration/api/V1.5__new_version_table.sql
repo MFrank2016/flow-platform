@@ -20,7 +20,7 @@ CREATE TABLE `flow_yml_v1` (
 # ------------------------------------------------------------
 
 CREATE TABLE `job_v1` (
-  `flow_name` varchar(255) NOT NULL,
+  `flow_id` bigint(20) NOT NULL,
   `build_number` bigint(20) NOT NULL,
   `envs` longtext,
   `job_category` varchar(20) NOT NULL,
@@ -28,16 +28,16 @@ CREATE TABLE `job_v1` (
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `created_by` varchar(255) DEFAULT NULL,
-  PRIMARY KEY (`flow_name`, `build_number`)
+  PRIMARY KEY (`flow_id`, `build_number`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 # ------------------------------------------------------------
 
 CREATE TABLE `job_tree_v1` (
-  `flow_name` varchar(255) NOT NULL,
+  `flow_id` bigint(20) NOT NULL,
   `build_number` bigint(20) NOT NULL,
   `tree` longblob NOT NULL,
-  PRIMARY KEY (`flow_name`, `build_number`)
+  PRIMARY KEY (`flow_id`, `build_number`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 # ------------------------------------------------------------

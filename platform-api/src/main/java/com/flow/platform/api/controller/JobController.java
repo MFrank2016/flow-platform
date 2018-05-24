@@ -24,13 +24,15 @@ import com.flow.platform.api.domain.job.JobCategory;
 import com.flow.platform.api.domain.job.NodeResult;
 import com.flow.platform.api.domain.permission.Actions;
 import com.flow.platform.api.domain.user.User;
+import com.flow.platform.api.domain.v1.JobKey;
+import com.flow.platform.api.domain.v1.JobV1;
 import com.flow.platform.api.security.WebSecurity;
 import com.flow.platform.api.service.ArtifactService;
 import com.flow.platform.api.service.LogService;
 import com.flow.platform.api.service.job.JobSearchService;
-import com.flow.platform.api.service.job.JobService;
 import com.flow.platform.api.service.job.NodeResultService;
 import com.flow.platform.api.service.v1.FlowService;
+import com.flow.platform.api.service.v1.JobService;
 import com.flow.platform.api.util.I18nUtil;
 import com.flow.platform.core.domain.Page;
 import com.flow.platform.core.domain.Pageable;
@@ -67,7 +69,7 @@ public class JobController extends NodeController {
     private FlowService flowService;
 
     @Autowired
-    private JobService jobService;
+    private JobService jobServiceV1;
 
     @Autowired
     private NodeResultService nodeResultService;
@@ -103,7 +105,6 @@ public class JobController extends NodeController {
     /**
      * @api {post} /jobs/:root Create
      * @apiParam {String} root flow node path
-     * @apiParam {Boolean} [isFromScmYml] is load yml from scm repo, otherwise yml from flow
      * @apiGroup Jobs
      * @apiDescription Create job by flow node path, the async call since it will load yml from git
      * FLOW_STATUS must be READY and YML contnet must be provided
@@ -111,14 +112,13 @@ public class JobController extends NodeController {
      */
     @PostMapping(path = "/{root}")
     @WebSecurity(action = Actions.JOB_CREATE)
-    public void create(@RequestParam(required = false, defaultValue = "true") boolean isFromScmYml,
-                       @RequestBody(required = false) Map<String, String> envs) {
+    public JobV1 create(@RequestBody(required = false) Map<String, String> envs) {
         if (Objects.isNull(envs)) {
             envs = new LinkedHashMap<>();
         }
 
         Flow flow = flowService.find(flowName.get());
-        jobService.create(flow, JobCategory.MANUAL, envs, currentUser.get());
+        return jobServiceV1.create(flow, JobCategory.MANUAL, envs, currentUser.get());
     }
 
     /**
@@ -198,6 +198,7 @@ public class JobController extends NodeController {
         if (Pageable.isEmpty(pageable)) {
             pageable = Pageable.DEFAULT;
         }
+
         return searchService.search(searchCondition, paths, pageable);
     }
 
@@ -215,8 +216,9 @@ public class JobController extends NodeController {
      */
     @GetMapping(path = "/{root}/{buildNumber}")
     @WebSecurity(action = Actions.JOB_SHOW)
-    public Job show(@PathVariable Long buildNumber) {
-        return jobService.find(flowName.get(), buildNumber);
+    public JobV1 show(@PathVariable Long buildNumber) {
+        Flow flow = flowService.find(flowName.get());
+        return jobServiceV1.find(new JobKey(flow.getId(), buildNumber));
     }
 
     /**
@@ -238,13 +240,8 @@ public class JobController extends NodeController {
     @GetMapping(path = "/{root}/{buildNumber}/yml")
     @WebSecurity(action = Actions.JOB_YML)
     public String yml(@PathVariable Long buildNumber) {
-        String path = flowName.get();
-        try {
-            return jobService.findYml(path, buildNumber);
-        } catch (NotFoundException ignore) {
-            // ignore job node not found exception since maybe job node created when yml loading
-            return StringUtil.EMPTY;
-        }
+        Flow flow = flowService.find(flowName.get());
+        return jobServiceV1.jobYml(new JobKey(flow.getId(), buildNumber));
     }
 
     /**
@@ -283,9 +280,10 @@ public class JobController extends NodeController {
     @GetMapping(path = "/{root}/{buildNumber}/nodes")
     @WebSecurity(action = Actions.JOB_SHOW)
     public List<NodeResult> indexNodeResults(@PathVariable Long buildNumber) {
-        String path = flowName.get();
-        Job job = jobService.find(path, buildNumber);
-        return nodeResultService.list(job, true);
+//        String path = flowName.get();
+//        Job job = jobService.find(path, buildNumber);
+//        return nodeResultService.list(job, true);
+        throw new UnsupportedOperationException();
     }
 
     /**
@@ -327,8 +325,9 @@ public class JobController extends NodeController {
     @PostMapping(path = "/{root}/{buildNumber}/stop")
     @WebSecurity(action = Actions.JOB_STOP)
     public void stopJob(@PathVariable Long buildNumber) {
-        String path = flowName.get();
-        jobService.stop(path, buildNumber);
+//        String path = flowName.get();
+//        jobService.stop(path, buildNumber);
+        throw new UnsupportedOperationException();
     }
 
     /**
@@ -351,7 +350,8 @@ public class JobController extends NodeController {
     @PostMapping(path = "/status/latest")
     @WebSecurity(action = Actions.JOB_SHOW)
     public Collection<Job> latestStatus(@RequestBody List<String> paths) {
-        return jobService.list(paths, true);
+//        return jobService.list(paths, true);
+        throw new UnsupportedOperationException();
     }
 
     /**

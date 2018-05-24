@@ -82,12 +82,21 @@ public class JobServiceImpl implements JobService {
     }
 
     @Override
+    public String jobYml(JobKey key) {
+        Objects.requireNonNull(key, "JobKey is required");
+        JobTree jobTree = jobTreeDao.get(key);
+        return jobTree.getTree().toYml();
+    }
+
+    @Override
     public Page<JobV1> list(List<String> flows, boolean latestOnly, Pageable pageable) {
+        List<Long> ids = flowService.list(flows);
+
         if (latestOnly) {
-            return jobDaoV1.listLatestByFlows(flows, pageable);
+            return jobDaoV1.listLatestByFlows(ids, pageable);
         }
 
-        return jobDaoV1.listByFlow(flows, pageable);
+        return jobDaoV1.listByFlow(ids, pageable);
     }
 
     @Override
@@ -103,7 +112,7 @@ public class JobServiceImpl implements JobService {
 
         // create job with job number
         JobNumber jobNumber = jobNumberDao.increase(flow.getId());
-        JobV1 job = new JobV1(flow.getName(), jobNumber.getNumber());
+        JobV1 job = new JobV1(flow.getId(), jobNumber.getNumber());
         job.setCategory(eventType);
         job.setCreatedBy(creator.getEmail());
         job.setCreatedAt(ZonedDateTime.now());
@@ -130,8 +139,7 @@ public class JobServiceImpl implements JobService {
     @Transactional
     public void delete(Flow flow) {
         Objects.requireNonNull(flow, "Flow must be defined");
-
-        jobDaoV1.deleteByFlow(flow.getName());
-        jobTreeDao.deleteByFlow(flow.getName());
+        jobDaoV1.deleteByFlow(flow.getId());
+        jobTreeDao.deleteByFlow(flow.getId());
     }
 }

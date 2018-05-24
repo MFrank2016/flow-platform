@@ -39,7 +39,7 @@ public class JobTreeDaoTest extends TestBase {
     @Autowired
     private FlowHelper flowHelper;
 
-    private JobKey key = new JobKey("my_flow", 0L);
+    private JobKey key = new JobKey(10L, 0L);
 
     @Before
     public void init() throws IOException {
@@ -73,7 +73,7 @@ public class JobTreeDaoTest extends TestBase {
 
     @Test
     public void should_delete_by_flow_name() {
-        jobTreeDao.deleteByFlow(key.getFlow());
+        jobTreeDao.deleteByFlow(key.getFlowId());
         Assert.assertEquals(0, jobTreeDao.list().size());
     }
 

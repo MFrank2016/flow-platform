@@ -69,8 +69,8 @@ public class JobV1 extends EnvObject {
     @Setter
     private String createdBy;
 
-    public JobV1(String flow, Long number) {
-        this.key = new JobKey(flow, number);
+    public JobV1(Long flowId, Long number) {
+        this.key = new JobKey(flowId, number);
     }
 
     public boolean isFinishStatus() {

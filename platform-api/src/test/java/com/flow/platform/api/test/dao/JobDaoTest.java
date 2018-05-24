@@ -54,24 +54,24 @@ public class JobDaoTest extends TestBase {
 
     @Test
     public void should_create_and_get_job() {
-        JobV1 job = createJobs(flow.getName(), 1).get(0);
-        JobV1 loaded = jobDaoV1.get(new JobKey(flow.getName(), 0L));
+        JobV1 job = createJobs(flow.getId(), 1).get(0);
+        JobV1 loaded = jobDaoV1.get(new JobKey(flow.getId(), 0L));
         Assert.assertEquals(job, loaded);
     }
 
     @Test
     public void should_list_job_by_flow_name() {
-        List<JobV1> inits = createJobs(flow.getName(), 2);
+        List<JobV1> inits = createJobs(flow.getId(), 2);
         JobV1 first = inits.get(0);
         JobV1 second = inits.get(1);
 
-        Page<JobV1> jobs = jobDaoV1.listByFlow(Lists.newArrayList(flow.getName()), new Pageable(1, 1));
+        Page<JobV1> jobs = jobDaoV1.listByFlow(Lists.newArrayList(flow.getId()), new Pageable(1, 1));
         Assert.assertNotNull(jobs);
         Assert.assertEquals(1, jobs.getPageSize());
         Assert.assertEquals(2, jobs.getTotalSize());
         Assert.assertEquals(first, jobs.getContent().get(0));
 
-        jobs = jobDaoV1.listByFlow(Lists.newArrayList(flow.getName()), new Pageable(2, 1));
+        jobs = jobDaoV1.listByFlow(Lists.newArrayList(flow.getId()), new Pageable(2, 1));
         Assert.assertNotNull(jobs);
         Assert.assertEquals(1, jobs.getPageSize());
         Assert.assertEquals(2, jobs.getTotalSize());
@@ -80,17 +80,17 @@ public class JobDaoTest extends TestBase {
 
     @Test
     public void should_delete_jobs_by_flow_name() {
-        createJobs(flow.getName(), 10);
+        createJobs(flow.getId(), 10);
         Assert.assertEquals(10, jobDaoV1.list().size());
 
-        jobDaoV1.deleteByFlow(flow.getName());
+        jobDaoV1.deleteByFlow(flow.getId());
         Assert.assertEquals(0, jobDaoV1.list().size());
     }
 
-    private List<JobV1> createJobs(String name, int size) {
+    private List<JobV1> createJobs(Long flowId, int size) {
         List<JobV1> jobs = new ArrayList<>(size);
         for (int i = 0; i < size; i++) {
-            jobs.add(jobDaoV1.save(new JobV1(name, (long) i)));
+            jobs.add(jobDaoV1.save(new JobV1(flowId, (long) i)));
         }
         return jobs;
     }

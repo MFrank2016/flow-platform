@@ -115,6 +115,10 @@ public class NodeTree implements Serializable {
         return getWithIndex(path).node;
     }
 
+    public String toYml() {
+        throw new UnsupportedOperationException();
+    }
+
     private NodeWithIndex getWithIndex(NodePath path) {
         NodeWithIndex nodeWithIndex = cached.get(path);
 

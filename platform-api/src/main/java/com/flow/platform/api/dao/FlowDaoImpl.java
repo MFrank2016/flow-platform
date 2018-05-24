@@ -17,7 +17,6 @@
 package com.flow.platform.api.dao;
 
 import com.flow.platform.api.domain.Flow;
-import com.flow.platform.api.domain.node.Node;
 import com.flow.platform.core.dao.AbstractBaseDao;
 import java.util.Collection;
 import java.util.List;
@@ -55,4 +54,11 @@ public class FlowDaoImpl extends AbstractBaseDao<Long, Flow> implements FlowDao 
             .list());
     }
 
+    @Override
+    public List<Long> listByNames(Collection<String> names) {
+        return execute(session -> session
+            .createQuery("select id from Flow where name in :names", Long.class)
+            .setParameterList("names", names)
+            .list());
+    }
 }

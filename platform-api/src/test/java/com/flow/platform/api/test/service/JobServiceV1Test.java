@@ -78,7 +78,7 @@ public class JobServiceV1Test extends TestBase {
 
         // then:
         countDown.await(30, TimeUnit.SECONDS);
-        Page<JobV1> jobs = jobDaoV1.listByFlow(Lists.newArrayList(flow.getName()), Pageable.DEFAULT);
+        Page<JobV1> jobs = jobDaoV1.listByFlow(Lists.newArrayList(flow.getId()), Pageable.DEFAULT);
         Assert.assertEquals(numOfJob, jobs.getPageSize());
     }
 }

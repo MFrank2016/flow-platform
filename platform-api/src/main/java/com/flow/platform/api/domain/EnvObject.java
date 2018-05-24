@@ -20,7 +20,6 @@ import com.flow.platform.api.envs.EnvKey;
 import com.flow.platform.api.envs.EnvUtil;
 import com.flow.platform.api.envs.EnvValue;
 import com.flow.platform.domain.Jsonable;
-import com.flow.platform.yml.parser.annotations.YmlSerializer;
 import com.google.gson.annotations.Expose;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -36,7 +35,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class EnvObject extends Jsonable {
 
-    @YmlSerializer(required = false)
     @Expose
     protected Map<String, String> envs = new LinkedHashMap<>();
 
