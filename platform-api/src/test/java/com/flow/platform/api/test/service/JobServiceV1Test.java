@@ -28,6 +28,7 @@ import com.google.common.collect.Lists;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
@@ -46,10 +47,15 @@ public class JobServiceV1Test extends TestBase {
     @Autowired
     private FlowHelper flowHelper;
 
+    @Before
+    public void init() {
+        setCurrentUser(mockUser);
+    }
+
     @Test
     public void should_create_and_delete_job() throws Throwable {
         Flow flow = flowHelper.createFlowWithYml("flow-job", "yml/demo_flow2.yaml");
-        JobV1 job = jobServiceV1.create(flow, JobCategory.MANUAL, null, mockUser);
+        JobV1 job = jobServiceV1.create(flow, JobCategory.MANUAL, null);
 
         Assert.assertNotNull(jobDaoV1.get(job.getKey()));
         Assert.assertNotNull(jobTreeDao.get(job.getKey()));
@@ -71,7 +77,7 @@ public class JobServiceV1Test extends TestBase {
         // when:
         for (int i = 0; i < numOfJob; i++) {
             taskExecutor.execute(() -> {
-                jobServiceV1.create(flow, JobCategory.MANUAL, null, mockUser);
+                jobServiceV1.create(flow, JobCategory.MANUAL, null);
                 countDown.countDown();
             });
         }

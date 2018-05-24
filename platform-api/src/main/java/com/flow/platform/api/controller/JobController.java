@@ -36,7 +36,6 @@ import com.flow.platform.api.service.v1.JobService;
 import com.flow.platform.api.util.I18nUtil;
 import com.flow.platform.core.domain.Page;
 import com.flow.platform.core.domain.Pageable;
-import com.flow.platform.core.exception.NotFoundException;
 import com.flow.platform.util.StringUtil;
 import com.google.common.collect.Lists;
 import java.util.Collection;
@@ -118,7 +117,7 @@ public class JobController extends NodeController {
         }
 
         Flow flow = flowService.find(flowName.get());
-        return jobServiceV1.create(flow, JobCategory.MANUAL, envs, currentUser.get());
+        return jobServiceV1.create(flow, JobCategory.MANUAL, envs);
     }
 
     /**
@@ -349,9 +348,8 @@ public class JobController extends NodeController {
      */
     @PostMapping(path = "/status/latest")
     @WebSecurity(action = Actions.JOB_SHOW)
-    public Collection<Job> latestStatus(@RequestBody List<String> paths) {
-//        return jobService.list(paths, true);
-        throw new UnsupportedOperationException();
+    public Collection<JobV1> latestStatus(@RequestBody List<String> flows) {
+        return jobServiceV1.listForLatest(flows);
     }
 
     /**

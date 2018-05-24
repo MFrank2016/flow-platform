@@ -23,13 +23,13 @@ import com.flow.platform.api.domain.Flow;
 import com.flow.platform.api.domain.FlowYml;
 import com.flow.platform.api.domain.job.JobCategory;
 import com.flow.platform.api.domain.job.JobNumber;
-import com.flow.platform.api.domain.user.User;
 import com.flow.platform.api.domain.v1.JobKey;
 import com.flow.platform.api.domain.v1.JobTree;
 import com.flow.platform.api.domain.v1.JobV1;
 import com.flow.platform.api.envs.EnvUtil;
 import com.flow.platform.api.envs.FlowEnvs;
 import com.flow.platform.api.envs.JobEnvs;
+import com.flow.platform.api.service.CurrentUser;
 import com.flow.platform.core.domain.Page;
 import com.flow.platform.core.domain.Pageable;
 import com.flow.platform.core.exception.NotFoundException;
@@ -49,7 +49,7 @@ import org.springframework.transaction.annotation.Transactional;
  * @author yang
  */
 @Service(value = "jobServiceV1")
-public class JobServiceImpl implements JobService {
+public class JobServiceImpl extends CurrentUser implements JobService {
 
     @Value(value = "${domain.api}")
     private String apiDomain;
@@ -89,22 +89,22 @@ public class JobServiceImpl implements JobService {
     }
 
     @Override
-    public Page<JobV1> list(List<String> flows, boolean latestOnly, Pageable pageable) {
+    public Page<JobV1> list(List<String> flows, Pageable pageable) {
         List<Long> ids = flowService.list(flows);
-
-        if (latestOnly) {
-            return jobDaoV1.listLatestByFlows(ids, pageable);
-        }
-
         return jobDaoV1.listByFlow(ids, pageable);
     }
 
     @Override
+    public List<JobV1> listForLatest(List<String> flows) {
+        List<Long> ids = flowService.list(flows);
+        return jobDaoV1.listLatestByFlows(ids);
+    }
+
+    @Override
     @Transactional(isolation = Isolation.REPEATABLE_READ)
-    public JobV1 create(Flow flow, JobCategory eventType, Map<String, String> envs, User creator) {
+    public JobV1 create(Flow flow, JobCategory eventType, Map<String, String> envs) {
         Objects.requireNonNull(flow, "Flow must be defined");
         Objects.requireNonNull(eventType, "Event type must be defined");
-        Objects.requireNonNull(creator, "User must be defined while create job");
 
         // parse yml content to NodeTree
         FlowYml flowYml = flowService.findYml(flow);
@@ -114,7 +114,7 @@ public class JobServiceImpl implements JobService {
         JobNumber jobNumber = jobNumberDao.increase(flow.getId());
         JobV1 job = new JobV1(flow.getId(), jobNumber.getNumber());
         job.setCategory(eventType);
-        job.setCreatedBy(creator.getEmail());
+        job.setCreatedBy(currentUser().getEmail());
         job.setCreatedAt(ZonedDateTime.now());
         job.setUpdatedAt(ZonedDateTime.now());
 

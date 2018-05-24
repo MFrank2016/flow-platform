@@ -35,7 +35,7 @@ public class FlowDaoImpl extends AbstractBaseDao<Long, Flow> implements FlowDao 
 
     @Override
     protected String getKeyName() {
-        return "path";
+        return "id";
     }
 
     @Override
@@ -47,9 +47,9 @@ public class FlowDaoImpl extends AbstractBaseDao<Long, Flow> implements FlowDao 
     }
 
     @Override
-    public List<Flow> listByCreatedBy(Collection<String> createdBy) {
+    public List<Long> listByCreatedBy(Collection<String> createdBy) {
         return execute(session -> session
-            .createQuery("from Flow where createdBy in :createdByList", Flow.class)
+            .createQuery("select id from Flow where createdBy in :createdByList", Long.class)
             .setParameterList("createdByList", createdBy)
             .list());
     }

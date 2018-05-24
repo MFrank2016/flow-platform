@@ -59,8 +59,14 @@ public class JobDaoImpl extends AbstractBaseDao<JobKey, JobV1> implements JobDao
     }
 
     @Override
-    public Page<JobV1> listLatestByFlows(Collection<Long> flowIds, Pageable pageable) {
-        return null;
+    public List<JobV1> listLatestByFlows(Collection<Long> flowIds) {
+        final String hql = "from JobV1 where key.flowId in :flowIds and key.number "
+            + "in (select max(key.number) from JobV1 where key.flowId in :flowIds group by key.flowId)";
+
+        return execute(session -> session
+            .createQuery(hql, JobV1.class)
+            .setParameterList("flowIds", flowIds)
+            .list());
     }
 
     @Override

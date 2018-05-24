@@ -36,7 +36,7 @@ public interface FlowDao extends BaseDao<Long, Flow> {
     /**
      * List flow path by created by email
      */
-    List<Flow> listByCreatedBy(Collection<String> createdBy);
+    List<Long> listByCreatedBy(Collection<String> createdBy);
 
     /**
      * List flow ids by name collection
