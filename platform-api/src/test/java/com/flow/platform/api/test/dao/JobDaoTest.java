@@ -22,7 +22,9 @@ import com.flow.platform.api.domain.v1.JobKey;
 import com.flow.platform.api.domain.v1.JobV1;
 import com.flow.platform.api.test.FlowHelper;
 import com.flow.platform.api.test.TestBase;
+import com.flow.platform.core.domain.Page;
 import com.flow.platform.core.domain.Pageable;
+import com.google.common.collect.Lists;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -63,15 +65,17 @@ public class JobDaoTest extends TestBase {
         JobV1 first = inits.get(0);
         JobV1 second = inits.get(1);
 
-        List<JobV1> jobs = jobDaoV1.listByFlow(flow.getName(), new Pageable(1, 1));
+        Page<JobV1> jobs = jobDaoV1.listByFlow(Lists.newArrayList(flow.getName()), new Pageable(1, 1));
         Assert.assertNotNull(jobs);
-        Assert.assertEquals(1, jobs.size());
-        Assert.assertEquals(first, jobs.get(0));
+        Assert.assertEquals(1, jobs.getPageSize());
+        Assert.assertEquals(2, jobs.getTotalSize());
+        Assert.assertEquals(first, jobs.getContent().get(0));
 
-        jobs = jobDaoV1.listByFlow(flow.getName(), new Pageable(2, 1));
+        jobs = jobDaoV1.listByFlow(Lists.newArrayList(flow.getName()), new Pageable(2, 1));
         Assert.assertNotNull(jobs);
-        Assert.assertEquals(1, jobs.size());
-        Assert.assertEquals(second, jobs.get(0));
+        Assert.assertEquals(1, jobs.getPageSize());
+        Assert.assertEquals(2, jobs.getTotalSize());
+        Assert.assertEquals(second, jobs.getContent().get(0));
     }
 
     @Test

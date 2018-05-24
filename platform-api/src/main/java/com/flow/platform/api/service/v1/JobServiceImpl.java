@@ -30,9 +30,12 @@ import com.flow.platform.api.domain.v1.JobV1;
 import com.flow.platform.api.envs.EnvUtil;
 import com.flow.platform.api.envs.FlowEnvs;
 import com.flow.platform.api.envs.JobEnvs;
+import com.flow.platform.core.domain.Page;
+import com.flow.platform.core.domain.Pageable;
 import com.flow.platform.core.exception.NotFoundException;
 import com.flow.platform.tree.NodeTree;
 import java.time.ZonedDateTime;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -72,6 +75,15 @@ public class JobServiceImpl implements JobService {
         }
 
         return job;
+    }
+
+    @Override
+    public Page<JobV1> list(List<String> flows, boolean latestOnly, Pageable pageable) {
+        if (latestOnly) {
+            return jobDaoV1.listLatestByFlows(flows, pageable);
+        }
+
+        return jobDaoV1.listByFlow(flows, pageable);
     }
 
     @Override

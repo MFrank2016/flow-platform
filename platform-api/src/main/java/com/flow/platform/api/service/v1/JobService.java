@@ -18,9 +18,12 @@ package com.flow.platform.api.service.v1;
 
 import com.flow.platform.api.domain.Flow;
 import com.flow.platform.api.domain.job.JobCategory;
+import com.flow.platform.api.domain.user.User;
 import com.flow.platform.api.domain.v1.JobKey;
 import com.flow.platform.api.domain.v1.JobV1;
-import com.flow.platform.api.domain.user.User;
+import com.flow.platform.core.domain.Page;
+import com.flow.platform.core.domain.Pageable;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -32,6 +35,11 @@ public interface JobService {
      * Find job by job key
      */
     JobV1 find(JobKey key);
+
+    /**
+     * List jobs or latest jobs by flows
+     */
+    Page<JobV1> list(List<String> flows, boolean latestOnly, Pageable pageable);
 
     /**
      * Create a new job

@@ -19,6 +19,7 @@ package com.flow.platform.api.dao.v1;
 import com.flow.platform.api.domain.v1.JobKey;
 import com.flow.platform.api.domain.v1.JobV1;
 import com.flow.platform.core.dao.AbstractBaseDao;
+import com.flow.platform.core.domain.Page;
 import com.flow.platform.core.domain.Pageable;
 import java.util.Collection;
 import java.util.List;
@@ -41,18 +42,25 @@ public class JobDaoImpl extends AbstractBaseDao<JobKey, JobV1> implements JobDao
     }
 
     @Override
-    public List<JobV1> listLatestByFlows(Collection<String> flows) {
-        return null;
-    }
-
-    @Override
-    public List<JobV1> listByFlow(String flow, Pageable pageable) {
-        return execute(session -> session
-            .createQuery("from JobV1 where key.flow = :flow", JobV1.class)
-            .setParameter("flow", flow)
+    public Page<JobV1> listByFlow(Collection<String> flows, Pageable pageable) {
+        List<JobV1> jobs = execute(session -> session
+            .createQuery("from JobV1 where key.flow in :flows", JobV1.class)
+            .setParameter("flows", flows)
             .setFirstResult(pageable.getOffset())
             .setMaxResults(pageable.getSize())
             .getResultList());
+
+        Long totalSize = execute(session -> session
+            .createQuery("select count(*) from JobV1 where key.flow = :flows", Long.class)
+            .setParameter("flows", flows)
+            .uniqueResult());
+
+        return new Page<>(jobs, jobs.size(), pageable.getNumber(), totalSize);
+    }
+
+    @Override
+    public Page<JobV1> listLatestByFlows(Collection<String> flows, Pageable pageable) {
+        return null;
     }
 
     @Override

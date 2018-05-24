@@ -20,26 +20,40 @@ import com.flow.platform.domain.Jsonable;
 import com.google.gson.annotations.Expose;
 import java.util.Collections;
 import java.util.List;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 /**
  * @author gyfirim
  */
+@NoArgsConstructor
 public class Page<T> extends Jsonable {
 
     @Expose
+    @Getter
+    @Setter
     private List<T> content = Collections.emptyList();
 
     @Expose
+    @Getter
+    @Setter
     private long totalSize;
 
     // page index
     @Expose
+    @Getter
+    @Setter
     private int pageNumber;
 
     @Expose
+    @Getter
+    @Setter
     private int pageSize;
 
     @Expose
+    @Getter
+    @Setter
     private int pageCount;
 
     public Page(List<T> content, int pageSize, int number, long totalSize) {
@@ -50,43 +64,7 @@ public class Page<T> extends Jsonable {
         this.pageCount = pageSize == 0 ? 1 : (int) Math.ceil((double) this.totalSize / (double)pageSize);
     }
 
-    public List<T> getContent() {
-        return content;
-    }
-
-    public void setContent(List<T> content) {
-        this.content = content;
-    }
-
-    public long getTotalSize() {
-        return totalSize;
-    }
-
-    public void setTotalSize(long totalSize) {
-        this.totalSize = totalSize;
-    }
-
-    public int getPageNumber() {
-        return pageNumber;
-    }
-
-    public void setPageNumber(int pageNumber) {
-        this.pageNumber = pageNumber;
-    }
-
-    public int getPageSize() {
-        return pageSize;
-    }
-
-    public void setPageSize(int pageSize) {
-        this.pageSize = pageSize;
-    }
-
-    public int getPageCount() {
-        return pageCount;
-    }
-
-    public void setPageCount(int pageCount) {
-        this.pageCount = pageCount;
+    public Page(List<T> content, Pageable pageable, long totalSize) {
+        this(content, pageable.getSize(), pageable.getNumber(), totalSize);
     }
 }

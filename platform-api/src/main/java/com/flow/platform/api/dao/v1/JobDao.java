@@ -19,18 +19,18 @@ package com.flow.platform.api.dao.v1;
 import com.flow.platform.api.domain.v1.JobKey;
 import com.flow.platform.api.domain.v1.JobV1;
 import com.flow.platform.core.dao.BaseDao;
+import com.flow.platform.core.domain.Page;
 import com.flow.platform.core.domain.Pageable;
 import java.util.Collection;
-import java.util.List;
 
 /**
  * @author yang
  */
 public interface JobDao extends BaseDao<JobKey, JobV1> {
 
-    List<JobV1> listLatestByFlows(Collection<String> flows);
+    Page<JobV1> listLatestByFlows(Collection<String> flows, Pageable pageable);
 
-    List<JobV1> listByFlow(String flow, Pageable pageable);
+    Page<JobV1> listByFlow(Collection<String> flows, Pageable pageable);
 
     void deleteByFlow(String flow);
 }

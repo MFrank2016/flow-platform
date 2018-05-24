@@ -21,7 +21,9 @@ import com.flow.platform.api.domain.job.JobCategory;
 import com.flow.platform.api.domain.v1.JobV1;
 import com.flow.platform.api.service.v1.JobService;
 import com.flow.platform.api.test.TestBase;
+import com.flow.platform.core.domain.Page;
 import com.flow.platform.core.domain.Pageable;
+import com.google.common.collect.Lists;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import org.junit.Assert;
@@ -70,6 +72,7 @@ public class JobServiceV1Test extends TestBase {
 
         // then:
         countDown.await(30, TimeUnit.SECONDS);
-        Assert.assertEquals(numOfJob, jobDaoV1.listByFlow(flow.getName(), Pageable.DEFAULT).size());
+        Page<JobV1> jobs = jobDaoV1.listByFlow(Lists.newArrayList(flow.getName()), Pageable.DEFAULT);
+        Assert.assertEquals(numOfJob, jobs.getPageSize());
     }
 }
