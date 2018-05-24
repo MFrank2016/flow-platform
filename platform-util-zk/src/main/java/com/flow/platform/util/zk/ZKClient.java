@@ -70,6 +70,10 @@ public class ZKClient implements Closeable {
         this.connTimeout = connTimeout;
     }
 
+    public CuratorFramework getClient() {
+        return client;
+    }
+
     /**
      * @param host zookeeper host url
      * @param retryPeriod period between retry in millis

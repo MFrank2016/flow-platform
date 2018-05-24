@@ -23,6 +23,7 @@ import com.flow.platform.api.domain.sync.Sync;
 import com.flow.platform.api.security.WebSecurity;
 import com.flow.platform.api.service.AgentService;
 import com.flow.platform.api.service.SyncService;
+import com.flow.platform.api.service.v1.AgentManagerService;
 import com.flow.platform.core.exception.IllegalParameterException;
 import com.flow.platform.domain.Agent;
 import com.flow.platform.domain.AgentPath;
@@ -50,6 +51,9 @@ public class AgentController {
     private AgentService agentService;
 
     @Autowired
+    private AgentManagerService agentManagerService;
+
+    @Autowired
     private SyncService syncService;
 
     /**
@@ -73,8 +77,8 @@ public class AgentController {
      */
     @GetMapping
     @WebSecurity(action = Actions.AGENT_SHOW)
-    public List<AgentItem> index() {
-        return agentService.listItems();
+    public List<Agent> index() {
+        return agentManagerService.list();
     }
 
     /**
@@ -93,12 +97,12 @@ public class AgentController {
      */
     @PostMapping(path = "/create")
     @WebSecurity(action = Actions.ADMIN_CREATE)
-    public AgentItem create(@RequestBody AgentPath agentPath) {
+    public Agent create(@RequestBody AgentPath agentPath) {
         if (agentPath.isEmpty()) {
             throw new IllegalParameterException("Zone and agent name are required");
         }
 
-        return agentService.create(agentPath);
+        return agentManagerService.create(agentPath);
     }
 
     /**
@@ -150,7 +154,7 @@ public class AgentController {
         if (Strings.isNullOrEmpty(token)) {
             throw new IllegalParameterException("miss required params ");
         }
-        return agentService.settings(token);
+        return agentManagerService.settings(token);
     }
 
     /**

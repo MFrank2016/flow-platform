@@ -97,7 +97,7 @@ public class AuthenticationInterceptor extends HandlerInterceptorAdapter {
         }
 
         try {
-            doVerify(request, handler);
+//            doVerify(request, handler);
             return true;
         } catch (Throwable e) {
             response.sendError(HttpStatus.UNAUTHORIZED.value(), e.getMessage());

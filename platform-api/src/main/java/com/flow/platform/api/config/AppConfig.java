@@ -45,7 +45,8 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
  */
 @Log4j2
 @Configuration
-@Import({SchedulerConfig.class, CachingConfig.class, DatabaseConfig.class, QueueConfig.class, PluginConfig.class})
+@Import({SchedulerConfig.class, CachingConfig.class, DatabaseConfig.class, QueueConfig.class, PluginConfig.class,
+    ZookeeperConfig.class})
 public class AppConfig extends AppConfigBase {
 
     public final static String NAME = "API";

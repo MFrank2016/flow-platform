@@ -92,7 +92,7 @@ public enum GitEnvs implements EnvKey {
     private Set<String> values;
 
     /**
-     * The default setting
+     * The default settings
      */
     GitEnvs() {
         this.readonly = true;

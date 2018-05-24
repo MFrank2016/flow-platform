@@ -16,10 +16,10 @@
 
 package com.flow.platform.agent;
 
+import com.flow.platform.agent.mq.Pusher;
 import com.flow.platform.domain.Cmd;
 import com.flow.platform.domain.Jsonable;
 import com.flow.platform.util.zk.ZKClient;
-import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
 import lombok.Getter;
@@ -48,18 +48,24 @@ public class AgentManager implements Runnable, TreeCacheListener, AutoCloseable 
     private final ZKClient zkClient;
 
     @Getter
-    private final String zonePath;    // zone path, /flow-agents/{zone}
-
-    @Getter
     private final String nodePath;    // zk node path, /flow-agents/{zone}/{name}
 
     @Getter
     private final List<Cmd> cmdHistory = new LinkedList<>();
 
+    private final static String SPLIT_CHARS = "===";
+
     public AgentManager(String zkHost, int zkTimeout, String zone, String name) {
         this.zkClient = new ZKClient(zkHost, ZK_RETRY_PERIOD, ZK_RECONNECT_TIME);
-        this.zonePath = ZKPaths.makePath(Config.ZK_ROOT, zone);
-        this.nodePath = ZKPaths.makePath(this.zonePath, name);
+        this.nodePath = ZKPaths.makePath(Config.ZK_ROOT, zone + SPLIT_CHARS + name);
+
+        // init Pusher message
+        Pusher.init(Config.AGENT_SETTINGS.getRabbitmqHost(), Config.AGENT_SETTINGS.getCallbackQueueName());
+
+        // init consumer to receive
+        new Thread(
+            new CmdConsumer(Config.AGENT_SETTINGS.getRabbitmqHost(), Config.AGENT_SETTINGS.getListeningQueueName()))
+            .start();
     }
 
     /**
@@ -103,7 +109,7 @@ public class AgentManager implements Runnable, TreeCacheListener, AutoCloseable 
         }
 
         if (event.getType() == Type.NODE_UPDATED) {
-            onDataChanged(eventData.getPath());
+//            onDataChanged(eventData.getPath());
             return;
         }
 
@@ -166,7 +172,7 @@ public class AgentManager implements Runnable, TreeCacheListener, AutoCloseable 
      */
     private String registerZkNodeAndWatch() {
         String path = zkClient.createEphemeral(nodePath, null);
-        zkClient.watchTree(path, this);
+//        zkClient.watchTree(path, this);
         return path;
     }
 

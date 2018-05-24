@@ -30,27 +30,27 @@ import java.math.BigInteger;
 public interface MessageService {
 
     /**
-     * save message setting
+     * save message settings
      */
     SettingContent save(SettingContent t);
 
     /**
-     * find message setting
+     * find message settings
      */
     SettingContent find(MessageType type);
 
     /**
-     * delete message setting
+     * delete message settings
      */
     void delete(SettingContent t);
 
     /**
-     * update message setting
+     * update message settings
      */
     SettingContent update(SettingContent t);
 
     /**
-     * test message setting
+     * test message settings
      */
     Boolean authEmailSetting(EmailSettingContent emailSetting);
 

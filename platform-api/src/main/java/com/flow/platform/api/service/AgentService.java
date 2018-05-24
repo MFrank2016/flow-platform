@@ -56,7 +56,7 @@ public interface AgentService {
     AgentItem create(AgentPath agentPath);
 
     /**
-     * Get agent setting by token from cc
+     * Get agent settings by token from cc
      */
     AgentSettings settings(String token);
 

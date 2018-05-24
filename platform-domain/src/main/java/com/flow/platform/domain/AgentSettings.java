@@ -71,6 +71,24 @@ public class AgentSettings extends Jsonable {
     @Expose
     private String zookeeperUrl;
 
+    /**
+     * host for rabbit
+     */
+    @Getter
+    @Setter
+    @Expose
+    private String rabbitmqHost;
+
+    @Setter
+    @Getter
+    @Expose
+    private String callbackQueueName;
+
+    @Getter
+    @Setter
+    @Expose
+    private String listeningQueueName;
+
     public AgentSettings(String webSocketUrl, String cmdStatusUrl, String cmdLogUrl) {
         this.webSocketUrl = webSocketUrl;
         this.cmdStatusUrl = cmdStatusUrl;

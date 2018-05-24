@@ -118,7 +118,7 @@ public class RabbitQueue extends PlatformQueue<PriorityMessage> implements Conte
     }
 
     private void initRabbitMQ() throws URISyntaxException {
-        CachingConnectionFactory connectionFactory = new CachingConnectionFactory(new URI(host));
+        CachingConnectionFactory connectionFactory = new CachingConnectionFactory(host);
 
         Map<String, Object> cmdQueueArgs = new HashMap<>();
         cmdQueueArgs.put("x-max-length", maxSize);

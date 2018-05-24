@@ -76,15 +76,15 @@ public class NodeCrontabServiceImpl implements NodeCrontabService {
 
     @PostConstruct
     public void initCrontabTask() {
-        taskExecutor.execute(() -> {
-            List<Flow> flows = flowService.list(false);
-            for (Flow flow : flows) {
-                try {
-                    set(flow);
-                } catch (Throwable ignore) {
-                }
-            }
-        });
+//        taskExecutor.execute(() -> {
+//            List<Flow> flows = flowService.list(false);
+//            for (Flow flow : flows) {
+//                try {
+//                    set(flow);
+//                } catch (Throwable ignore) {
+//                }
+//            }
+//        });
     }
 
     @Override
@@ -108,7 +108,7 @@ public class NodeCrontabServiceImpl implements NodeCrontabService {
     @Override
     public void set(Flow flow) {
         if (!EnvUtil.hasRequiredEnvKey(flow, CRONTAB_REQUIRED_ENVS)) {
-            throw new IllegalParameterException("Missing crontab setting env variables");
+            throw new IllegalParameterException("Missing crontab settings env variables");
         }
 
         final String branch = flow.getEnv(FlowEnvs.FLOW_TASK_CRONTAB_BRANCH);

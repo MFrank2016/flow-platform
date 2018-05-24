@@ -95,24 +95,24 @@ public class SyncServiceImpl implements SyncService {
 
     @PostConstruct
     private void init() {
-        callbackUrl = HttpURL.build(apiDomain).append("/hooks/sync").toString();
-
-        taskExecutor.execute(() -> {
-            try {
-                log.trace("Start to init agent list in thread: " + Thread.currentThread().getName());
-                load();
-
-                List<Agent> agents = agentService.list();
-                for (Agent agent : agents) {
-                    if (agent.getStatus() == AgentStatus.OFFLINE) {
-                        continue;
-                    }
-                    register(agent.getPath());
-                }
-            } catch (Throwable e) {
-                log.warn(e.getMessage());
-            }
-        });
+//        callbackUrl = HttpURL.build(apiDomain).append("/hooks/sync").toString();
+//
+//        taskExecutor.execute(() -> {
+//            try {
+//                log.trace("Start to init agent list in thread: " + Thread.currentThread().getName());
+//                load();
+//
+//                List<Agent> agents = agentService.list();
+//                for (Agent agent : agents) {
+//                    if (agent.getStatus() == AgentStatus.OFFLINE) {
+//                        continue;
+//                    }
+//                    register(agent.getPath());
+//                }
+//            } catch (Throwable e) {
+//                log.warn(e.getMessage());
+//            }
+//        });
     }
 
     @Override
