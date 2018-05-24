@@ -17,7 +17,6 @@
 package com.flow.platform.api.consumer;
 
 import com.flow.platform.api.dao.v1.JobTreeDao;
-import com.flow.platform.api.domain.job.JobStatus;
 import com.flow.platform.api.domain.v1.JobKey;
 import com.flow.platform.api.domain.v1.JobTree;
 import com.flow.platform.api.domain.v1.JobV1;
@@ -54,7 +53,7 @@ public class JobQueueConsumer {
                 log.warn("The job {} cannot start since its already on finish status", key);
                 return;
             }
-            handleJob(job);
+            agentManagerService.handleJob(job.getKey());
         } catch (NotFoundException e) {
             log.warn("The job '{}' from queue been deleted", key);
         }

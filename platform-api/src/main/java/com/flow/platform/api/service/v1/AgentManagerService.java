@@ -16,6 +16,7 @@
 
 package com.flow.platform.api.service.v1;
 
+import com.flow.platform.api.domain.v1.JobKey;
 import com.flow.platform.domain.Agent;
 import com.flow.platform.domain.AgentPath;
 import com.flow.platform.domain.AgentSettings;
@@ -35,4 +36,6 @@ public interface AgentManagerService {
     Agent selectAgent();
 
     AgentSettings settings(String token);
+
+    void handleJob(JobKey key);
 }

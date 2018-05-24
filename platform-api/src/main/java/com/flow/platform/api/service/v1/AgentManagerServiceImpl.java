@@ -40,6 +40,7 @@ import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.recipes.cache.PathChildrenCacheEvent;
 import org.apache.curator.framework.recipes.cache.PathChildrenCacheEvent.Type;
 import org.apache.curator.framework.recipes.cache.PathChildrenCacheListener;
+import org.springframework.amqp.core.Message;
 import org.springframework.amqp.core.Queue;
 import org.springframework.amqp.rabbit.core.RabbitAdmin;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -104,7 +105,8 @@ public class AgentManagerServiceImpl extends ApplicationEventService implements 
     public void handleJob(JobKey jobKey) {
         JobV1 jobV1 = jobServiceV1.find(jobKey);
         JobTree jobTree = jobTreeDao.get(jobV1.getKey());
-        
+        Agent agent = selectAgent();
+        commonTemplate.convertAndSend(buildQueueName(agent.getPath()), jobTree);
     }
 
     @Override
