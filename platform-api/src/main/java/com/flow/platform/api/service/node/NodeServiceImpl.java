@@ -296,7 +296,7 @@ public class NodeServiceImpl extends CurrentUser implements NodeService {
 //            userFlowService.unAssign(user, flow);
 //            userFlowService.assign(user, flow);
             user.setRoles(roleService.list(user));
-            user.setFlows(paths);
+//            user.setFlows(paths);
         }
         return users;
     }

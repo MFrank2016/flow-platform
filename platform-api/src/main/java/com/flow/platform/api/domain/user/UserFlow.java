@@ -28,7 +28,7 @@ import lombok.ToString;
  */
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = false)
-@ToString
+@ToString(of = {"key"})
 public class UserFlow extends CreateUpdateObject {
 
     @Expose
@@ -41,16 +41,16 @@ public class UserFlow extends CreateUpdateObject {
     @Setter
     private String createdBy;
 
-    public UserFlow(String flowPath, String email) {
-        this(new UserFlowKey(flowPath, email));
+    public UserFlow(Long flowId, String email) {
+        this(new UserFlowKey(flowId, email));
     }
 
     public UserFlow(UserFlowKey userFlowKey) {
         this.key = userFlowKey;
     }
 
-    public String getFlowPath() {
-        return this.key.getFlowPath();
+    public Long getFlowId() {
+        return this.key.getFlowId();
     }
 
     public String getEmail() {

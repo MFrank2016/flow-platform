@@ -9,11 +9,15 @@ CREATE TABLE `flow_v1` (
   UNIQUE KEY `flow_name_unique_key` (`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
+# ------------------------------------------------------------
+
 CREATE TABLE `flow_yml_v1` (
   `flow_id`bigint(20) NOT NULL,
   `content` longblob,
   PRIMARY KEY (`flow_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+# ------------------------------------------------------------
 
 CREATE TABLE `job_v1` (
   `flow_name` varchar(255) NOT NULL,
@@ -27,6 +31,8 @@ CREATE TABLE `job_v1` (
   PRIMARY KEY (`flow_name`, `build_number`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
+# ------------------------------------------------------------
+
 CREATE TABLE `job_tree_v1` (
   `flow_name` varchar(255) NOT NULL,
   `build_number` bigint(20) NOT NULL,
@@ -34,8 +40,21 @@ CREATE TABLE `job_tree_v1` (
   PRIMARY KEY (`flow_name`, `build_number`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
+# ------------------------------------------------------------
+
 CREATE TABLE `job_number_v1` (
   `flow_id` bigint(20) NOT NULL,
   `build_number` bigint(20) NOT NULL,
   PRIMARY KEY (`flow_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+# ------------------------------------------------------------
+
+CREATE TABLE `user_flow_v1` (
+  `flow_id` bigint(20) NOT NULL,
+  `user_email` varchar(100) NOT NULL,
+  `created_by` varchar(255) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`flow_id`,`user_email`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;

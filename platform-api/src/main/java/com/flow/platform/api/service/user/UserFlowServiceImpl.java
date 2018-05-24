@@ -48,25 +48,20 @@ public class UserFlowServiceImpl extends CurrentUser implements UserFlowService 
 
     @Override
     public List<User> list(String flowName) {
-        List<String> userEmails = userFlowDao.listByFlowPath(flowName);
-        if (userEmails.isEmpty()) {
-            return new ArrayList<>(0);
-        }
-        return userDao.list(userEmails);
+        Flow flow = flowDao.get(flowName);
+        List<String> emails = userFlowDao.listByFlow(flow.getId());
+        return emails.isEmpty() ? new ArrayList<>(0) : userDao.list(emails);
     }
 
     @Override
     public List<Flow> list(User user) {
-        List<String> flowPaths = userFlowDao.listByEmail(user.getEmail());
-        if (flowPaths.isEmpty()) {
-            return new ArrayList<>(0);
-        }
-        return flowDao.listByCreatedBy(Lists.newArrayList(user.getEmail()));
+        List<Long> ids = userFlowDao.listByEmail(user.getEmail());
+        return ids.isEmpty() ? new ArrayList<>(0) : flowDao.list(ids);
     }
 
     @Override
     public void assign(User user, Flow flow) {
-        UserFlow userFlow = new UserFlow(flow.getName(), user.getEmail());
+        UserFlow userFlow = new UserFlow(flow.getId(), user.getEmail());
         userFlow.setCreatedBy(currentUser().getEmail());
         userFlowDao.save(userFlow);
     }
@@ -78,15 +73,14 @@ public class UserFlowServiceImpl extends CurrentUser implements UserFlowService 
 
     @Override
     public void unAssign(Flow flow) {
-        userFlowDao.deleteByFlowPath(flow.getName());
+        userFlowDao.deleteByFlow(flow.getId());
     }
 
     @Override
     public void unAssign(User user, Flow flow) {
-        UserFlow userFlow = userFlowDao.get(new UserFlowKey(flow.getName(), user.getEmail()));
+        UserFlow userFlow = userFlowDao.get(new UserFlowKey(flow.getId(), user.getEmail()));
         if (userFlow != null) {
             userFlowDao.delete(userFlow);
         }
     }
-
 }

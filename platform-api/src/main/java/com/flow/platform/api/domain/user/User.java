@@ -39,7 +39,7 @@ public class User extends CreateUpdateObject {
     @Expose
     @Getter
     @Setter
-    private List<String> flows;
+    private List<Long> flows;
 
     @Expose
     @Getter
