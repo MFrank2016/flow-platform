@@ -21,6 +21,7 @@ import com.flow.platform.api.domain.job.JobCategory;
 import com.flow.platform.api.domain.job.JobStatus;
 import com.google.gson.annotations.Expose;
 import java.time.ZonedDateTime;
+import java.util.EnumSet;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -34,6 +35,9 @@ import lombok.ToString;
 @ToString(of = {"key"})
 @EqualsAndHashCode(of = {"key"}, callSuper = false)
 public class JobV1 extends EnvObject {
+
+    private final static EnumSet<JobStatus> FINISH_STATUS =
+        EnumSet.of(JobStatus.SUCCESS, JobStatus.FAILURE, JobStatus.STOPPED, JobStatus.TIMEOUT);
 
     @Expose
     @Getter
@@ -67,5 +71,9 @@ public class JobV1 extends EnvObject {
 
     public JobV1(String flow, Long number) {
         this.key = new JobKey(flow, number);
+    }
+
+    public boolean isFinishStatus() {
+        return FINISH_STATUS.contains(status);
     }
 }

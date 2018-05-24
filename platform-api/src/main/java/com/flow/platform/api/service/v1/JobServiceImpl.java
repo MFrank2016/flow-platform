@@ -38,6 +38,7 @@ import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -64,6 +65,9 @@ public class JobServiceImpl implements JobService {
 
     @Autowired
     private FlowService flowService;
+
+    @Autowired
+    private RabbitTemplate jobQueueTemplate;
 
     @Override
     public JobV1 find(JobKey key) {
@@ -118,9 +122,7 @@ public class JobServiceImpl implements JobService {
         // persistent job and job tree
         jobDaoV1.save(job);
         jobTreeDao.save(new JobTree(job.getKey(), tree));
-
-        // TODO: send job request to queue
-
+        jobQueueTemplate.convertAndSend(job.getKey());
         return job;
     }
 
