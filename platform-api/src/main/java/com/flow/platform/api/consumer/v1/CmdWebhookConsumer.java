@@ -115,21 +115,23 @@ public class CmdWebhookConsumer implements MessageListener {
             }
 
             if (Cmd.FINISH_STATUS.contains(cmd.getStatus())) {
-
                 Node nextNode = treeManager.onFinish(cmd.getResult());
 
                 if (Objects.isNull(nextNode)) {
                     job.setStatus(JobStatus.SUCCESS);
                     agentManagerService.resetAgentStatus(AgentStatus.IDLE, agent);
-                } else {
+                }
+
+                if (!Objects.isNull(nextNode)) {
                     Cmd nextCmd = agentManagerService.buildCmdFromNode(nextNode, cmd.getJobKey(), agent);
+
                     commonTemplate
                         .send(agentManagerService.agentQueue(agent),
                             new Message(nextCmd.toBytes(), new MessageProperties()));
                 }
             }
 
-            // update job tree
+            // update job and tree
             jobTreeDao.update(jobTree);
             jobDaoV1.update(job);
 
