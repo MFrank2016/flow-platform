@@ -42,7 +42,7 @@ public class LogEventHandlerTest extends TestBase {
         System.setProperty(Config.PROP_ENABLE_REALTIME_AGENT_LOG, "false");
         Assert.assertEquals(false, Config.enableRealtimeLog());
 
-        CmdManager.getInstance().kill();
+//        CmdManager.getInstance().kill();
     }
 
     @Test

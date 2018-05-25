@@ -31,6 +31,7 @@ import lombok.Setter;
  *
  * @author gy@fir.im
  */
+@Deprecated
 @NoArgsConstructor
 @EqualsAndHashCode(of = {"id"}, callSuper = false)
 public class Cmd extends CmdBase {

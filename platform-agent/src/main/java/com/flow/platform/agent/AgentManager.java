@@ -17,6 +17,7 @@
 package com.flow.platform.agent;
 
 import com.flow.platform.agent.mq.Pusher;
+import com.flow.platform.domain.AgentStatus;
 import com.flow.platform.domain.Cmd;
 import com.flow.platform.domain.Jsonable;
 import com.flow.platform.util.zk.ZKClient;
@@ -129,38 +130,12 @@ public class AgentManager implements Runnable, TreeCacheListener, AutoCloseable 
      */
     private void onDeleted() {
         try {
-            CmdManager.getInstance().shutdown(null);
+//            CmdManager.getInstance().shutdown(null);
             log.trace("========= Agent been deleted =========");
 
             stop();
         } finally {
             Runtime.getRuntime().exit(1);
-        }
-    }
-
-    private void onDataChanged(String path) {
-        final Cmd cmd;
-
-        try {
-            final byte[] rawData = zkClient.getData(path);
-            if (rawData == null) {
-                log.warn("Zookeeper node data is null");
-                return;
-            }
-
-            cmd = Jsonable.parse(rawData, Cmd.class);
-            if (cmd == null) {
-                log.warn("Unable to parse cmd from zk node: " + new String(rawData));
-                return;
-            }
-
-            cmdHistory.add(cmd);
-            log.trace("Received command: " + cmd.toString());
-            CmdManager.getInstance().execute(cmd);
-
-        } catch (Throwable e) {
-            log.error("Invalid cmd from server", e);
-            // TODO: should report agent status directly...
         }
     }
 
@@ -171,7 +146,7 @@ public class AgentManager implements Runnable, TreeCacheListener, AutoCloseable 
      * @return path of zookeeper or null if failure
      */
     private String registerZkNodeAndWatch() {
-        String path = zkClient.createEphemeral(nodePath, null);
+        String path = zkClient.createEphemeral(nodePath, AgentStatus.IDLE.toString().getBytes());
 //        zkClient.watchTree(path, this);
         return path;
     }

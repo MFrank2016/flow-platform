@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 fir.im
+ * Copyright 2017 flow.ci
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,16 +14,27 @@
  * limitations under the License.
  */
 
-package com.flow.platform.api.dao.v1;
-
-import com.flow.platform.domain.v1.JobKey;
-import com.flow.platform.api.domain.v1.JobTree;
-import com.flow.platform.core.dao.BaseDao;
+package com.flow.platform.tree;
 
 /**
- * @author yang
+ * @author yh@fir.im
  */
-public interface JobTreeDao extends BaseDao<JobKey, JobTree> {
+public enum YmlEnvs {
 
-    void deleteByFlow(Long flowId);
+    /**
+     * agent work dir default /tmp
+     */
+    WORK_DIR,
+
+    /**
+     * OutPuts filter
+     */
+    OUTPUT_ENV_FILTER,
+
+    /**
+     * timeout
+     */
+    TIMEOUT,
+
+    AGENT_TOKEN
 }

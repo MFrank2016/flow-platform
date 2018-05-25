@@ -18,6 +18,7 @@ package com.flow.platform.api.domain.v1;
 
 
 import com.flow.platform.domain.Jsonable;
+import com.flow.platform.domain.v1.JobKey;
 import com.flow.platform.tree.NodeTree;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;

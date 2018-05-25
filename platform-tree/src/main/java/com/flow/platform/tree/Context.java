@@ -16,19 +16,23 @@
 
 package com.flow.platform.tree;
 
+import com.flow.platform.domain.Jsonable;
 import java.io.Serializable;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import lombok.Getter;
+import lombok.Setter;
 
 /**
  * Tree context
  *
  * @author yang
  */
-public class Context implements Serializable {
+public class Context extends Jsonable implements Serializable {
 
+    @Getter
     protected final Map<String, String> context = new LinkedHashMap<>();
 
     public Set<Entry<String, String>> all() {

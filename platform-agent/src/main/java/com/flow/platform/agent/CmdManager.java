@@ -25,10 +25,13 @@ import com.flow.platform.domain.CmdResult;
 import com.flow.platform.domain.CmdStatus;
 import com.flow.platform.domain.CmdType;
 import com.flow.platform.domain.Jsonable;
+import com.flow.platform.tree.YmlEnvs;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -55,24 +58,12 @@ public class CmdManager {
         return INSTANCE;
     }
 
-    // current running cmd data
-    private final Map<Cmd, CmdResult> running = Maps.newConcurrentMap();
-
-    // finished cmd data
-    private final Map<Cmd, CmdResult> finished = Maps.newConcurrentMap();
-
-    // rejected cmd data
-    private final Map<Cmd, CmdResult> rejected = Maps.newConcurrentMap();
-
     // Make thread to Daemon thread, those threads exit while JVM exist
     private final ThreadFactory defaultFactory = r -> {
         Thread t = Executors.defaultThreadFactory().newThread(r);
         t.setDaemon(true);
         return t;
     };
-
-    // Executor to execute command and shell
-    private ThreadPoolExecutor cmdExecutor = createExecutor();
 
     // Executor to execute operations
     private ExecutorService defaultExecutor = Executors.newCachedThreadPool(defaultFactory);
@@ -83,104 +74,39 @@ public class CmdManager {
     private CmdManager() {
     }
 
-    /**
-     * @return running cmd and result
-     */
-    public Map<Cmd, CmdResult> getRunning() {
-        return running;
-    }
-
-    /**
-     * @return finished cmd and result
-     */
-    public Map<Cmd, CmdResult> getFinished() {
-        return finished;
-    }
-
-    /**
-     * @return rejected cmd and result
-     */
-    public Map<Cmd, CmdResult> getRejected() {
-        return rejected;
-    }
-
-    public ThreadPoolExecutor getCmdExecutor() {
-        return cmdExecutor;
-    }
-
     public List<ProcListener> getExtraProcEventListeners() {
         return extraProcEventListeners;
     }
 
-    /**
-     * Stop all executing processes and exit agent
-     */
-    public void stop() {
-        kill();
-        Runtime.getRuntime().exit(0);
-    }
-
-    public void shutdown(String password) {
-        kill();
-        try {
-            if (password == null) {
-                password = Config.sudoPassword(); // try to load sudo password from system property
-            }
-
-            if (password == null) {
-                log.trace("Shutdown cannot be executed since sudo password is null");
-                return;
-            }
-
-            String shutdownCmd = String.format("echo %s | sudo -S shutdown -h now", password);
-            log.trace("Shutdown command: " + shutdownCmd);
-
-            // exec shutdown command
-            CmdExecutor executor = new CmdExecutor(null, Lists.newArrayList(shutdownCmd));
-            executor.run();
-
-        } catch (Throwable e) {
-            e.printStackTrace();
-        }
-    }
 
     /**
      * Execute command from Cmd object by thread executor
      *
      * @param cmd Cmd object
      */
-    public void execute(final Cmd cmd) {
+    public void execute(final com.flow.platform.tree.Cmd cmd) {
         if (cmd.getType() == CmdType.RUN_SHELL) {
             // check max concurrent proc
-            int max = cmdExecutor.getMaximumPoolSize();
-            int cur = cmdExecutor.getActiveCount();
-            log.trace(" ===== CmdExecutor: max={}, current={} =====", max, cur);
 
-            // reach max proc number, reject this execute
-            if (max == cur) {
-                onReject(cmd);
-                return;
-            }
-
-            cmdExecutor.execute(new TaskRunner(cmd) {
+            new TaskRunner(cmd) {
                 @Override
                 public void run() {
                     log.debug("start cmd ...");
 
-                    LogEventHandler logListener = new LogEventHandler(getCmd());
+//                    LogEventHandler logListener = new LogEventHandler(getCmd());
 
                     ProcEventHandler procEventHandler =
-                        new ProcEventHandler(getCmd(), extraProcEventListeners, running, finished);
+                        new ProcEventHandler(getCmd(), extraProcEventListeners);
 
                     try {
                         CmdExecutor executor = new CmdExecutor(
                             procEventHandler,
-                            logListener,
-                            cmd.getInputs(),
-                            cmd.getWorkingDir(),
-                            cmd.getOutputEnvFilter(),
-                            cmd.getTimeout(),
-                            Lists.newArrayList(getCmd().getCmd()));
+                            null,
+                            cmd.getContext(),
+                            cmd.get(YmlEnvs.WORK_DIR),
+                            Collections.EMPTY_LIST, // TODO:  outputEnvFilters
+                            Integer.parseInt(cmd.get(YmlEnvs.TIMEOUT)),
+                            Lists.newArrayList(getCmd().getContent()));
 
                         executor.run();
                     } catch (Throwable e) {
@@ -190,37 +116,9 @@ public class CmdManager {
                         procEventHandler.onException(result);
                     }
                 }
-            });
+            }.run();
 
             return;
-        }
-
-        if (cmd.getType() == CmdType.SYSTEM_INFO) {
-            LogEventHandler logListener = new LogEventHandler(cmd);
-            Log log = new Log(Type.STDERR, collectionAgentInfo());
-            logListener.onLog(log);
-            logListener.onFinish();
-            cmd.setStatus(CmdStatus.EXECUTED);
-            return;
-        }
-
-        // kill current running proc
-        if (cmd.getType() == CmdType.KILL) {
-            defaultExecutor.execute(this::kill);
-            return;
-        }
-
-        // stop current agent
-        if (cmd.getType() == CmdType.STOP) {
-            defaultExecutor.execute(this::stop);
-            return;
-        }
-
-        if (cmd.getType() == CmdType.SHUTDOWN) {
-            defaultExecutor.execute(() -> {
-                String passwordOfSudo = cmd.getCmd();
-                shutdown(passwordOfSudo);
-            });
         }
     }
 
@@ -248,78 +146,16 @@ public class CmdManager {
         return Jsonable.GSON_CONFIG.toJson(dic);
     }
 
-    /**
-     * Kill all current running process
-     */
-    public synchronized void kill() {
-        cmdExecutor.shutdown();
-        ZonedDateTime now = ZonedDateTime.now();
-
-        for (Map.Entry<Cmd, CmdResult> entry : running.entrySet()) {
-            CmdResult r = entry.getValue();
-            r.setExecutedTime(now);
-            r.setFinishTime(now);
-            r.setExitValue(CmdResult.EXIT_VALUE_FOR_KILL);
-
-            Cmd cmd = entry.getKey();
-            finished.put(cmd, r);
-
-            r.getProcess().destroy();
-
-            ReportManager.getInstance().cmdReportSync(cmd.getId(), CmdStatus.KILLED, r);
-            log.trace("Kill process : {}", r.toString());
-        }
-
-        try {
-            cmdExecutor.shutdownNow();
-        } catch (Throwable ignore) {
-
-        } finally {
-            cmdExecutor = createExecutor(); // reset cmd executor
-            log.trace("Cmd thread terminated");
-        }
-    }
-
-    private void onReject(final Cmd cmd) {
-        CmdResult rejectResult = new CmdResult();
-        rejectResult.setExitValue(CmdResult.EXIT_VALUE_FOR_REJECT);
-
-        ZonedDateTime now = ZonedDateTime.now();
-        rejectResult.setStartTime(now);
-        rejectResult.setExecutedTime(now);
-        rejectResult.setFinishTime(now);
-
-        rejected.put(cmd, rejectResult);
-        ReportManager.getInstance().cmdReportSync(cmd.getId(), CmdStatus.REJECTED, null);
-        log.warn("Reject cmd '{}' since over the limit proc of agent", cmd.getId());
-    }
-
-    private ThreadPoolExecutor createExecutor() {
-        return new ThreadPoolExecutor(
-            Config.concurrentThreadNum(),
-            Config.concurrentThreadNum(),
-            0L,
-            TimeUnit.SECONDS,
-            new LinkedBlockingQueue<>(),
-            defaultFactory,
-            (r, executor) -> {
-                if (r instanceof TaskRunner) {
-                    TaskRunner task = (TaskRunner) r;
-                    onReject(task.getCmd());
-                    log.warn("Reject cmd: {}", task.getCmd());
-                }
-            });
-    }
 
     private abstract class TaskRunner implements Runnable {
 
-        private final Cmd cmd;
+        private final com.flow.platform.tree.Cmd cmd;
 
-        public TaskRunner(Cmd cmd) {
+        public TaskRunner(com.flow.platform.tree.Cmd cmd) {
             this.cmd = cmd;
         }
 
-        public Cmd getCmd() {
+        public com.flow.platform.tree.Cmd getCmd() {
             return cmd;
         }
     }

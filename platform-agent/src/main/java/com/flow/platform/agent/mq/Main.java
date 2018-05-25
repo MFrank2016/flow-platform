@@ -17,6 +17,8 @@
 package com.flow.platform.agent.mq;
 
 import com.flow.platform.agent.CmdConsumer;
+import com.flow.platform.domain.CmdStatus;
+import com.flow.platform.tree.Cmd;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -30,14 +32,16 @@ public class Main {
 
         ThreadPoolExecutor executor = new ThreadPoolExecutor(1, 1, 100, TimeUnit.SECONDS, new LinkedBlockingQueue<>(100));
 
-        executor.execute(new CmdConsumer("127.0.0.1", "default==a"));
+        Cmd cmd = new Cmd();
+        cmd.setStatus(CmdStatus.RUNNING);
+//        executor.execute(new CmdConsumer("127.0.0.1", "default==a"));
 
-        Pusher.init("127.0.0.1", "default==a");
+        Pusher.init("127.0.0.1", "cmd.callback.queue");
 
-        Pusher.publish("hello");
-        Pusher.publish("hello");
-        Pusher.publish("hello");
-        Pusher.publish("hello");
+        Pusher.publish(cmd.toJson());
+//        Pusher.publish("hello");
+//        Pusher.publish("hello");
+//        Pusher.publish("hello");
 
         System.out.println("finish send message");
     }

@@ -39,6 +39,7 @@ import org.apache.curator.framework.recipes.cache.TreeCacheListener;
 import org.apache.curator.retry.ExponentialBackoffRetry;
 import org.apache.zookeeper.CreateMode;
 import org.apache.zookeeper.KeeperException;
+import org.apache.zookeeper.data.Stat;
 
 /**
  * @author yang
@@ -202,6 +203,18 @@ public class ZKClient implements Closeable {
 
         try {
             return client.getData().forPath(path);
+        } catch (Throwable e) {
+            throw checkException(String.format("Fail to get data for node: %s", path), e);
+        }
+    }
+
+    public byte[] getData(String path, Stat stat) {
+        if (!exist(path)) {
+            throw new ZkException("Zookeeper node path does not existed", null);
+        }
+
+        try {
+            return client.getData().storingStatIn(stat).forPath(path);
         } catch (Throwable e) {
             throw checkException(String.format("Fail to get data for node: %s", path), e);
         }

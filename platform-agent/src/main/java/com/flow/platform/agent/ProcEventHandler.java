@@ -16,12 +16,13 @@
 
 package com.flow.platform.agent;
 
+import com.flow.platform.agent.mq.Pusher;
 import com.flow.platform.cmd.ProcListener;
-import com.flow.platform.domain.Cmd;
 import com.flow.platform.domain.CmdResult;
 import com.flow.platform.domain.CmdStatus;
+import com.flow.platform.tree.Result;
 import java.util.List;
-import java.util.Map;
+import java.util.Objects;
 import lombok.extern.log4j.Log4j2;
 
 /**
@@ -30,28 +31,22 @@ import lombok.extern.log4j.Log4j2;
 @Log4j2
 public class ProcEventHandler implements ProcListener {
 
-    private final Cmd cmd;
-    private final Map<Cmd, CmdResult> running;
-    private final Map<Cmd, CmdResult> finished;
+    private final com.flow.platform.tree.Cmd cmd;
     private final List<ProcListener> extraProcEventListeners;
     private final ReportManager reportManager = ReportManager.getInstance();
 
-    public ProcEventHandler(Cmd cmd,
-                            List<ProcListener> extraProcEventListeners,
-                            Map<Cmd, CmdResult> running,
-                            Map<Cmd, CmdResult> finished) {
+    public ProcEventHandler(com.flow.platform.tree.Cmd cmd,
+                            List<ProcListener> extraProcEventListeners) {
         this.cmd = cmd;
         this.extraProcEventListeners = extraProcEventListeners;
-        this.running = running;
-        this.finished = finished;
     }
 
     @Override
     public void onStarted(CmdResult result) {
-        running.put(cmd, result);
 
-        // report cmd async
-        reportManager.cmdReport(cmd.getId(), CmdStatus.RUNNING, result);
+        // Send cmd Result to Queue
+        // TODO: send cmd result to queue (Running)
+        reportResult(CmdStatus.RUNNING, result);
 
         for (ProcListener listener : extraProcEventListeners) {
             listener.onStarted(result);
@@ -61,7 +56,9 @@ public class ProcEventHandler implements ProcListener {
     @Override
     public void onExecuted(CmdResult result) {
         // report cmd sync since block current thread
-        reportManager.cmdReportSync(cmd.getId(), CmdStatus.EXECUTED, result);
+//        reportManager.cmdReportSync(cmd.getId(), CmdStatus.EXECUTED, result);
+        // TODO: send cmd result to queue (Executed)
+        reportResult(CmdStatus.EXECUTED, result);
 
         for (ProcListener listener : extraProcEventListeners) {
             listener.onExecuted(result);
@@ -72,11 +69,9 @@ public class ProcEventHandler implements ProcListener {
     public void onLogged(CmdResult result) {
         log.debug("got result...");
 
-        running.remove(cmd);
-        finished.put(cmd, result);
-
         // report cmd sync since block current thread
-        reportManager.cmdReportSync(cmd.getId(), CmdStatus.LOGGED, result);
+        // TODO: send cmd result to queue (Logged)
+        reportResult(CmdStatus.LOGGED, result);
 
         for (ProcListener listener : extraProcEventListeners) {
             listener.onLogged(result);
@@ -85,14 +80,44 @@ public class ProcEventHandler implements ProcListener {
 
     @Override
     public void onException(CmdResult result) {
-        running.remove(cmd);
-        finished.put(cmd, result);
 
         // report cmd sync since block current thread
-        reportManager.cmdReportSync(cmd.getId(), CmdStatus.EXCEPTION, result);
+//        reportManager.cmdReportSync(cmd.getId(), CmdStatus.EXCEPTION, result);
+        // TODO: send cmd result to queue (Exception)
+        reportResult(CmdStatus.EXCEPTION, result);
 
         for (ProcListener listener : extraProcEventListeners) {
             listener.onException(result);
         }
+    }
+
+    private void reportResult(CmdStatus cmdStatus, CmdResult result) {
+        cmd.setStatus(cmdStatus);
+        cmd.setResult(resultAdaptor(result));
+        Pusher.publish(cmd.toJson());
+    }
+
+    private Result resultAdaptor(CmdResult result) {
+
+        Result res = new Result();
+        res.setPath(cmd.getNodePath());
+
+        if (!Objects.isNull(result)) {
+
+            if(!Objects.isNull(result.getExitValue())) {
+                res.setCode(result.getExitValue());
+            }
+
+            if(!Objects.isNull(result.getDuration())) {
+                res.setDuration(result.getDuration());
+            }
+
+            if(!Objects.isNull(result.getOutput())) {
+                result.getOutput().forEach((k, v) -> {
+                    res.put(k, v);
+                });
+            }
+        }
+        return res;
     }
 }

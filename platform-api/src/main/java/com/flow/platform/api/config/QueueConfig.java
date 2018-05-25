@@ -17,6 +17,7 @@
 package com.flow.platform.api.config;
 
 import com.flow.platform.api.consumer.JobQueueConsumer;
+import com.flow.platform.api.consumer.v1.CmdWebhookConsumer;
 import com.flow.platform.api.service.SyncService;
 import com.flow.platform.core.queue.MemoryQueue;
 import com.flow.platform.core.queue.PriorityMessage;
@@ -47,6 +48,8 @@ public class QueueConfig {
 
     private final static String JOB_QUEUE_NAME = "job.queue";
 
+    private final static String CMD_WEBHOOK_QUEUE_NAME = "cmd.callback.queue";
+
     @Value("${api.queue.hosts}")
     private String hosts;
 
@@ -62,6 +65,9 @@ public class QueueConfig {
     @Autowired
     private JobQueueConsumer jobQueueConsumer;
 
+    @Autowired
+    private CmdWebhookConsumer cmdWebhookConsumer;
+
     /**
      * Queue to process cmd callback task
      */
@@ -74,17 +80,7 @@ public class QueueConfig {
     public SyncService.QueueCreator syncQueueCreator() {
         return name -> new MemoryQueue(taskExecutor, 50, name);
     }
-
-    @Bean
-    public PlatformQueue<PriorityMessage> jobQueue() {
-        return new RabbitQueue(taskExecutor, "127.0.0.1", 50, 100, "JobQueue");
-    }
-
-    @Bean
-    public PlatformQueue<PriorityMessage> jobResultQueue() {
-        return new RabbitQueue(taskExecutor, "127.0.0.1", 50, 100, "JobResultQueue");
-    }
-
+    
     @Bean
     public RabbitTemplate commonTemplate() {
         RabbitTemplate template = new RabbitTemplate(connectionFactory());
@@ -95,6 +91,7 @@ public class QueueConfig {
     public AmqpAdmin amqpAdmin() {
         RabbitAdmin admin = new RabbitAdmin(connectionFactory());
         admin.declareQueue(new Queue(JOB_QUEUE_NAME));
+        admin.declareQueue(new Queue(CMD_WEBHOOK_QUEUE_NAME));
         return admin;
     }
 
@@ -106,20 +103,34 @@ public class QueueConfig {
         return template;
     }
 
+    @Bean
+    public SimpleMessageListenerContainer jobQueueListener() {
+        SimpleMessageListenerContainer container = buildContainer();
+        container.setQueueNames(JOB_QUEUE_NAME);
+        container.setConcurrentConsumers(1);
+        container.setMessageListener(new MessageListenerAdapter(jobQueueConsumer));
+        return container;
+    }
+
+    @Bean
+    public SimpleMessageListenerContainer cmdWebhookQueueListener() {
+        SimpleMessageListenerContainer container = buildContainer();
+        container.setQueueNames(CMD_WEBHOOK_QUEUE_NAME);
+        container.setConcurrentConsumers(1);
+        container.setMessageListener(new MessageListenerAdapter(cmdWebhookConsumer));
+        return container;
+    }
+
+    private SimpleMessageListenerContainer buildContainer() {
+        SimpleMessageListenerContainer container = new SimpleMessageListenerContainer();
+        container.setConnectionFactory(connectionFactory());
+        return container;
+    }
+
     private CachingConnectionFactory connectionFactory() {
         CachingConnectionFactory connectionFactory = new CachingConnectionFactory("127.0.0.1");
         connectionFactory.setUsername(username);
         connectionFactory.setPassword(password);
         return connectionFactory;
-    }
-
-    @Bean
-    public SimpleMessageListenerContainer jobQueueListener() {
-        SimpleMessageListenerContainer container = new SimpleMessageListenerContainer();
-        container.setConnectionFactory(connectionFactory());
-        container.setQueueNames(JOB_QUEUE_NAME);
-        container.setConcurrentConsumers(1);
-        container.setMessageListener(new MessageListenerAdapter(jobQueueConsumer));
-        return container;
     }
 }

@@ -38,10 +38,9 @@ public abstract class MqSettings {
         connectionFactory.setHost(host);
 
         try {
-
             connection = connectionFactory.newConnection();
             channel = connection.createChannel();
-            channel.queueDeclare(queueName, false, false, false, null);
+            channel.queueDeclare(queueName, true, false, false, null);
 
         } catch (Throwable throwable) {
             System.out.println(throwable.getMessage());

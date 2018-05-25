@@ -18,7 +18,7 @@ package com.flow.platform.api.test.dao;
 
 import com.flow.platform.api.domain.Flow;
 import com.flow.platform.api.domain.FlowYml;
-import com.flow.platform.api.domain.v1.JobKey;
+import com.flow.platform.domain.v1.JobKey;
 import com.flow.platform.api.domain.v1.JobV1;
 import com.flow.platform.api.test.FlowHelper;
 import com.flow.platform.api.test.TestBase;

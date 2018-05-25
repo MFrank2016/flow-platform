@@ -18,6 +18,7 @@ package com.flow.platform.domain;
 
 import com.google.common.base.Strings;
 import com.google.gson.annotations.Expose;
+import java.util.Objects;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -76,5 +77,17 @@ public class AgentPath extends Jsonable {
     @Override
     public String toString() {
         return zone + RESERVED_CHAR + name;
+    }
+
+    public static AgentPath parse(String content) {
+        if (Objects.isNull(content)) {
+            return null;
+        }
+
+        if (!content.contains(RESERVED_CHAR)) {
+            return null;
+        }
+
+        return new AgentPath(content.split(RESERVED_CHAR)[0], content.split(RESERVED_CHAR)[1]);
     }
 }

@@ -16,14 +16,11 @@
 
 package com.flow.platform.api.consumer;
 
-import com.flow.platform.api.dao.v1.JobTreeDao;
-import com.flow.platform.api.domain.v1.JobKey;
-import com.flow.platform.api.domain.v1.JobTree;
 import com.flow.platform.api.domain.v1.JobV1;
 import com.flow.platform.api.service.v1.AgentManagerService;
 import com.flow.platform.api.service.v1.JobService;
 import com.flow.platform.core.exception.NotFoundException;
-import com.flow.platform.domain.Agent;
+import com.flow.platform.domain.v1.JobKey;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -37,9 +34,6 @@ public class JobQueueConsumer {
 
     @Autowired
     private JobService jobServiceV1;
-
-    @Autowired
-    private JobTreeDao jobTreeDao;
 
     @Autowired
     private AgentManagerService agentManagerService;
@@ -57,13 +51,5 @@ public class JobQueueConsumer {
         } catch (NotFoundException e) {
             log.warn("The job '{}' from queue been deleted", key);
         }
-    }
-
-    private void handleJob(JobV1 job) {
-        // TODO: find available agent and dispatch the first runnable node to agent
-        Agent agent = agentManagerService.selectAgent();
-
-        JobTree jobTree = jobTreeDao.get(job.getKey());
-
     }
 }

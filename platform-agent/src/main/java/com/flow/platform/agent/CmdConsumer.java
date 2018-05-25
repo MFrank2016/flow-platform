@@ -17,6 +17,9 @@
 package com.flow.platform.agent;
 
 import com.flow.platform.agent.mq.Consumer;
+import com.flow.platform.agent.mq.Pusher;
+import com.flow.platform.domain.Jsonable;
+import com.flow.platform.tree.Cmd;
 import lombok.extern.log4j.Log4j2;
 
 /**
@@ -31,21 +34,21 @@ public class CmdConsumer extends Consumer {
 
     @Override
     public void item(byte[] rawData) {
+        log.trace("Received cmd :" + new String(rawData));
 
-        System.out.println("receive body " + new String(rawData));
+        if (rawData == null) {
+            log.warn("Zookeeper node data is null");
+            return;
+        }
 
-//        if (rawData == null) {
-//            log.warn("Zookeeper node data is null");
-//            return;
-//        }
-//
-//        Cmd cmd = Jsonable.parse(rawData, Cmd.class);
-//        if (cmd == null) {
-//            log.warn("Unable to parse cmd from zk node: " + new String(rawData));
-//            return;
-//        }
-//
-//        log.trace("Received command: " + cmd.toString());
-//        CmdManager.getInstance().execute(cmd);
+        Cmd cmd = Jsonable.parse(rawData, Cmd.class);
+        if (cmd == null) {
+            log.warn("Unable to parse cmd from zk node: " + new String(rawData));
+            return;
+        }
+
+
+        log.trace("Received command: " + cmd.toString());
+        CmdManager.getInstance().execute(cmd);
     }
 }

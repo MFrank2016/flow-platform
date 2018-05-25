@@ -16,10 +16,14 @@
 
 package com.flow.platform.api.service.v1;
 
-import com.flow.platform.api.domain.v1.JobKey;
+import com.flow.platform.api.domain.v1.JobV1;
+import com.flow.platform.domain.AgentStatus;
+import com.flow.platform.domain.v1.JobKey;
 import com.flow.platform.domain.Agent;
 import com.flow.platform.domain.AgentPath;
 import com.flow.platform.domain.AgentSettings;
+import com.flow.platform.tree.Cmd;
+import com.flow.platform.tree.Node;
 import java.util.List;
 
 /**
@@ -37,5 +41,11 @@ public interface AgentManagerService {
 
     AgentSettings settings(String token);
 
+    String agentQueue(Agent agent);
+
     void handleJob(JobKey key);
+
+    Cmd buildCmdFromNode(Node node, JobKey jobKey, Agent agent);
+
+    void resetAgentStatus(AgentStatus agentStatus, Agent agent);
 }

@@ -17,10 +17,12 @@
 package com.flow.platform.agent.mq;
 
 import com.google.common.base.Charsets;
+import lombok.extern.log4j.Log4j2;
 
 /**
  * @author yh@fir.im
  */
+@Log4j2
 public class Pusher extends MqSettings {
 
     private static Pusher instance;
@@ -33,7 +35,7 @@ public class Pusher extends MqSettings {
         try {
             this.channel.basicPublish("", this.queueName, null, message.getBytes(Charsets.UTF_8));
         } catch (Throwable throwable) {
-            System.out.println(throwable.getMessage());
+            log.error(throwable.getMessage());
         }
     }
 

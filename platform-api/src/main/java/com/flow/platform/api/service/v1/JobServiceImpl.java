@@ -23,7 +23,7 @@ import com.flow.platform.api.domain.Flow;
 import com.flow.platform.api.domain.FlowYml;
 import com.flow.platform.api.domain.job.JobCategory;
 import com.flow.platform.api.domain.job.JobNumber;
-import com.flow.platform.api.domain.v1.JobKey;
+import com.flow.platform.domain.v1.JobKey;
 import com.flow.platform.api.domain.v1.JobTree;
 import com.flow.platform.api.domain.v1.JobV1;
 import com.flow.platform.api.envs.EnvUtil;
@@ -43,6 +43,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
@@ -101,7 +102,7 @@ public class JobServiceImpl extends CurrentUser implements JobService {
     }
 
     @Override
-    @Transactional(isolation = Isolation.REPEATABLE_READ)
+    @Transactional(propagation = Propagation.NEVER)
     public JobV1 create(Flow flow, JobCategory eventType, Map<String, String> envs) {
         Objects.requireNonNull(flow, "Flow must be defined");
         Objects.requireNonNull(eventType, "Event type must be defined");
