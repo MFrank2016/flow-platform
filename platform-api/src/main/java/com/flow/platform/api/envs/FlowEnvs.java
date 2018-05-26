@@ -28,11 +28,6 @@ public enum FlowEnvs implements EnvKey {
     FLOW_NAME(true, false, null),
 
     /**
-     * Indicate flow is configured for git
-     */
-    FLOW_STATUS(true, false, ImmutableSet.of(StatusValue.PENDING.value(), StatusValue.READY.value())),
-
-    /**
      * Indicate flow yml loading, ready
      */
     FLOW_YML_STATUS(true, false, ImmutableSet.of(

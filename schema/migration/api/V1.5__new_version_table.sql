@@ -1,6 +1,7 @@
 CREATE TABLE `flow_v1` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT,
   `name` varchar(100) NOT NULL,
+  `flow_status` varchar(20) NOT NULL,
   `envs` longtext,
   `created_by` varchar(100) DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,

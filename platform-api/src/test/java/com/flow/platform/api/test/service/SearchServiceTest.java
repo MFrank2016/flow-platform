@@ -16,11 +16,10 @@
 
 package com.flow.platform.api.test.service;
 
-import com.flow.platform.api.domain.Flow;
+import com.flow.platform.api.domain.v1.Flow;
 import com.flow.platform.api.domain.SearchCondition;
 import com.flow.platform.api.domain.job.Job;
 import com.flow.platform.api.domain.job.JobCategory;
-import com.flow.platform.api.domain.node.Node;
 import com.flow.platform.api.envs.GitEnvs;
 import com.flow.platform.api.test.TestBase;
 import com.flow.platform.core.domain.Page;

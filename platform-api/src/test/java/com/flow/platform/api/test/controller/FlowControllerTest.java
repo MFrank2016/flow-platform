@@ -18,10 +18,11 @@ package com.flow.platform.api.test.controller;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.flow.platform.api.domain.Flow;
+import com.flow.platform.api.domain.v1.Flow;
 import com.flow.platform.api.service.v1.FlowService;
 import com.flow.platform.api.test.FlowHelper;
 import com.flow.platform.core.exception.NotFoundException;
@@ -81,7 +82,7 @@ public class FlowControllerTest extends ControllerTestWithoutAuth {
     @Test
     public void should_get_env_value() throws Throwable {
         // given: add env to context
-        mockMvc.perform(post("/flows/" + flowName + "/env")
+        mockMvc.perform(patch("/flows/" + flowName + "/env")
             .contentType(MediaType.APPLICATION_JSON)
             .content("{\"FLOW_STATUS\": \"PENDING\"}")).andExpect(status().isOk());
 

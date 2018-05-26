@@ -17,7 +17,7 @@
 package com.flow.platform.api.test;
 
 import com.flow.platform.api.config.AppConfig;
-import com.flow.platform.api.domain.Flow;
+import com.flow.platform.api.domain.v1.Flow;
 import com.flow.platform.api.service.v1.FlowService;
 import com.google.common.io.Files;
 import java.io.File;

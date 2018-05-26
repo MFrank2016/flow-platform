@@ -17,10 +17,9 @@
 package com.flow.platform.api.controller;
 
 import com.flow.platform.api.config.AppConfig;
-import com.flow.platform.api.domain.Flow;
+import com.flow.platform.api.domain.v1.Flow;
 import com.flow.platform.api.domain.job.Job;
 import com.flow.platform.api.domain.job.JobCategory;
-import com.flow.platform.api.domain.node.Node;
 import com.flow.platform.api.domain.user.User;
 import com.flow.platform.api.envs.GitEnvs;
 import com.flow.platform.api.envs.GitToggleEnvs;

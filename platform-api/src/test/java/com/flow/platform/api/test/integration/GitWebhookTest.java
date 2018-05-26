@@ -19,7 +19,7 @@ package com.flow.platform.api.test.integration;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.flow.platform.api.domain.Flow;
+import com.flow.platform.api.domain.v1.Flow;
 import com.flow.platform.api.domain.job.Job;
 import com.flow.platform.api.domain.node.Node;
 import com.flow.platform.api.domain.request.TriggerParam;
@@ -125,7 +125,7 @@ public class GitWebhookTest extends TestBase {
         envKeySet.remove(GitEnvs.FLOW_GIT_PR_URL.name());
         verifyRootNodeResultOutput(job, envKeySet);
 
-        Assert.assertEquals(GitSource.UNDEFINED_SSH.name(), job.getEnv(GitEnvs.FLOW_GIT_SOURCE));
+        Assert.assertEquals(GitSource.SSH.name(), job.getEnv(GitEnvs.FLOW_GIT_SOURCE));
         Assert.assertEquals(GitEventType.PUSH.name(), job.getEnv(GitEnvs.FLOW_GIT_EVENT_TYPE));
         Assert.assertEquals(GitSource.GITHUB.name(), job.getEnv(GitEnvs.FLOW_GIT_EVENT_SOURCE));
 
@@ -155,7 +155,7 @@ public class GitWebhookTest extends TestBase {
         Job job = mock_trigger_from_git(openPr);
         job = jobDao.get(job.getId());
 
-        Assert.assertEquals(GitSource.UNDEFINED_SSH.name(), job.getEnv(GitEnvs.FLOW_GIT_SOURCE));
+        Assert.assertEquals(GitSource.SSH.name(), job.getEnv(GitEnvs.FLOW_GIT_SOURCE));
         Assert.assertEquals(GitEventType.PR.name(), job.getEnv(GitEnvs.FLOW_GIT_EVENT_TYPE));
         Assert.assertEquals(GitSource.GITHUB.name(), job.getEnv(GitEnvs.FLOW_GIT_EVENT_SOURCE));
 
@@ -179,7 +179,7 @@ public class GitWebhookTest extends TestBase {
         Job job = mock_trigger_from_git(createPr);
         job = jobDao.get(job.getId());
 
-        Assert.assertEquals(GitSource.UNDEFINED_SSH.name(), job.getEnv(GitEnvs.FLOW_GIT_SOURCE));
+        Assert.assertEquals(GitSource.SSH.name(), job.getEnv(GitEnvs.FLOW_GIT_SOURCE));
         Assert.assertEquals(GitEventType.PR.name(), job.getEnv(GitEnvs.FLOW_GIT_EVENT_TYPE));
         Assert.assertEquals(GitSource.GITHUB.name(), job.getEnv(GitEnvs.FLOW_GIT_EVENT_SOURCE));
 
@@ -206,7 +206,7 @@ public class GitWebhookTest extends TestBase {
         envKeySet.remove(GitEnvs.FLOW_GIT_PR_URL.name());
         verifyRootNodeResultOutput(job, envKeySet);
 
-        Assert.assertEquals(GitSource.UNDEFINED_SSH.name(), job.getEnv(GitEnvs.FLOW_GIT_SOURCE));
+        Assert.assertEquals(GitSource.SSH.name(), job.getEnv(GitEnvs.FLOW_GIT_SOURCE));
         Assert.assertEquals(GitEventType.PUSH.name(), job.getEnv(GitEnvs.FLOW_GIT_EVENT_TYPE));
         Assert.assertEquals(GitSource.GITLAB.name(), job.getEnv(GitEnvs.FLOW_GIT_EVENT_SOURCE));
 
@@ -239,7 +239,7 @@ public class GitWebhookTest extends TestBase {
         job = jobDao.get(job.getId());
 
         // then: verify job env
-        Assert.assertEquals(GitSource.UNDEFINED_SSH.name(), job.getEnv(GitEnvs.FLOW_GIT_SOURCE));
+        Assert.assertEquals(GitSource.SSH.name(), job.getEnv(GitEnvs.FLOW_GIT_SOURCE));
         Assert.assertEquals(GitEventType.PR.name(), job.getEnv(GitEnvs.FLOW_GIT_EVENT_TYPE));
         Assert.assertEquals(GitSource.GITLAB.name(), job.getEnv(GitEnvs.FLOW_GIT_EVENT_SOURCE));
 
@@ -265,7 +265,7 @@ public class GitWebhookTest extends TestBase {
         job = jobDao.get(job.getId());
 
         // then: verify job env
-        Assert.assertEquals(GitSource.UNDEFINED_SSH.name(), job.getEnv(GitEnvs.FLOW_GIT_SOURCE));
+        Assert.assertEquals(GitSource.SSH.name(), job.getEnv(GitEnvs.FLOW_GIT_SOURCE));
         Assert.assertEquals(GitEventType.PR.name(), job.getEnv(GitEnvs.FLOW_GIT_EVENT_TYPE));
         Assert.assertEquals(GitSource.GITLAB.name(), job.getEnv(GitEnvs.FLOW_GIT_EVENT_SOURCE));
 
@@ -294,7 +294,7 @@ public class GitWebhookTest extends TestBase {
 
         // set flow git related env
         Map<String, String> env = new HashMap<>();
-        env.put(GitEnvs.FLOW_GIT_SOURCE.name(), GitSource.UNDEFINED_SSH.name());
+        env.put(GitEnvs.FLOW_GIT_SOURCE.name(), GitSource.SSH.name());
         env.put(GitEnvs.FLOW_GIT_URL.name(), gitUrl);
         env.put(GitEnvs.FLOW_GIT_BRANCH.name(), "develop");
         env.put(GitEnvs.FLOW_GIT_SSH_PRIVATE_KEY.name(), getResourceContent("ssh_private_key"));

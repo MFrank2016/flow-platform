@@ -19,7 +19,7 @@ package com.flow.platform.api.task;
 import static com.flow.platform.api.service.node.NodeCrontabService.KEY_BRANCH;
 import static com.flow.platform.api.service.node.NodeCrontabService.KEY_NODE_PATH;
 
-import com.flow.platform.api.domain.Flow;
+import com.flow.platform.api.domain.v1.Flow;
 import com.flow.platform.api.domain.job.JobCategory;
 import com.flow.platform.api.domain.user.User;
 import com.flow.platform.api.envs.EnvUtil;

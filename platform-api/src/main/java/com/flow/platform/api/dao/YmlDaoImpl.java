@@ -16,7 +16,7 @@
 
 package com.flow.platform.api.dao;
 
-import com.flow.platform.api.domain.FlowYml;
+import com.flow.platform.api.domain.v1.FlowYml;
 import com.flow.platform.core.dao.AbstractBaseDao;
 import org.springframework.stereotype.Repository;
 

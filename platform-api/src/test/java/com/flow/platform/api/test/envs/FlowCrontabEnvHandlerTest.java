@@ -16,8 +16,7 @@
 
 package com.flow.platform.api.test.envs;
 
-import com.flow.platform.api.domain.Flow;
-import com.flow.platform.api.domain.node.Node;
+import com.flow.platform.api.domain.v1.Flow;
 import com.flow.platform.api.envs.EnvKey;
 import com.flow.platform.api.envs.FlowEnvs;
 import com.flow.platform.api.envs.handler.EnvHandler;

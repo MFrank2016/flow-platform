@@ -19,14 +19,16 @@ package com.flow.platform.api.service.v1;
 import com.flow.platform.api.dao.FlowDao;
 import com.flow.platform.api.dao.YmlDao;
 import com.flow.platform.api.dao.job.JobNumberDao;
-import com.flow.platform.api.domain.Flow;
-import com.flow.platform.api.domain.FlowYml;
+import com.flow.platform.api.domain.v1.Flow;
+import com.flow.platform.api.domain.v1.FlowStatus;
+import com.flow.platform.api.domain.v1.FlowYml;
 import com.flow.platform.api.domain.job.JobNumber;
 import com.flow.platform.api.domain.user.Role;
 import com.flow.platform.api.domain.user.SysRole;
 import com.flow.platform.api.domain.user.User;
 import com.flow.platform.api.envs.EnvUtil;
 import com.flow.platform.api.envs.GitEnvs;
+import com.flow.platform.api.envs.GitToggleEnvs;
 import com.flow.platform.api.exception.DuplicateExeption;
 import com.flow.platform.api.service.CurrentUser;
 import com.flow.platform.api.service.user.RoleService;
@@ -77,8 +79,7 @@ public class FlowServiceImpl extends CurrentUser implements FlowService {
 
         // save flow get auto increased flow id
         flow = flowDao.save(new Flow(name));
-        flow.putEnv(GitEnvs.FLOW_GIT_WEBHOOK, hooksUrl(flow));
-        flow.putEnv(GitEnvs.FLOW_GIT_BRANCH, GitEnvs.DEFAULT_BRANCH);
+        initFlowEnvs(flow);
 
         User user = currentUser();
         flow.setCreatedBy(user.getEmail());
@@ -106,6 +107,13 @@ public class FlowServiceImpl extends CurrentUser implements FlowService {
             throw new NotFoundException("The yml of flow " + flow.getName() + " is not found");
         }
         return yml;
+    }
+
+    @Override
+    public Flow changeStatus(Flow flow, FlowStatus status) {
+        flow.setStatus(status);
+        flowDao.update(flow);
+        return flow;
     }
 
     @Override
@@ -170,6 +178,19 @@ public class FlowServiceImpl extends CurrentUser implements FlowService {
 
         flowDao.update(flow);
         return flow;
+    }
+
+    private void initFlowEnvs(Flow flow) {
+        flow.putEnv(GitEnvs.FLOW_GIT_WEBHOOK, hooksUrl(flow));
+        flow.putEnv(GitEnvs.FLOW_GIT_BRANCH, GitEnvs.DEFAULT_BRANCH);
+
+        flow.putEnv(GitToggleEnvs.FLOW_GIT_PUSH_ENABLED, Boolean.toString(true));
+        flow.putEnv(GitToggleEnvs.FLOW_GIT_PUSH_FILTER, "[\"*\"]");
+
+        flow.putEnv(GitToggleEnvs.FLOW_GIT_TAG_ENABLED, Boolean.toString(true));
+        flow.putEnv(GitToggleEnvs.FLOW_GIT_TAG_FILTER, "[\"*\"]");
+
+        flow.putEnv(GitToggleEnvs.FLOW_GIT_PR_ENABLED, Boolean.toString(true));
     }
 
     private String hooksUrl(final Flow flow) {

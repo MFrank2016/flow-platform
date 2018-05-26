@@ -14,8 +14,9 @@
  * limitations under the License.
  */
 
-package com.flow.platform.api.domain;
+package com.flow.platform.api.domain.v1;
 
+import com.flow.platform.api.domain.EnvObject;
 import com.flow.platform.tree.NodePath;
 import com.google.gson.annotations.Expose;
 import java.time.ZonedDateTime;
@@ -43,6 +44,14 @@ public final class Flow extends EnvObject {
      */
     @Expose
     private String name;
+
+    /**
+     * Indicate flow is ready or pending
+     */
+    @Expose
+    @Getter
+    @Setter
+    private FlowStatus status = FlowStatus.PENDING;
 
     @Expose
     @Getter

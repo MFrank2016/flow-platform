@@ -17,7 +17,7 @@
 package com.flow.platform.api.controller;
 
 import com.flow.platform.api.domain.Artifact;
-import com.flow.platform.api.domain.Flow;
+import com.flow.platform.api.domain.v1.Flow;
 import com.flow.platform.api.domain.SearchCondition;
 import com.flow.platform.api.domain.job.Job;
 import com.flow.platform.api.domain.job.JobCategory;

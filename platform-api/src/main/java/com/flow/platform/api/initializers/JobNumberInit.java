@@ -19,11 +19,8 @@ package com.flow.platform.api.initializers;
 import com.flow.platform.api.dao.FlowDao;
 import com.flow.platform.api.dao.job.JobDao;
 import com.flow.platform.api.dao.job.JobNumberDao;
-import com.flow.platform.api.domain.Flow;
-import com.flow.platform.api.domain.job.JobNumber;
-import com.flow.platform.api.domain.node.Node;
+import com.flow.platform.api.domain.v1.Flow;
 import java.util.List;
-import java.util.Objects;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 

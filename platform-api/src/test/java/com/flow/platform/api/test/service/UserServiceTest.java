@@ -2,7 +2,7 @@ package com.flow.platform.api.test.service;
 
 import com.flow.platform.api.config.AppConfig;
 import com.flow.platform.api.dao.user.UserDao;
-import com.flow.platform.api.domain.Flow;
+import com.flow.platform.api.domain.v1.Flow;
 import com.flow.platform.api.domain.response.LoginResponse;
 import com.flow.platform.api.domain.user.SysRole;
 import com.flow.platform.api.domain.user.User;

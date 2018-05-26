@@ -16,7 +16,7 @@
 
 package com.flow.platform.api.envs.handler;
 
-import com.flow.platform.api.domain.Flow;
+import com.flow.platform.api.domain.v1.Flow;
 import com.flow.platform.api.envs.EnvKey;
 import com.flow.platform.core.exception.IllegalParameterException;
 import com.google.common.base.Strings;

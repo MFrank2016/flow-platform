@@ -4,10 +4,9 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 
 import com.flow.platform.api.domain.Artifact;
-import com.flow.platform.api.domain.Flow;
+import com.flow.platform.api.domain.v1.Flow;
 import com.flow.platform.api.domain.job.Job;
 import com.flow.platform.api.domain.job.JobCategory;
-import com.flow.platform.api.domain.node.Node;
 import com.flow.platform.api.envs.GitEnvs;
 import com.flow.platform.api.test.TestBase;
 import com.flow.platform.domain.Jsonable;

@@ -15,7 +15,7 @@
  */
 package com.flow.platform.api.test.service;
 
-import com.flow.platform.api.domain.Flow;
+import com.flow.platform.api.domain.v1.Flow;
 import com.flow.platform.api.domain.user.User;
 import com.flow.platform.api.service.user.UserFlowService;
 import com.flow.platform.api.service.v1.FlowService;

@@ -16,7 +16,7 @@
 
 package com.flow.platform.api.service.node;
 
-import com.flow.platform.api.domain.Flow;
+import com.flow.platform.api.domain.v1.Flow;
 import com.flow.platform.core.context.ContextEvent;
 import java.util.List;
 import org.quartz.Trigger;

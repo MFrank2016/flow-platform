@@ -21,7 +21,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 
-import com.flow.platform.api.domain.Flow;
+import com.flow.platform.api.domain.v1.Flow;
 import com.flow.platform.api.domain.job.Job;
 import com.flow.platform.api.domain.job.JobCategory;
 import com.flow.platform.api.domain.job.JobStatus;
@@ -53,7 +53,7 @@ public class ManualJobTest extends TestBase {
         Flow flow = flowService.save("manual_flow_test");
 
         Map<String, String> env = new HashMap<>();
-        env.put(GitEnvs.FLOW_GIT_SOURCE.name(), GitSource.UNDEFINED_SSH.name());
+        env.put(GitEnvs.FLOW_GIT_SOURCE.name(), GitSource.SSH.name());
         env.put(GitEnvs.FLOW_GIT_URL.name(), GITHUB_TEST_REPO_SSH);
         env.put(GitEnvs.FLOW_GIT_SSH_PRIVATE_KEY.name(), getResourceContent("ssh_private_key"));
         envService.save(flow, env, false);

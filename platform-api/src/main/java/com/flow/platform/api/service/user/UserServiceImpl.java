@@ -5,7 +5,7 @@ import com.flow.platform.api.dao.user.UserDao;
 import com.flow.platform.api.dao.user.UserFlowDao;
 import com.flow.platform.api.dao.user.UserRoleDao;
 import com.flow.platform.api.domain.EmailSettingContent;
-import com.flow.platform.api.domain.Flow;
+import com.flow.platform.api.domain.v1.Flow;
 import com.flow.platform.api.domain.MessageType;
 import com.flow.platform.api.domain.response.LoginResponse;
 import com.flow.platform.api.domain.user.Role;

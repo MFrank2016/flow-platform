@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.flow.platform.api.domain;
+package com.flow.platform.api.domain.v1;
 
 import com.flow.platform.domain.Jsonable;
 import com.flow.platform.util.StringUtil;
