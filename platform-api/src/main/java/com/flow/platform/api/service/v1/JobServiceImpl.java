@@ -20,6 +20,7 @@ import com.flow.platform.api.dao.job.JobNumberDao;
 import com.flow.platform.api.dao.v1.JobDao;
 import com.flow.platform.api.dao.v1.JobTreeDao;
 import com.flow.platform.api.domain.v1.Flow;
+import com.flow.platform.api.domain.v1.FlowStatus;
 import com.flow.platform.api.domain.v1.FlowYml;
 import com.flow.platform.api.domain.job.JobCategory;
 import com.flow.platform.api.domain.job.JobNumber;
@@ -32,6 +33,7 @@ import com.flow.platform.api.envs.JobEnvs;
 import com.flow.platform.api.service.CurrentUser;
 import com.flow.platform.core.domain.Page;
 import com.flow.platform.core.domain.Pageable;
+import com.flow.platform.core.exception.IllegalStatusException;
 import com.flow.platform.core.exception.NotFoundException;
 import com.flow.platform.tree.NodeTree;
 import java.time.ZonedDateTime;
@@ -105,6 +107,10 @@ public class JobServiceImpl extends CurrentUser implements JobService {
     public JobV1 create(Flow flow, JobCategory eventType, Map<String, String> envs) {
         Objects.requireNonNull(flow, "Flow must be defined");
         Objects.requireNonNull(eventType, "Event type must be defined");
+
+        if (flow.getStatus() == FlowStatus.PENDING) {
+            throw new IllegalStatusException("Cannot start job since flow not ready");
+        }
 
         // parse yml content to NodeTree
         FlowYml flowYml = flowService.findYml(flow);

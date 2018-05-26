@@ -18,6 +18,7 @@ package com.flow.platform.api.test;
 
 import com.flow.platform.api.config.AppConfig;
 import com.flow.platform.api.domain.v1.Flow;
+import com.flow.platform.api.domain.v1.FlowStatus;
 import com.flow.platform.api.service.v1.FlowService;
 import com.google.common.io.Files;
 import java.io.File;
@@ -37,6 +38,7 @@ public class FlowHelper {
 
     public Flow createFlowWithYml(String flowName, String ymlResourceName) throws IOException {
         Flow flow = flowService.save(flowName);
+        flowService.changeStatus(flow, FlowStatus.READY);
         String yml = getResourceContent(ymlResourceName);
         flowService.updateYml(flow, yml);
         return flow;

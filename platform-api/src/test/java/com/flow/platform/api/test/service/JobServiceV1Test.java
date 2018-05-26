@@ -77,6 +77,9 @@ public class JobServiceV1Test extends TestBase {
         // when:
         for (int i = 0; i < numOfJob; i++) {
             taskExecutor.execute(() -> {
+                // set current user in thread since get it from ThreadLocal
+                setCurrentUser(mockUser);
+
                 jobServiceV1.create(flow, JobCategory.MANUAL, null);
                 countDown.countDown();
             });
