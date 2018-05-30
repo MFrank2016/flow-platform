@@ -20,7 +20,7 @@ import static com.flow.platform.api.domain.job.NodeStatus.STOPPED;
 import static com.flow.platform.api.domain.job.NodeStatus.SUCCESS;
 import static com.flow.platform.api.domain.job.NodeStatus.TIMEOUT;
 
-import com.flow.platform.api.domain.Flow;
+import com.flow.platform.api.domain.v1.Flow;
 import com.flow.platform.api.domain.job.Job;
 import com.flow.platform.api.domain.job.JobCategory;
 import com.flow.platform.api.domain.job.NodeResult;

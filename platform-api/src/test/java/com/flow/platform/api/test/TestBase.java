@@ -41,7 +41,7 @@ import com.flow.platform.api.dao.user.UserFlowDao;
 import com.flow.platform.api.dao.user.UserRoleDao;
 import com.flow.platform.api.dao.v1.JobDao;
 import com.flow.platform.api.dao.v1.JobTreeDao;
-import com.flow.platform.api.domain.Flow;
+import com.flow.platform.api.domain.v1.Flow;
 import com.flow.platform.api.domain.job.Job;
 import com.flow.platform.api.domain.job.JobCategory;
 import com.flow.platform.api.domain.job.JobStatus;
@@ -258,7 +258,7 @@ public abstract class TestBase {
     protected void setRequiredJobEnvsForFlow(Flow flow) throws IOException {
         HashMap<String, String> envs = new HashMap<>();
         envs.put(GitEnvs.FLOW_GIT_URL.name(), TestBase.GITHUB_TEST_REPO_SSH);
-        envs.put(GitEnvs.FLOW_GIT_SOURCE.name(), GitSource.UNDEFINED_SSH.name());
+        envs.put(GitEnvs.FLOW_GIT_SOURCE.name(), GitSource.SSH.name());
         envs.put(GitEnvs.FLOW_GIT_SSH_PRIVATE_KEY.name(), getResourceContent("ssh_private_key"));
         envService.save(flow, envs, false);
     }

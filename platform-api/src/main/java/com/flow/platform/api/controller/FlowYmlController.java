@@ -17,8 +17,8 @@
 package com.flow.platform.api.controller;
 
 import com.flow.platform.api.config.AppConfig;
-import com.flow.platform.api.domain.Flow;
-import com.flow.platform.api.domain.FlowYml;
+import com.flow.platform.api.domain.v1.Flow;
+import com.flow.platform.api.domain.v1.FlowYml;
 import com.flow.platform.api.domain.permission.Actions;
 import com.flow.platform.api.security.WebSecurity;
 import com.flow.platform.api.service.v1.FlowService;

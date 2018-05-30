@@ -17,9 +17,8 @@
 package com.flow.platform.api.test.dao;
 
 import com.flow.platform.api.config.AppConfig;
-import com.flow.platform.api.domain.Flow;
-import com.flow.platform.api.domain.FlowYml;
-import com.flow.platform.api.domain.node.Yml;
+import com.flow.platform.api.domain.v1.Flow;
+import com.flow.platform.api.domain.v1.FlowYml;
 import com.flow.platform.api.test.TestBase;
 import com.google.common.io.Files;
 import java.io.File;

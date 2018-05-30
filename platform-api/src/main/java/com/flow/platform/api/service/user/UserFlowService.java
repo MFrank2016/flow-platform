@@ -15,7 +15,7 @@
  */
 package com.flow.platform.api.service.user;
 
-import com.flow.platform.api.domain.Flow;
+import com.flow.platform.api.domain.v1.Flow;
 import com.flow.platform.api.domain.user.User;
 import java.util.List;
 

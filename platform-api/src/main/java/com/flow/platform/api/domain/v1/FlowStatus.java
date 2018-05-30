@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 flow.ci
+ * Copyright 2018 fir.im
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 
-package com.flow.platform.api.dao;
-
-import com.flow.platform.api.domain.v1.FlowYml;
-import com.flow.platform.core.dao.BaseDao;
+package com.flow.platform.api.domain.v1;
 
 /**
- * @author yh@firim
+ * @author yang
  */
-public interface YmlDao extends BaseDao<Long, FlowYml> {
+public enum FlowStatus {
 
+    PENDING,
+
+    READY
 }

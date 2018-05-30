@@ -16,12 +16,10 @@
 
 package com.flow.platform.api.controller;
 
-import com.flow.platform.api.domain.Flow;
-import com.flow.platform.api.domain.node.Node;
 import com.flow.platform.api.domain.permission.Actions;
-import com.flow.platform.api.domain.request.ListParam;
 import com.flow.platform.api.domain.request.TriggerParam;
-import com.flow.platform.api.domain.user.User;
+import com.flow.platform.api.domain.v1.Flow;
+import com.flow.platform.api.domain.v1.FlowStatus;
 import com.flow.platform.api.security.WebSecurity;
 import com.flow.platform.api.service.GitService;
 import com.flow.platform.api.service.v1.FlowService;
@@ -31,6 +29,8 @@ import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -57,45 +57,12 @@ public class FlowController extends NodeController {
         return flowService.list(true);
     }
 
-    /**
-     * @api {get} /flows/:root Show
-     * @apiParam {String} root flow node name
-     * @apiGroup Flows
-     *
-     * @apiSuccessExample {json} Success-Response
-     *  {
-     *      path: /flow-name,
-     *      name: flow-name,
-     *      createdAt: 15123123
-     *      updatedAt: 15123123
-     *      envs: {
-     *          FLOW_ENV_1: xxxx,
-     *          FLOW_ENV_2: xxxx
-     *      }
-     *  }
-     */
     @GetMapping(path = {"/{root}", "/{root}/show"})
     @WebSecurity(action = Actions.FLOW_SHOW)
     public Flow show() {
         return flowService.find(flowName.get());
     }
 
-    /**
-     * @api {post} /flows/:root Create
-     * @apiParam {String} root flow node name will be created
-     * @apiDescription Create empty flow node with default env variables
-     * @apiGroup Flows
-     *
-     * @apiSuccessExample {json} Success-Response
-     *  {
-     *      path: /flow-name,
-     *      name: flow-name,
-     *      createdAt: 15123123
-     *      updatedAt: 15123123
-     *      envs: {
-     *      }
-     *  }
-     */
     @PostMapping(path = {"/{root}", "/{root}/create"})
     @WebSecurity(action = Actions.FLOW_CREATE)
     public Flow create() {
@@ -103,164 +70,48 @@ public class FlowController extends NodeController {
         return created;
     }
 
-    /**
-     * @api {delete} /flows/:root Delete
-     * @apiParam {String} root flow node name will be deleted
-     * @apiDescription Delete flow node by name and return flow node object
-     * @apiGroup Flows
-     *
-     * @apiSuccessExample {json} Success-Response
-     *  {
-     *      path: /flow-name,
-     *      name: flow-name,
-     *      createdAt: 15123123
-     *      updatedAt: 15123123
-     *      envs: {
-     *          FLOW_ENV_VAR_1: xxx,
-     *          FLOW_ENV_VAR_2: xxx
-     *      }
-     *  }
-     */
+    @PatchMapping(path = "/{root}/status/{status}")
+    public Flow changeStatus(@PathVariable FlowStatus status) {
+        Flow flow = flowService.find(flowName.get());
+        return flowService.changeStatus(flow, status);
+    }
+
     @DeleteMapping(path = "/{root}")
     @WebSecurity(action = Actions.FLOW_DELETE)
     public Flow delete() {
         return flowService.delete(flowName.get());
     }
 
-    /**
-     * @api {post} /flows/:root/env Add Env Variables
-     * @apiParam {String} root flow node name will be set env variables
-     * @apiParam {Boolean} [verify=false] enable to verify env varaible
-     * @apiParamExample {json} Request-Body:
-     *  {
-     *      FLOW_ENV_VAR_2: xxx,
-     *      FLOW_ENV_VAR_1: xxx
-     *  }
-     * @apiGroup Flows
-     * @apiDescription Add env variables to flow env variables, overwrite if env existed
-     *
-     * @apiSuccessExample {json} Success-Response
-     *  {
-     *      path: /flow-name,
-     *      name: flow-name,
-     *      createdAt: 15123123
-     *      updatedAt: 15123123
-     *      envs: {
-     *          FLOW_ENV_VAR_1: xxx,
-     *          FLOW_ENV_VAR_2: xxx
-     *      }
-     *  }
-     */
-    @PostMapping("/{root}/env")
+    @PatchMapping("/{root}/env")
     @WebSecurity(action = Actions.FLOW_SET_ENV)
     public Flow putContext(@RequestBody Map<String, String> envs) {
         return flowService.merge(flowName.get(), envs);
     }
 
-    /**
-     * @api {delete} /flows/:root/env Del Env Variables
-     * @apiParam {String} root flow node name will be set env variables
-     * @apiParam {Boolean} [verify=false] enable to verify env varaible
-     * @apiParamExample {json} Request-Body:
-     *  [
-     *      FLOW_ENV_VAR_2,
-     *      FLOW_ENV_VAR_1
-     *  ]
-     * @apiGroup Flows
-     * @apiDescription Delete env variables to flow env variables
-     *
-     * @apiSuccessExample {json} Success-Response
-     *  {
-     *      path: /flow-name,
-     *      name: flow-name,
-     *      createdAt: 15123123
-     *      updatedAt: 15123123
-     *      envs: {
-     *          FLOW_ENV_VAR_3: xxx,
-     *          FLOW_ENV_VAR_4: xxx
-     *      }
-     *  }
-     */
     @DeleteMapping("/{root}/env")
     @WebSecurity(action = Actions.FLOW_SET_ENV)
     public Flow removeContext(@RequestBody Set<String> envKeys) {
         return flowService.remove(flowName.get(), envKeys);
     }
 
-    /**
-     * @api {get} /flows/:root/branches List Branches
-     * @apiParam {String} root flow node name
-     * @apiParam {Boolean} [refresh] true or false, the default is false
-     * @apiGroup Flows
-     *
-     * @apiSuccessExample {json} Success-Response
-     *
-     *  [
-     *      master,
-     *      develop,
-     *      feature/xxx/xxx
-     *  ]
-     */
+    @GetMapping("/{root}/env")
+    public Map<String, String> getContext() {
+        return flowService.find(flowName.get()).getEnvs();
+    }
+
     @GetMapping("/{root}/branches")
     public List<String> listBranches(@RequestParam(required = false, defaultValue = "false") Boolean refresh) {
         Flow flow = flowService.find(flowName.get());
         return gitService.branches(flow, refresh);
     }
 
-    /**
-     * @api {get} /flows/:root/tags List Tags
-     * @apiParam {String} root flow node name
-     * @apiGroup Flows
-     *
-     * @apiSuccessExample {json} Success-Response
-     *
-     *  [
-     *      v1.0,
-     *      v2.0
-     *  ]
-     */
     @GetMapping("/{root}/tags")
     public List<String> listTags() {
         Flow flow = flowService.find(flowName.get());
         return gitService.tags(flow, false);
     }
 
-    /**
-     * @api {post} /flows/:root/trigger
-     * @apiParam {String} root
-     * @apiParamExample {json} Request-Body:
-     *     {
-     *         	"branchFilter" : ["master", "dev"]
-     *         	"tagFilter" : ["v01", "v02"]
-     *         	"tagEnabled": true
-     *         	"pushEnabled": false
-     *         	"prEnabled": true
-     *     }
-     * @apiGroup Flows
-     *
-     * @apiSuccessExample {list} Success-Response
-     *  {
-     *      "branchFilter": [
-     *          "master",
-     *          "develop"
-     *     ],
-     *     "tagFilter": [
-     *          "aa"
-     *     ]
-     *     "tagEnable": false,
-     *     "pushEnable": true,
-     *     "prEnable": false,
-     *      path: /flow-name,
-     *      name: flow-name,
-     *      createdAt: 15123123
-     *      updatedAt: 15123123
-     *      branchFilter: []
-     *      envs: {
-     *          FLOW_ENV_VAR_1: xxx,
-     *          FLOW_ENV_VAR_2: xxx
-     *      }
-     */
-    @PostMapping("/{root}/trigger")
+    @PatchMapping("/{root}/trigger")
     public Flow trigger(@RequestBody TriggerParam triggerParam) {
         return flowService.merge(flowName.get(), triggerParam.toEnv());
     }

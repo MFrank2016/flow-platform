@@ -30,7 +30,7 @@ public enum GitEnvs implements EnvKey {
 
     /**
      * For diff FLOW_GIT_SOURCE
-     *  - UNDEFINED_SSH and UNDEFINED_HTTP is repo url
+     *  - SSH and HTTP is repo url
      *  - GITLAB is gitlab host url
      */
     FLOW_GIT_URL(false, true, null),

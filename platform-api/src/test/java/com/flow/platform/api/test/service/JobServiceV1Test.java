@@ -16,7 +16,7 @@
 
 package com.flow.platform.api.test.service;
 
-import com.flow.platform.api.domain.Flow;
+import com.flow.platform.api.domain.v1.Flow;
 import com.flow.platform.api.domain.job.JobCategory;
 import com.flow.platform.api.domain.v1.JobV1;
 import com.flow.platform.api.service.v1.JobService;
@@ -77,6 +77,9 @@ public class JobServiceV1Test extends TestBase {
         // when:
         for (int i = 0; i < numOfJob; i++) {
             taskExecutor.execute(() -> {
+                // set current user in thread since get it from ThreadLocal
+                setCurrentUser(mockUser);
+
                 jobServiceV1.create(flow, JobCategory.MANUAL, null);
                 countDown.countDown();
             });

@@ -16,8 +16,9 @@
 
 package com.flow.platform.api.service.v1;
 
-import com.flow.platform.api.domain.Flow;
-import com.flow.platform.api.domain.FlowYml;
+import com.flow.platform.api.domain.v1.Flow;
+import com.flow.platform.api.domain.v1.FlowStatus;
+import com.flow.platform.api.domain.v1.FlowYml;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -37,6 +38,11 @@ public interface FlowService {
      * Get flow instance
      */
     Flow find(String name);
+
+    /**
+     * Change flow status
+     */
+    Flow changeStatus(Flow flow, FlowStatus status);
 
     /**
      * Get flow yml instance

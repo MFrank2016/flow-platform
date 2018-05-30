@@ -16,7 +16,7 @@
 
 package com.flow.platform.api.service.v1;
 
-import com.flow.platform.api.domain.Flow;
+import com.flow.platform.api.domain.v1.Flow;
 import com.flow.platform.api.domain.job.JobCategory;
 import com.flow.platform.domain.v1.JobKey;
 import com.flow.platform.api.domain.v1.JobV1;

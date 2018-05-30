@@ -21,9 +21,9 @@ package com.flow.platform.util.git.model;
  */
 public enum GitSource {
 
-    UNDEFINED_SSH,
+    SSH,
 
-    UNDEFINED_HTTP,
+    HTTP,
 
     GITLAB,
 

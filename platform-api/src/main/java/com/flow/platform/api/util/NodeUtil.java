@@ -15,7 +15,7 @@
  */
 package com.flow.platform.api.util;
 
-import com.flow.platform.api.domain.Flow;
+import com.flow.platform.api.domain.v1.Flow;
 import com.flow.platform.api.domain.node.Node;
 import com.flow.platform.api.exception.NodeFormatException;
 import com.flow.platform.api.exception.YmlException;

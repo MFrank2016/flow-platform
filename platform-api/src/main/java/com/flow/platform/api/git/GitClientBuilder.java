@@ -16,7 +16,7 @@
 
 package com.flow.platform.api.git;
 
-import com.flow.platform.api.domain.Flow;
+import com.flow.platform.api.domain.v1.Flow;
 import com.flow.platform.api.envs.GitEnvs;
 import com.flow.platform.util.git.GitClient;
 import com.flow.platform.util.git.GitException;

@@ -16,7 +16,7 @@
 
 package com.flow.platform.api.dao;
 
-import com.flow.platform.api.domain.Flow;
+import com.flow.platform.api.domain.v1.Flow;
 import com.flow.platform.core.dao.AbstractBaseDao;
 import java.util.Collection;
 import java.util.List;

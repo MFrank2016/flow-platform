@@ -16,7 +16,7 @@
 
 package com.flow.platform.api.service;
 
-import com.flow.platform.api.domain.Flow;
+import com.flow.platform.api.domain.v1.Flow;
 import com.flow.platform.api.envs.EnvKey;
 import com.flow.platform.api.envs.GitEnvs;
 import com.flow.platform.util.git.GitException;
@@ -80,7 +80,7 @@ public interface GitService {
     /**
      * Fetch latest commit from git repo
      *
-     * - For UNDEFINED_SSH or UNDEFINED_HTTP will be load from git local git repo, so use together with clone
+     * - For SSH or HTTP will be load from git local git repo, so use together with clone
      */
     GitCommit latestCommit(Flow flow);
 }

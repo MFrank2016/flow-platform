@@ -4,11 +4,17 @@
   "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
 
 <hibernate-mapping package="com.flow.platform.api.domain">
-  <class name="com.flow.platform.api.domain.Flow" table="flow_v1">
+  <class name="com.flow.platform.api.domain.v1.Flow" table="flow_v1">
     <id name="id" column="id" type="long">
       <generator class="identity"/>
     </id>
     <property name="name" length="100" column="name" unique="true" not-null="true"/>
+    <property name="status" length="20" column="flow_status" not-null="true">
+      <type name="org.hibernate.type.EnumType">
+        <param name="enumClass">com.flow.platform.api.domain.v1.FlowStatus</param>
+        <param name="useNamed">true</param>
+      </type>
+    </property>
     <property name="envs" type="com.flow.platform.core.dao.adaptor.MapAdaptor" column="envs"/>
     <property name="createdBy" column="created_by" length="100"/>
     <property name="createdAt" type="java.time.ZonedDateTime">
@@ -19,7 +25,7 @@
     </property>
   </class>
 
-  <class name="com.flow.platform.api.domain.FlowYml" table="flow_yml_v1">
+  <class name="com.flow.platform.api.domain.v1.FlowYml" table="flow_yml_v1">
     <id name="flowId" column="flow_id" type="long">
       <generator class="assigned"/>
     </id>

@@ -17,7 +17,7 @@
 package com.flow.platform.api.test.service;
 
 import com.flow.platform.api.config.AppConfig;
-import com.flow.platform.api.domain.Flow;
+import com.flow.platform.api.domain.v1.Flow;
 import com.flow.platform.api.envs.GitEnvs;
 import com.flow.platform.api.service.GitService;
 import com.flow.platform.api.service.GitService.ProgressListener;
@@ -58,7 +58,7 @@ public class GitServiceTest extends TestBase {
     @Before
     public void initNodeWithGitInfo() throws Throwable {
         flow = new Flow("flow_test");
-        flow.putEnv(GitEnvs.FLOW_GIT_SOURCE, GitSource.UNDEFINED_SSH.name());
+        flow.putEnv(GitEnvs.FLOW_GIT_SOURCE, GitSource.SSH.name());
         flow.putEnv(GitEnvs.FLOW_GIT_URL, TestBase.GITHUB_TEST_REPO_SSH);
         flow.putEnv(GitEnvs.FLOW_GIT_SSH_PRIVATE_KEY, getResourceContent("ssh_private_key"));
         flow.putEnv(GitEnvs.FLOW_GIT_BRANCH, "master");
