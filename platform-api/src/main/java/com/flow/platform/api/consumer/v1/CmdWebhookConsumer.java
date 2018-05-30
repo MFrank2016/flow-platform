@@ -137,7 +137,7 @@ public class CmdWebhookConsumer implements MessageListener {
 
         } catch (Throwable throwable) {
             throwable.printStackTrace();
-            log.error("handle message exception: " + throwable.getMessage());
+            log.error("Handle message exception: " + throwable.getMessage());
         }
 
         log.trace("Handle message finish!");
