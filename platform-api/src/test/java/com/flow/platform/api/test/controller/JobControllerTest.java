@@ -20,17 +20,16 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.flow.platform.api.domain.v1.Flow;
 import com.flow.platform.api.domain.job.Job;
 import com.flow.platform.api.domain.job.JobCategory;
-import com.flow.platform.api.domain.job.JobStatus;
-import com.flow.platform.api.domain.job.NodeResult;
-import com.flow.platform.api.domain.job.NodeStatus;
+import com.flow.platform.api.domain.v1.Flow;
+import com.flow.platform.api.domain.v1.JobV1;
 import com.flow.platform.api.envs.GitEnvs;
-import java.io.File;
+import com.flow.platform.api.service.v1.JobNodeManager;
+import com.flow.platform.api.service.v1.JobService;
+import com.flow.platform.api.test.FlowHelper;
+import com.flow.platform.tree.NodeStatus;
 import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.List;
 import org.junit.Assert;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,26 +42,28 @@ import org.springframework.test.web.servlet.MvcResult;
 public class JobControllerTest extends ControllerTestWithoutAuth {
 
     @Autowired
-    private Path workspace;
+    private FlowHelper flowHelper;
+
+    @Autowired
+    private JobService jobServiceV1;
+
+    @Autowired
+    private JobNodeManager jobNodeManager;
 
     @Test
     public void should_show_job_success() throws Exception {
         stubDemo();
-        Flow rootForFlow = createRootFlow("flow1", "yml/flow.yaml");
-        Job job = jobService.create(rootForFlow, JobCategory.MANUAL, null, mockUser);
+        Flow rootForFlow = flowHelper.createFlowWithYml("flow1", "yml/flow.yaml");
+        JobV1 job = jobServiceV1.create(rootForFlow, JobCategory.MANUAL, null);
+
         job.putEnv(GitEnvs.FLOW_GIT_BRANCH, "master");
-        jobDao.update(job);
+        jobDaoV1.update(job);
 
-        Job returnedJob = requestToShowJob(job.getNodePath(), job.getNumber());
-
-        // then: verify children result is returned
-        Assert.assertNotNull(returnedJob.getChildrenResult());
-
-        // then: verify session id is created
-        Assert.assertNull(returnedJob.getSessionId());
+        JobV1 returnedJob = requestToShowJob(rootForFlow.getName(), job.buildNumber());
+        Assert.assertEquals(job, returnedJob);
 
         // when: load yml
-        String ymlForJob = requestToGetYml(job.getNodePath(), job.getNumber());
+        String ymlForJob = requestToGetYml(rootForFlow.getName(), job.buildNumber());
         String originYml = getResourceContent("yml/flow.yaml");
         Assert.assertEquals(originYml, ymlForJob);
     }
@@ -70,39 +71,36 @@ public class JobControllerTest extends ControllerTestWithoutAuth {
     @Test
     public void should_stop_job_success() throws Exception {
         stubDemo();
-        Flow rootForFlow = createRootFlow("flow1", "yml/flow.yaml");
-        Job job = jobService.create(rootForFlow, JobCategory.TAG, null, mockUser);
+        Flow rootForFlow = flowHelper.createFlowWithYml("flow1", "yml/flow.yaml");
+        JobV1 job = jobServiceV1.create(rootForFlow, JobCategory.TAG, null);
         job.putEnv(GitEnvs.FLOW_GIT_BRANCH, "master");
-        jobDao.update(job);
+        jobDaoV1.update(job);
 
-        MvcResult mvcResult = this.mockMvc.perform(
-            post(String.format("/jobs/%s/%s/stop", job.getNodeName(), job.getNumber()))
-                .contentType(MediaType.APPLICATION_JSON)
-        ).andExpect(status().isOk()).andReturn();
+        this.mockMvc.perform(post(String.format("/jobs/%s/%s/stop", rootForFlow.getName(), job.buildNumber()))
+            .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk()).andReturn();
 
-        Job loadedJob = requestToShowJob(job.getNodePath(), job.getNumber());
-        Assert.assertEquals(NodeStatus.STOPPED, loadedJob.getRootResult().getStatus());
+        JobV1 loadedJob = requestToShowJob(rootForFlow.getName(), job.buildNumber());
+        Assert.assertEquals(NodeStatus.KILLED, jobNodeManager.root(loadedJob.getKey()).getStatus());
     }
 
     @Test
     public void should_get_step_log_success() throws Exception {
         stubDemo();
-        Flow rootForFlow = createRootFlow("flow1", "yml/flow.yaml");
-        Job job = jobService.create(rootForFlow, JobCategory.TAG, null, mockUser);
+        Flow rootForFlow = flowHelper.createFlowWithYml("flow1", "yml/flow.yaml");
+        JobV1 job = jobServiceV1.create(rootForFlow, JobCategory.TAG, null);
         job.putEnv(GitEnvs.FLOW_GIT_BRANCH, "master");
-        jobDao.update(job);
+        jobDaoV1.update(job);
 
-        MvcResult mvcResult = this.mockMvc.perform(
-            get(String.format("/jobs/%s/%s/1/log", job.getNodeName(), job.getNumber()))
-        ).andExpect(status().isOk()).andReturn();
-        String response = mvcResult.getResponse().getContentAsString();
+        String response = performRequestWith200Status(
+            get(String.format("/jobs/%s/%s/1/log", rootForFlow.getName(), job.buildNumber())));
         Assert.assertNotNull(response);
     }
 
     @Test
     public void should_get_job_zip_error() throws Exception {
         stubDemo();
-        Flow rootForFlow = createRootFlow("flow1", "yml/flow.yaml");
+        Flow rootForFlow = flowHelper.createFlowWithYml("flow1", "yml/flow.yaml");
         Job job = jobService.create(rootForFlow, JobCategory.TAG, null, mockUser);
 
         job.putEnv(GitEnvs.FLOW_GIT_BRANCH, "master");
@@ -114,50 +112,14 @@ public class JobControllerTest extends ControllerTestWithoutAuth {
         Assert.assertNotNull(response);
     }
 
-    @Test
-    public void should_get_job_zip_success() throws Exception {
-        stubDemo();
-        Flow rootForFlow = createRootFlow("flow1", "yml/flow.yaml");
-        Job job = jobService.create(rootForFlow, JobCategory.TAG, null, mockUser);
+    private JobV1 requestToShowJob(String path, Long buildNumber) throws Exception {
+        String response = performRequestWith200Status(get(String.format("/jobs/%s/%s", path, buildNumber))
+            .contentType(MediaType.APPLICATION_JSON));
 
-        job.putEnv(GitEnvs.FLOW_GIT_BRANCH, "master");
-        job.setStatus(JobStatus.SUCCESS);
-        jobDao.update(job);
-
-        List<NodeResult> nodeResultList = nodeResultService.list(job, true);
-        for (NodeResult nodeResult : nodeResultList) {
-            nodeResult.setCmdId("xxxx");
-            nodeResultService.update(nodeResult);
-        }
-
-        MvcResult mvcResult = this.mockMvc.perform(
-            get(String.format("/jobs/%s/%s/log/download", job.getNodeName(), job.getNumber()))
-        ).andExpect(status().isOk()).andReturn();
-        String response = mvcResult.getResponse().getContentAsString();
-        Assert.assertNotNull(response);
-
-        Path zipLog = Paths
-            .get(workspace.toString(), job.getNodeName(), "log", job.getId().toString(),
-                job.getId().toString() + ".zip");
-        File zipFile = new File(zipLog.toString());
-        Assert.assertTrue(zipFile.exists());
-    }
-
-    private Job requestToShowJob(String path, Long buildNumber) throws Exception {
-        MvcResult mvcResult = this.mockMvc.perform(
-            get(String.format("/jobs/%s/%s", path, buildNumber))
-                .contentType(MediaType.APPLICATION_JSON)
-        ).andExpect(status().isOk()).andReturn();
-
-        String response = mvcResult.getResponse().getContentAsString();
-        return Job.parse(response, Job.class);
+        return JobV1.parse(response, JobV1.class);
     }
 
     private String requestToGetYml(String path, Long buildNumber) throws Exception {
-        MvcResult mvcResult = this.mockMvc.perform(get(String.format("/jobs/%s/%s/yml", path, buildNumber)))
-            .andExpect(status().isOk())
-            .andReturn();
-
-        return mvcResult.getResponse().getContentAsString();
+        return performRequestWith200Status(get(String.format("/jobs/%s/%s/yml", path, buildNumber)));
     }
 }

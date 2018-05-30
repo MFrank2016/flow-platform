@@ -26,6 +26,7 @@ import java.util.Objects;
 import org.yaml.snakeyaml.DumperOptions;
 import org.yaml.snakeyaml.DumperOptions.FlowStyle;
 import org.yaml.snakeyaml.DumperOptions.LineBreak;
+import org.yaml.snakeyaml.DumperOptions.ScalarStyle;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.constructor.Constructor;
 import org.yaml.snakeyaml.error.YAMLException;
@@ -45,10 +46,11 @@ public class YmlHelper {
     private final static LineBreak LINE_BREAK = LineBreak.getPlatformLineBreak();
 
     static {
-        DUMPER_OPTIONS.setIndent(4);
-        DUMPER_OPTIONS.setIndicatorIndent(2);
+        DUMPER_OPTIONS.setIndent(2);
+        DUMPER_OPTIONS.setIndicatorIndent(0);
         DUMPER_OPTIONS.setExplicitStart(true);
         DUMPER_OPTIONS.setDefaultFlowStyle(FlowStyle.BLOCK);
+        DUMPER_OPTIONS.setDefaultScalarStyle(ScalarStyle.PLAIN);
         DUMPER_OPTIONS.setLineBreak(LINE_BREAK);
     }
 

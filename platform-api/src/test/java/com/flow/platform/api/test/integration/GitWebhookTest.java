@@ -287,7 +287,7 @@ public class GitWebhookTest extends TestBase {
 
     private Flow init_flow(String gitUrl) throws Throwable {
         // create empty flow
-        Flow flow = flowService.save(flowName);
+        Flow flow = flowService.create(flowName);
 
         // setup yml
         flowService.updateYml(flow, getResourceContent("yml/for_git_webhook_test.yml"));

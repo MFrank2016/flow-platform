@@ -50,7 +50,7 @@ public class ManualJobTest extends TestBase {
     @Test
     public void should_manual_create_job_with_failure_since_unable_to_create_session() throws Throwable {
         // given: flow
-        Flow flow = flowService.save("manual_flow_test");
+        Flow flow = flowService.create("manual_flow_test");
 
         Map<String, String> env = new HashMap<>();
         env.put(GitEnvs.FLOW_GIT_SOURCE.name(), GitSource.SSH.name());

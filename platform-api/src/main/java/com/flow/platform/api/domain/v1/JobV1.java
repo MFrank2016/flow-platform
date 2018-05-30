@@ -77,4 +77,8 @@ public class JobV1 extends EnvObject {
     public boolean isFinishStatus() {
         return FINISH_STATUS.contains(status);
     }
+
+    public Long buildNumber() {
+        return key.getNumber();
+    }
 }

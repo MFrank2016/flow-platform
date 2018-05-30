@@ -116,7 +116,7 @@ public class NodeTree implements Serializable {
     }
 
     public String toYml() {
-        throw new UnsupportedOperationException();
+        return YmlHelper.toYml(this.root);
     }
 
     private NodeWithIndex getWithIndex(NodePath path) {

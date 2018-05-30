@@ -82,9 +82,8 @@ public class QueueConfig {
     }
     
     @Bean
-    public RabbitTemplate commonTemplate() {
-        RabbitTemplate template = new RabbitTemplate(connectionFactory());
-        return template;
+    public RabbitTemplate jobCmdTemplate() {
+        return new RabbitTemplate(connectionFactory());
     }
 
     @Bean

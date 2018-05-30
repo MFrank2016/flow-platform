@@ -47,7 +47,7 @@ public class UserFlowServiceTest extends TestBase {
         Assert.assertNotNull(userDao.get(currentUser.get().getEmail()));
 
         final String flowPath = "user_flow_test";
-        flow = flowService.save(flowPath);
+        flow = flowService.create(flowPath);
         Assert.assertNotNull(flowService.find(flowPath));
         Assert.assertNotNull(userDao.get(currentUser.get().getEmail()));
     }

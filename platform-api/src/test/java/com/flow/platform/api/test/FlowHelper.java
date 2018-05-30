@@ -19,7 +19,9 @@ package com.flow.platform.api.test;
 import com.flow.platform.api.config.AppConfig;
 import com.flow.platform.api.domain.v1.Flow;
 import com.flow.platform.api.domain.v1.FlowStatus;
+import com.flow.platform.api.envs.GitEnvs;
 import com.flow.platform.api.service.v1.FlowService;
+import com.flow.platform.util.git.model.GitSource;
 import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
@@ -37,8 +39,14 @@ public class FlowHelper {
     private FlowService flowService;
 
     public Flow createFlowWithYml(String flowName, String ymlResourceName) throws IOException {
-        Flow flow = flowService.save(flowName);
+        Flow flow = flowService.create(flowName);
+
+        flow.putEnv(GitEnvs.FLOW_GIT_URL, "git@test.com");
+        flow.putEnv(GitEnvs.FLOW_GIT_SOURCE, GitSource.GITLAB.name());
+        flowService.merge(flow.getName(), flow.getEnvs());
+
         flowService.changeStatus(flow, FlowStatus.READY);
+
         String yml = getResourceContent(ymlResourceName);
         flowService.updateYml(flow, yml);
         return flow;

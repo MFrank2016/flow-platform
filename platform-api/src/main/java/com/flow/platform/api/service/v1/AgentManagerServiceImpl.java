@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 flow.ci
+ * Copyright 2018 flow.ci
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,11 +17,10 @@
 package com.flow.platform.api.service.v1;
 
 import com.flow.platform.api.dao.v1.AgentDao;
-import com.flow.platform.api.dao.v1.JobTreeDao;
-import com.flow.platform.api.domain.v1.JobTree;
 import com.flow.platform.api.domain.v1.JobV1;
 import com.flow.platform.api.util.ZKHelper;
 import com.flow.platform.core.exception.FlowException;
+import com.flow.platform.core.exception.NotFoundException;
 import com.flow.platform.core.service.ApplicationEventService;
 import com.flow.platform.domain.Agent;
 import com.flow.platform.domain.AgentPath;
@@ -64,19 +63,19 @@ public class AgentManagerServiceImpl extends ApplicationEventService implements 
     private JobService jobServiceV1;
 
     @Autowired
-    private JobTreeDao jobTreeDao;
-
-    @Autowired
     private AgentDao agentDao;
 
     @Autowired
     private ZKClient zkClient;
 
     @Autowired
-    private RabbitTemplate commonTemplate;
+    private RabbitTemplate jobCmdTemplate;
 
     @Autowired
     private AmqpAdmin amqpAdmin;
+
+    @Autowired
+    private JobNodeManager jobNodeManager;
 
     private final static String ZK_ROOT_NODE = "/flow-agents";
 
@@ -115,15 +114,16 @@ public class AgentManagerServiceImpl extends ApplicationEventService implements 
     public void handleJob(JobKey jobKey) {
         log.trace("Handle job to lock agent and send first node to queue , key is " + jobKey);
 
-        JobV1 jobV1 = jobServiceV1.find(jobKey);
-        JobTree jobTree = jobTreeDao.get(jobV1.getKey());
+        JobV1 job = jobServiceV1.find(jobKey);
         Agent agent = selectAgent();
-        Node node = jobTree.getTree().next(jobTree.getTree().getRoot().getPath());
 
-        Cmd cmd = buildCmdFromNode(node, jobV1.getKey(), agent);
+        Node root = jobNodeManager.root(job.getKey());
+        Node next = jobNodeManager.next(job.getKey(), root.getPath());
+
+        Cmd cmd = buildCmdFromNode(next, job.getKey(), agent);
 
         log.trace("Send cmd to queue:  " + buildQueueName(agent.getPath()));
-        commonTemplate.send(buildQueueName(agent.getPath()),
+        jobCmdTemplate.send(buildQueueName(agent.getPath()),
             new Message(cmd.toJson().getBytes(), new MessageProperties()));
     }
 
@@ -149,11 +149,10 @@ public class AgentManagerServiceImpl extends ApplicationEventService implements 
 
     @Override
     public Agent selectAgent() {
-
         List<Agent> availableAgents = findAvailableAgents();
 
         if (availableAgents.size() == 0) {
-            throw new FlowException("Not found available agents");
+            throw new NotFoundException("No available agent");
         }
 
         Agent selectedAgent = availableAgents.get(0);
@@ -186,10 +185,9 @@ public class AgentManagerServiceImpl extends ApplicationEventService implements 
     }
 
     private void report(AgentPath agentPath, AgentStatus agentStatus) {
-
         if (agentStatus == AgentStatus.IDLE) {
-
             declareQueue(buildQueueName(agentPath));
+            return;
         }
 
         if (agentStatus == AgentStatus.OFFLINE) {
@@ -279,21 +277,18 @@ public class AgentManagerServiceImpl extends ApplicationEventService implements 
             final String name = ZKHelper.getNameFromPath(path);
             log.debug("Receive zookeeper event {} {}", eventType, path);
 
-            if (eventType == Type.CHILD_ADDED) {
+            AgentPath agentPath = new AgentPath(name.split(SPLIT_CHARS)[0], name.split(SPLIT_CHARS)[1]);
 
-                report(new AgentPath(name.split(SPLIT_CHARS)[0], name.split(SPLIT_CHARS)[1]), AgentStatus.IDLE);
+            if (eventType == Type.CHILD_ADDED) {
+                report(agentPath, AgentStatus.IDLE);
                 // report online
                 return;
             }
 
             if (eventType == Type.CHILD_REMOVED) {
                 // report offline
-
-                report(new AgentPath(name.split(SPLIT_CHARS)[0], name.split(SPLIT_CHARS)[1]), AgentStatus.OFFLINE);
-                return;
+                report(agentPath, AgentStatus.OFFLINE);
             }
         }
     }
-
-
 }

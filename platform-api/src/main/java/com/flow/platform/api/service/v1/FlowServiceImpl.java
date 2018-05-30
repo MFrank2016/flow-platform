@@ -64,6 +64,9 @@ public class FlowServiceImpl extends CurrentUser implements FlowService {
     private JobNumberDao jobNumberDao;
 
     @Autowired
+    private JobService jobServiceV1;
+
+    @Autowired
     private UserFlowService userFlowService;
 
     @Autowired
@@ -71,7 +74,7 @@ public class FlowServiceImpl extends CurrentUser implements FlowService {
 
     @Override
     @Transactional
-    public Flow save(String name) {
+    public Flow create(String name) {
         Flow flow = flowDao.get(name);
         if (!Objects.isNull(flow)) {
             throw new DuplicateExeption("The flow name is duplicated");
@@ -136,6 +139,7 @@ public class FlowServiceImpl extends CurrentUser implements FlowService {
         jobNumberDao.delete(new JobNumber(flow));
 
         userFlowService.unAssign(flow);
+        jobServiceV1.delete(flow);
         return flow;
     }
 

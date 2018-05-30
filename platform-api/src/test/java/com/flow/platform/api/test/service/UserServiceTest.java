@@ -138,6 +138,6 @@ public class UserServiceTest extends TestBase {
 
     private Flow createFlow() {
         String path = "test";
-        return flowService.save(path);
+        return flowService.create(path);
     }
 }

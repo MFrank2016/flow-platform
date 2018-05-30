@@ -16,49 +16,29 @@
 
 package com.flow.platform.api.service.v1;
 
-import com.flow.platform.api.domain.v1.Flow;
-import com.flow.platform.api.domain.job.JobCategory;
 import com.flow.platform.domain.v1.JobKey;
-import com.flow.platform.api.domain.v1.JobV1;
-import com.flow.platform.core.domain.Page;
-import com.flow.platform.core.domain.Pageable;
 import com.flow.platform.tree.Node;
 import com.flow.platform.tree.NodePath;
-import java.util.List;
-import java.util.Map;
 
 /**
+ * To handle method of node tree for job
+ *
  * @author yang
  */
-public interface JobService {
+public interface JobNodeManager {
 
     /**
-     * Find job by job key
+     * Get root job node
      */
-    JobV1 find(JobKey key);
+    Node root(JobKey key);
 
     /**
-     * Get yml content for current job
+     * Get job node by path
      */
-    String jobYml(JobKey key);
+    Node get(JobKey key, NodePath path);
 
     /**
-     * List jobs by flows
+     * Get next node by path
      */
-    Page<JobV1> list(List<String> flows, Pageable pageable);
-
-    /**
-     * List latest job for flows
-     */
-    List<JobV1> listForLatest(List<String> flows);
-
-    /**
-     * Create and start a new job
-     */
-    JobV1 create(Flow flow, JobCategory eventType, Map<String, String> envs);
-
-    /**
-     * Delete job by flow
-     */
-    void delete(Flow flow);
+    Node next(JobKey key, NodePath path);
 }

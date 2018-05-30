@@ -17,6 +17,7 @@
 package com.flow.platform.domain.v1;
 
 import com.flow.platform.domain.Jsonable;
+import com.google.gson.annotations.Expose;
 import java.util.Objects;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -32,10 +33,12 @@ import lombok.ToString;
 @EqualsAndHashCode(of = {"flowId", "number"}, callSuper = false)
 public class JobKey extends Jsonable {
 
+    @Expose
     @Getter
     @Setter
     private Long flowId;
 
+    @Expose
     @Getter
     @Setter
     private Long number;

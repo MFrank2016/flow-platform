@@ -32,7 +32,7 @@ public interface FlowService {
     /**
      * Create a flow with name
      */
-    Flow save(String name);
+    Flow create(String name);
 
     /**
      * Get flow instance

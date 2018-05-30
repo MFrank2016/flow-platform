@@ -248,7 +248,7 @@ public abstract class TestBase {
 
     @Deprecated
     public Flow createRootFlow(String flowName, String ymlResourceName) throws IOException {
-        Flow flow = flowService.save(flowName);
+        Flow flow = flowService.create(flowName);
         String yml = getResourceContent(ymlResourceName);
         setRequiredJobEnvsForFlow(flow);
         flowService.updateYml(new Flow(), yml);

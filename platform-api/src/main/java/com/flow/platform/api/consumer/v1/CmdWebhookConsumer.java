@@ -58,7 +58,7 @@ public class CmdWebhookConsumer implements MessageListener {
     private AgentManagerService agentManagerService;
 
     @Autowired
-    private AmqpTemplate commonTemplate;
+    private AmqpTemplate jobCmdTemplate;
 
     @Autowired
     private AgentDao agentDao;
@@ -125,9 +125,8 @@ public class CmdWebhookConsumer implements MessageListener {
                 if (!Objects.isNull(nextNode)) {
                     Cmd nextCmd = agentManagerService.buildCmdFromNode(nextNode, cmd.getJobKey(), agent);
 
-                    commonTemplate
-                        .send(agentManagerService.agentQueue(agent),
-                            new Message(nextCmd.toBytes(), new MessageProperties()));
+                    jobCmdTemplate.send(agentManagerService.agentQueue(agent),
+                        new Message(nextCmd.toBytes(), new MessageProperties()));
                 }
             }
 

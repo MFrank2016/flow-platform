@@ -66,7 +66,7 @@ public class FlowController extends NodeController {
     @PostMapping(path = {"/{root}", "/{root}/create"})
     @WebSecurity(action = Actions.FLOW_CREATE)
     public Flow create() {
-        Flow created = flowService.save(flowName.get());
+        Flow created = flowService.create(flowName.get());
         return created;
     }
 
