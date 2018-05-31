@@ -27,5 +27,9 @@ public enum AgentStatus implements Serializable {
 
     IDLE,
 
-    BUSY
+    BUSY;
+
+    public byte[] getBytes() {
+        return this.name().getBytes();
+    }
 }

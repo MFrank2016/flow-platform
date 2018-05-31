@@ -161,13 +161,14 @@ public class ZKClient implements Closeable {
 
     /**
      * if not create node, will throw exception
-     * @param path
-     * @return
      */
     public String createEphemeral(String path) {
         return createEphemeralPrivate(path, null);
     }
 
+    /**
+     * Lock on node with cannot be ephemeral
+     */
     public void lock(String path, Consumer<String> consumer) throws ZkException {
         InterProcessMutex lock = new InterProcessMutex(client, path);
 
@@ -180,10 +181,12 @@ public class ZKClient implements Closeable {
         } catch (Exception e) {
             throw new ZkException("Cannot acquire the lock on path: " + path);
         } finally {
-            try {
-                lock.release();
-            } catch (Exception e) {
-                throw new ZkException("Error on release lock for path : " + path);
+            if (lock.isAcquiredInThisProcess()) {
+                try {
+                    lock.release();
+                } catch (Exception ignored) {
+
+                }
             }
         }
     }

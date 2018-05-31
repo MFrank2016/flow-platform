@@ -39,6 +39,7 @@ import com.flow.platform.api.dao.user.RoleDao;
 import com.flow.platform.api.dao.user.UserDao;
 import com.flow.platform.api.dao.user.UserFlowDao;
 import com.flow.platform.api.dao.user.UserRoleDao;
+import com.flow.platform.api.dao.v1.AgentDao;
 import com.flow.platform.api.dao.v1.JobDao;
 import com.flow.platform.api.dao.v1.JobTreeDao;
 import com.flow.platform.api.domain.v1.Flow;
@@ -129,6 +130,9 @@ public abstract class TestBase {
 
     @Autowired
     protected UserDao userDao;
+
+    @Autowired
+    protected AgentDao agentDao;
 
     @Autowired
     protected YmlDao ymlDao;
@@ -315,6 +319,7 @@ public abstract class TestBase {
         permissionDao.deleteAll();
         userFlowDao.deleteAll();
         jobNumberDao.deleteAll();
+        agentDao.deleteAll();
     }
 
     @After

@@ -18,11 +18,10 @@ package com.flow.platform.util.zk.test;
 
 import com.flow.platform.util.zk.ZKClient;
 import com.flow.platform.util.zk.ZkException;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadFactory;
@@ -191,17 +190,17 @@ public class ZkClientTest {
 
     @Test
     public void should_lock_the_node_to_ensure_only_one_acquire_lock() throws Throwable {
-        zkClient.create("/lock-test", null);
+        zkClient.create("/lock-test", "nice".getBytes());
 
         // init simulate multiple request update same node
         int size = 10;
-        List<Thread> requests = new ArrayList<>(size);
 
+        ExecutorService pool = Executors.newFixedThreadPool(size);
         AtomicInteger numOfFailures = new AtomicInteger(0);
         CountDownLatch countDown = new CountDownLatch(size);
 
         for (int i = 0; i < size; i++) {
-            requests.add(new Thread(() -> {
+            pool.execute(() -> {
                 try {
                     zkClient.lock("/lock-test", (path) -> zkClient.setData("/lock-test", "hello".getBytes()));
                 } catch (ZkException e) {
@@ -209,12 +208,7 @@ public class ZkClientTest {
                 } finally {
                     countDown.countDown();
                 }
-            }));
-        }
-
-        // start
-        for (Thread t : requests) {
-            t.start();
+            });
         }
 
         // ensure only one request to update and other are failure
@@ -326,7 +320,6 @@ public class ZkClientTest {
         }
 
         Assert.assertEquals(1, zkClient.getChildren(rootPath).size());
-
         zkClient.close();
     }
 

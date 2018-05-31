@@ -17,12 +17,10 @@
 package com.flow.platform.domain;
 
 import com.google.gson.annotations.Expose;
-import com.google.gson.annotations.SerializedName;
 import java.time.ZonedDateTime;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 
@@ -81,13 +79,6 @@ public class Agent extends Webhookable {
     @Getter
     @Expose
     private String token;
-
-    /**
-     * zookeeper use version to lock agent
-     */
-    @Getter
-    @Setter
-    private Integer version;
 
     /**
      * Created date

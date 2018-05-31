@@ -11,8 +11,8 @@
     </composite-id>
 
     <property name="concurrentProc" column="concurrent_proc"/>
-    <property name="sessionId" length="50" column="session_id"/>
-    <property name="sessionDate" column="session_date"/>
+    <!--<property name="sessionId" length="50" column="session_id"/>-->
+    <!--<property name="sessionDate" column="session_date"/>-->
     <property name="token" column="token"/>
     <!--<property name="webhook" column="webhook"/>-->
 

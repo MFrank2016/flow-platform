@@ -20,14 +20,12 @@ import com.flow.platform.api.dao.v1.AgentDao;
 import com.flow.platform.api.exception.AgentNotAvailableException;
 import com.flow.platform.api.util.ZKHelper;
 import com.flow.platform.core.exception.FlowException;
-import com.flow.platform.core.exception.NotFoundException;
 import com.flow.platform.core.service.ApplicationEventService;
 import com.flow.platform.domain.Agent;
 import com.flow.platform.domain.AgentPath;
 import com.flow.platform.domain.AgentSettings;
 import com.flow.platform.domain.AgentStatus;
 import com.flow.platform.util.zk.ZKClient;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -39,6 +37,7 @@ import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.recipes.cache.PathChildrenCacheEvent;
 import org.apache.curator.framework.recipes.cache.PathChildrenCacheEvent.Type;
 import org.apache.curator.framework.recipes.cache.PathChildrenCacheListener;
+import org.apache.curator.utils.ZKPaths;
 import org.apache.zookeeper.data.Stat;
 import org.springframework.amqp.core.AmqpAdmin;
 import org.springframework.amqp.core.Queue;
@@ -52,6 +51,11 @@ import org.springframework.stereotype.Service;
 @Log4j2
 public class AgentManagerServiceImpl extends ApplicationEventService implements AgentManagerService {
 
+    /**
+     * Zookeeper node path which used for lock of acquire agent
+     */
+    private final static String LOCKER_PATH = ZKPaths.makePath(AgentPath.ROOT, "locker");
+
     @Autowired
     private AgentDao agentDao;
 
@@ -63,7 +67,8 @@ public class AgentManagerServiceImpl extends ApplicationEventService implements 
 
     @PostConstruct
     public void init() {
-        createRoot();
+        zkClient.create(AgentPath.ROOT, null);
+        zkClient.create(LOCKER_PATH, null);
 
         // detect node online or offline
         zkClient.watchChildren(AgentPath.ROOT, new ZkNodeWatcherEvent());
@@ -86,13 +91,13 @@ public class AgentManagerServiceImpl extends ApplicationEventService implements 
 
     @Override
     public List<Agent> list() {
-        return appendAgentsStatus(agentDao.list());
+        List<Agent> agents = agentDao.list();
+        return appendAgentsStatus(agents);
     }
 
     @Override
     public void release(Agent agent) {
-        byte[] bytes = AgentStatus.IDLE.name().getBytes();
-        zkClient.setData(agent.fullPath(), bytes);
+        zkClient.setData(agent.fullPath(), AgentStatus.IDLE.getBytes());
     }
 
     @Override
@@ -100,16 +105,16 @@ public class AgentManagerServiceImpl extends ApplicationEventService implements 
         List<Agent> availableAgents = findAvailableAgents();
 
         if (availableAgents.isEmpty()) {
-            throw new NotFoundException("No available agent");
+            throw new AgentNotAvailableException("No available agent");
         }
 
         Agent selectedAgent = availableAgents.get(0);
 
         // create lock try to set agent status
         try {
-            zkClient.lock(selectedAgent.fullPath(), (path) -> {
-                byte[] data = AgentStatus.BUSY.name().getBytes();
-                zkClient.setData(path, data);
+            zkClient.lock(LOCKER_PATH, (path) -> {
+                zkClient.setData(selectedAgent.fullPath(), AgentStatus.BUSY.getBytes());
+                selectedAgent.setStatus(AgentStatus.BUSY);
             });
         } catch (Throwable e) {
             throw new AgentNotAvailableException(e.getMessage());
@@ -155,15 +160,8 @@ public class AgentManagerServiceImpl extends ApplicationEventService implements 
 
     private List<Agent> findAvailableAgents() {
         List<Agent> agents = list();
-        List<Agent> availableList = new ArrayList<>(agents.size());
-
-        for (Agent agent : agents) {
-            if (Objects.equals(agent.getStatus(), AgentStatus.IDLE)) {
-                availableList.add(agent);
-            }
-        }
-
-        return availableList;
+        agents.removeIf(agent -> agent.getStatus() == AgentStatus.BUSY);
+        return agents;
     }
 
     private void createRoot() {
@@ -176,7 +174,6 @@ public class AgentManagerServiceImpl extends ApplicationEventService implements 
         try {
             Stat stat = new Stat();
             agent.setStatus(AgentStatus.valueOf(new String(zkClient.getData(agent.fullPath(), stat))));
-            agent.setVersion(stat.getVersion());
         } catch (Throwable throwable) {
             agent.setStatus(AgentStatus.OFFLINE);
         }
