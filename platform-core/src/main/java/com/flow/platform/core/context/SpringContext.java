@@ -45,7 +45,7 @@ public class SpringContext implements ApplicationContextAware {
         eventMulticaster.removeApplicationListener(listener);
     }
 
-    public void cleanApplictionListener() {
+    public void cleanApplicationListener() {
         eventMulticaster.removeAllListeners();
     }
 

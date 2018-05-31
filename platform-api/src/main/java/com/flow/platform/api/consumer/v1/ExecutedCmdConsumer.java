@@ -27,6 +27,7 @@ import com.flow.platform.api.service.v1.JobService;
 import com.flow.platform.domain.Agent;
 import com.flow.platform.domain.CmdStatus;
 import com.flow.platform.domain.v1.Cmd;
+import com.flow.platform.domain.v1.ExecutedCmd;
 import com.flow.platform.tree.Node;
 import com.flow.platform.tree.NodePath;
 import com.flow.platform.tree.Result;
@@ -63,7 +64,7 @@ public class ExecutedCmdConsumer {
     private AmqpTemplate jobCmdTemplate;
 
     @RabbitListener(queues = QueueConfig.CMD_CALLBACK_QUEUE_NAME)
-    public void handleMessage(Cmd cmd) {
+    public void handleMessage(ExecutedCmd cmd) {
         log.debug("Cmd Webhook Consumer received: {}", cmd);
 
         JobKey jobKey = JobKey.create(cmd.getMeta().get(CmdManager.META_JOB_KEY));

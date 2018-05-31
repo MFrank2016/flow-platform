@@ -55,6 +55,7 @@ public class JobNodeManagerImpl implements JobNodeManager {
     public void execute(JobKey key, NodePath path) {
         JobTree jobTree = jobTreeDao.get(key);
 
+        // TODO: should be cached
         TreeManager treeManager = new TreeManager(jobTree.getTree());
         treeManager.execute(path, null);
 
@@ -65,6 +66,7 @@ public class JobNodeManagerImpl implements JobNodeManager {
     public void finish(JobKey key, NodePath path, Result result) {
         JobTree jobTree = jobTreeDao.get(key);
 
+        // TODO: should be cached
         TreeManager treeManager = new TreeManager(jobTree.getTree());
         treeManager.onFinish(result);
 

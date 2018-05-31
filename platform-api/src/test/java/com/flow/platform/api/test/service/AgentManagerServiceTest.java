@@ -18,11 +18,11 @@ package com.flow.platform.api.test.service;
 
 import com.flow.platform.api.exception.AgentNotAvailableException;
 import com.flow.platform.api.service.v1.AgentManagerService;
+import com.flow.platform.api.test.JobHelper;
 import com.flow.platform.api.test.TestBase;
 import com.flow.platform.domain.Agent;
 import com.flow.platform.domain.AgentPath;
 import com.flow.platform.domain.AgentStatus;
-import com.flow.platform.util.zk.ZKClient;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
@@ -41,20 +41,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 public class AgentManagerServiceTest extends TestBase {
 
     @Autowired
-    private ZKClient zkClient;
+    private JobHelper jobHelper;
 
     @Autowired
     private AgentManagerService agentManagerService;
 
     @Before
     public void init() {
-        AgentPath agent1 = new AgentPath("default", "first");
-        agentManagerService.create(agent1);
-        zkClient.createEphemeral(agent1.fullPath(), AgentStatus.IDLE.getBytes());
-
-        AgentPath agent2 = new AgentPath("default", "second");
-        agentManagerService.create(agent2);
-        zkClient.createEphemeral(agent2.fullPath(), AgentStatus.BUSY.getBytes());
+        jobHelper.createAgent("default", "first", AgentStatus.IDLE);
+        jobHelper.createAgent("default", "second", AgentStatus.BUSY);
     }
 
     @Test

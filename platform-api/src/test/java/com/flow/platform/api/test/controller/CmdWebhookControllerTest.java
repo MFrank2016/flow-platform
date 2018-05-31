@@ -71,7 +71,7 @@ public class CmdWebhookControllerTest extends TestBase {
         stubSendCmd(sessionId);
 
         cmdCallbackQueue.clean();
-        springContext.cleanApplictionListener();
+        springContext.cleanApplicationListener();
     }
 
     @Test

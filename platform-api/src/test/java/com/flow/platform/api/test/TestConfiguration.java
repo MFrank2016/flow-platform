@@ -38,4 +38,9 @@ public class TestConfiguration {
     public FlowHelper flowHelper() {
         return new FlowHelper();
     }
+
+    @Bean
+    public JobHelper jobHelper() {
+        return new JobHelper();
+    }
 }

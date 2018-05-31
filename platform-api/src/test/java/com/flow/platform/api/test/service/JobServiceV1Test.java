@@ -16,15 +16,20 @@
 
 package com.flow.platform.api.test.service;
 
-import com.flow.platform.api.domain.v1.Flow;
 import com.flow.platform.api.domain.job.JobCategory;
+import com.flow.platform.api.domain.job.JobStatus;
+import com.flow.platform.api.domain.v1.Flow;
 import com.flow.platform.api.domain.v1.JobV1;
+import com.flow.platform.api.events.JobStatusEvent;
 import com.flow.platform.api.service.v1.JobNodeManager;
 import com.flow.platform.api.service.v1.JobService;
 import com.flow.platform.api.test.FlowHelper;
+import com.flow.platform.api.test.JobHelper;
 import com.flow.platform.api.test.TestBase;
+import com.flow.platform.core.context.SpringContext;
 import com.flow.platform.core.domain.Page;
 import com.flow.platform.core.domain.Pageable;
+import com.flow.platform.domain.AgentStatus;
 import com.flow.platform.tree.Node;
 import com.flow.platform.tree.NodeStatus;
 import com.google.common.collect.Lists;
@@ -34,6 +39,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationListener;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 /**
@@ -51,7 +57,13 @@ public class JobServiceV1Test extends TestBase {
     private JobNodeManager jobNodeManager;
 
     @Autowired
+    private SpringContext springContext;
+
+    @Autowired
     private FlowHelper flowHelper;
+
+    @Autowired
+    private JobHelper jobHelper;
 
     @Before
     public void init() {
@@ -59,14 +71,30 @@ public class JobServiceV1Test extends TestBase {
     }
 
     @Test
-    public void should_create_job() throws Throwable {
+    public void should_create_job_with_running_status() throws Throwable {
+        // init: create idle agent for job
+        jobHelper.createAgent("default", "hello", AgentStatus.IDLE);
+
+        CountDownLatch eventCountDown = new CountDownLatch(1);
+        springContext.registerApplicationListener((ApplicationListener<JobStatusEvent>) event -> {
+            eventCountDown.countDown();
+        });
+
+        // when: create job for mock flow
         Flow flow = flowHelper.createFlowWithYml("flow-job", "yml/demo_flow2.yaml");
         JobV1 job = jobServiceV1.create(flow, JobCategory.MANUAL, null);
-        Assert.assertNotNull(jobDaoV1.get(job.getKey()));
-        Assert.assertNotNull(jobTreeDao.get(job.getKey()));
+        eventCountDown.await(10, TimeUnit.SECONDS);
 
+        // then: job node tree root and first node status should be running
         Node root = jobNodeManager.root(job.getKey());
         Assert.assertEquals(NodeStatus.RUNNING, root.getStatus());
+
+        Node firstExecNode = jobNodeManager.next(job.getKey(), root.getPath());
+        Assert.assertEquals(NodeStatus.RUNNING, firstExecNode.getStatus());
+
+        // then: job status should be running
+        JobV1 loaded = jobServiceV1.find(job.getKey());
+        Assert.assertEquals(JobStatus.RUNNING, loaded.getStatus());
     }
 
     @Test
