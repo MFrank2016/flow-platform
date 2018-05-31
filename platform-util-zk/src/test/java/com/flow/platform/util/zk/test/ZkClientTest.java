@@ -18,6 +18,8 @@ package com.flow.platform.util.zk.test;
 
 import com.flow.platform.util.zk.ZKClient;
 import com.flow.platform.util.zk.ZkException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executor;
@@ -74,7 +76,7 @@ public class ZkClientTest {
     }
 
     @Test
-    public void should_return_false_if_node_not_exist() throws Throwable {
+    public void should_return_false_if_node_not_exist() {
         Assert.assertFalse(zkClient.exist("/hello/not-exit"));
     }
 
@@ -158,15 +160,15 @@ public class ZkClientTest {
         zkClient.create(childPath, null);
 
         // then:
-        Assert.assertEquals(true, zkClient.exist(rootPath));
-        Assert.assertEquals(true, zkClient.exist(childPath));
+        Assert.assertTrue(zkClient.exist(rootPath));
+        Assert.assertTrue(zkClient.exist(childPath));
 
         // when: delete node with children
         zkClient.delete(rootPath, true);
 
         // then:
-        Assert.assertEquals(false, zkClient.exist(rootPath));
-        Assert.assertEquals(false, zkClient.exist(childPath));
+        Assert.assertFalse(zkClient.exist(rootPath));
+        Assert.assertFalse(zkClient.exist(childPath));
     }
 
     @Test
@@ -174,7 +176,7 @@ public class ZkClientTest {
         // init: create node and watch it
         String path = ZKPaths.makePath("/", "flow-test");
         zkClient.create(path, null);
-        Assert.assertEquals(true, zkClient.exist(path));
+        Assert.assertTrue(zkClient.exist(path));
 
         final CountDownLatch latch = new CountDownLatch(1);
         zkClient.watchNode(path, latch::countDown);
@@ -188,11 +190,44 @@ public class ZkClientTest {
     }
 
     @Test
+    public void should_lock_the_node_to_ensure_only_one_acquire_lock() throws Throwable {
+        zkClient.create("/lock-test", null);
+
+        // init simulate multiple request update same node
+        int size = 10;
+        List<Thread> requests = new ArrayList<>(size);
+
+        AtomicInteger numOfFailures = new AtomicInteger(0);
+        CountDownLatch countDown = new CountDownLatch(size);
+
+        for (int i = 0; i < size; i++) {
+            requests.add(new Thread(() -> {
+                try {
+                    zkClient.lock("/lock-test", (path) -> zkClient.setData("/lock-test", "hello".getBytes()));
+                } catch (ZkException e) {
+                    numOfFailures.incrementAndGet();
+                } finally {
+                    countDown.countDown();
+                }
+            }));
+        }
+
+        // start
+        for (Thread t : requests) {
+            t.start();
+        }
+
+        // ensure only one request to update and other are failure
+        countDown.await(10, TimeUnit.SECONDS);
+        Assert.assertEquals(size - 1, numOfFailures.get());
+    }
+
+    @Test
     public void should_listen_children_change_event() throws Throwable {
         // init: create node and watch it
         String path = ZKPaths.makePath("/", "flow-children-test");
         zkClient.create(path, null);
-        Assert.assertEquals(true, zkClient.exist(path));
+        Assert.assertTrue(zkClient.exist(path));
 
         final CountDownLatch latch = new CountDownLatch(3); // should receive 3 events
         final AtomicInteger counterForChildAdded = new AtomicInteger(0);
@@ -260,7 +295,7 @@ public class ZkClientTest {
 
         // when: create, update and delete node
         zkClient.create(path, null);
-        Assert.assertEquals(true, zkClient.exist(path));
+        Assert.assertTrue(zkClient.exist(path));
         Thread.sleep(100);
 
         zkClient.setData(path, "hello".getBytes());
@@ -268,13 +303,13 @@ public class ZkClientTest {
         Thread.sleep(100);
 
         zkClient.delete(path, false);
-        Assert.assertEquals(false, zkClient.exist(path));
+        Assert.assertFalse(zkClient.exist(path));
         Thread.sleep(100);
 
         // then: check listener been triggered
-        Assert.assertEquals(true, isTriggerNodeAddedEvent.get());
-        Assert.assertEquals(true, isTriggerNodeRemovedEvent.get());
-        Assert.assertEquals(true, isTriggerNodeUpdatedEvent.get());
+        Assert.assertTrue(isTriggerNodeAddedEvent.get());
+        Assert.assertTrue(isTriggerNodeRemovedEvent.get());
+        Assert.assertTrue(isTriggerNodeUpdatedEvent.get());
     }
 
     @After

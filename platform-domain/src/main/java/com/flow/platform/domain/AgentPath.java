@@ -18,7 +18,6 @@ package com.flow.platform.domain;
 
 import com.google.common.base.Strings;
 import com.google.gson.annotations.Expose;
-import java.util.Objects;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -33,7 +32,19 @@ import lombok.Setter;
 @EqualsAndHashCode(of = {"zone", "name"}, callSuper = false)
 public class AgentPath extends Jsonable {
 
-    private final static String RESERVED_CHAR = "#";
+    public final static String ROOT = "/flow-agents";
+
+    private final static String SPLITTER = "===";
+
+    /**
+     * Parse 'zone===agent' to agent path instance
+     */
+    public static AgentPath parse(String content) {
+        String[] tokens = content.split(SPLITTER);
+        String zone = tokens[0];
+        String name = tokens[1];
+        return new AgentPath(zone, name);
+    }
 
     @Setter
     @Getter
@@ -46,15 +57,6 @@ public class AgentPath extends Jsonable {
     private String name;
 
     public AgentPath(String zone, String name) {
-        if (zone != null && zone.contains(RESERVED_CHAR)) {
-            throw new IllegalArgumentException("Agent key not valid");
-        }
-
-        // name is nullable
-        if (name != null && name.contains(RESERVED_CHAR)) {
-            throw new IllegalArgumentException("Agent key not valid");
-        }
-
         this.zone = zone;
         this.name = name;
     }
@@ -74,20 +76,15 @@ public class AgentPath extends Jsonable {
         return !Strings.isNullOrEmpty(name);
     }
 
-    @Override
-    public String toString() {
-        return zone + RESERVED_CHAR + name;
+    /**
+     * Get zookeeper full path
+     */
+    public String fullPath() {
+        return ROOT + "/" + toString();
     }
 
-    public static AgentPath parse(String content) {
-        if (Objects.isNull(content)) {
-            return null;
-        }
-
-        if (!content.contains(RESERVED_CHAR)) {
-            return null;
-        }
-
-        return new AgentPath(content.split(RESERVED_CHAR)[0], content.split(RESERVED_CHAR)[1]);
+    @Override
+    public String toString() {
+        return zone + SPLITTER + name;
     }
 }

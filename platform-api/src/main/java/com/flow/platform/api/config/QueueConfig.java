@@ -16,12 +16,11 @@
 
 package com.flow.platform.api.config;
 
-import com.flow.platform.api.consumer.JobQueueConsumer;
+import com.flow.platform.api.consumer.v1.JobQueueConsumer;
 import com.flow.platform.api.consumer.v1.CmdWebhookConsumer;
 import com.flow.platform.api.service.SyncService;
 import com.flow.platform.core.queue.MemoryQueue;
 import com.flow.platform.core.queue.PriorityMessage;
-import com.flow.platform.core.queue.RabbitQueue;
 import com.flow.platform.queue.PlatformQueue;
 import org.springframework.amqp.core.AmqpAdmin;
 import org.springframework.amqp.core.Queue;

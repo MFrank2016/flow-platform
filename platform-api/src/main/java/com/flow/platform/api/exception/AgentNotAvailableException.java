@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 flow.ci
+ * Copyright 2018 fir.im
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,18 +14,14 @@
  * limitations under the License.
  */
 
-package com.flow.platform.domain;
-
-import java.io.Serializable;
+package com.flow.platform.api.exception;
 
 /**
- * @author gy@fir.im
+ * @author yang
  */
-public enum AgentStatus implements Serializable {
+public class AgentNotAvailableException extends Exception {
 
-    OFFLINE,
-
-    IDLE,
-
-    BUSY
+    public AgentNotAvailableException(String message) {
+        super(message);
+    }
 }

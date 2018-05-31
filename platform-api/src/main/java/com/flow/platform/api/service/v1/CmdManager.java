@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 flow.ci
+ * Copyright 2018 fir.im
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,18 +14,16 @@
  * limitations under the License.
  */
 
-package com.flow.platform.domain;
+package com.flow.platform.api.service.v1;
 
-import java.io.Serializable;
+import com.flow.platform.domain.v1.JobKey;
+import com.flow.platform.tree.Cmd;
+import com.flow.platform.tree.Node;
 
 /**
- * @author gy@fir.im
+ * @author yang
  */
-public enum AgentStatus implements Serializable {
+public interface CmdManager {
 
-    OFFLINE,
-
-    IDLE,
-
-    BUSY
+    Cmd create(JobKey key, Node node, String token);
 }

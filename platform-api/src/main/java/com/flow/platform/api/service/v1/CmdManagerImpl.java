@@ -16,42 +16,28 @@
 
 package com.flow.platform.api.service.v1;
 
-import com.flow.platform.api.dao.v1.JobTreeDao;
 import com.flow.platform.domain.v1.JobKey;
 import com.flow.platform.tree.Cmd;
 import com.flow.platform.tree.Node;
-import com.flow.platform.tree.NodePath;
-import com.flow.platform.tree.NodeTree;
 import com.flow.platform.tree.YmlEnvs;
-import java.util.Objects;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 /**
  * @author yang
  */
 @Component
-public class JobNodeManagerImpl implements JobNodeManager {
-
-    @Autowired
-    private JobTreeDao jobTreeDao;
+public class CmdManagerImpl implements CmdManager {
 
     @Override
-    public Node root(JobKey key) {
-        return getTree(key).getRoot();
-    }
-
-    @Override
-    public Node get(JobKey key, NodePath path) {
-        return getTree(key).get(path);
-    }
-
-    @Override
-    public Node next(JobKey key, NodePath path) {
-        return getTree(key).next(path);
-    }
-
-    private NodeTree getTree(JobKey key) {
-        return jobTreeDao.get(key).getTree();
+    public Cmd create(JobKey key, Node node, String token) {
+        // trans node to cmd
+        Cmd cmd = new Cmd();
+        cmd.setNodePath(node.getPath());
+        cmd.setContent(node.getContent());
+        cmd.put(YmlEnvs.TIMEOUT, "100");
+        cmd.put(YmlEnvs.WORK_DIR, "/tmp"); //TODO: Working dir
+        cmd.put(YmlEnvs.AGENT_TOKEN, token);
+        cmd.setJobKey(key);
+        return cmd;
     }
 }

@@ -17,6 +17,7 @@
 package com.flow.platform.api.service.v1;
 
 import com.flow.platform.api.domain.v1.JobTree;
+import com.flow.platform.api.exception.AgentNotAvailableException;
 import com.flow.platform.domain.Agent;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -35,7 +36,11 @@ public class JobTreeDispatchServiceImpl implements JobTreeDispatchService {
     public void dispatch(JobTree jobTree) {
 
         // selected one agent to run job
-        Agent agent = agentManagerService.selectAgent();
+        try {
+            Agent agent = agentManagerService.acquire();
+        } catch (AgentNotAvailableException e) {
+            e.printStackTrace();
+        }
 
     }
 }

@@ -16,14 +16,10 @@
 
 package com.flow.platform.api.service.v1;
 
-import com.flow.platform.api.domain.v1.JobV1;
-import com.flow.platform.domain.AgentStatus;
-import com.flow.platform.domain.v1.JobKey;
+import com.flow.platform.api.exception.AgentNotAvailableException;
 import com.flow.platform.domain.Agent;
 import com.flow.platform.domain.AgentPath;
 import com.flow.platform.domain.AgentSettings;
-import com.flow.platform.tree.Cmd;
-import com.flow.platform.tree.Node;
 import java.util.List;
 
 /**
@@ -31,21 +27,40 @@ import java.util.List;
  */
 public interface AgentManagerService {
 
+    /**
+     * Create agent into database and create unique token
+     */
     Agent create(AgentPath agentPath);
 
+    /**
+     * Find agent by agent path
+     */
     Agent find(AgentPath agentPath);
 
+    /**
+     * List all agent
+     */
     List<Agent> list();
 
-    Agent selectAgent();
+    /**
+     * Acquire available agent, throw exception when
+     *
+     * @throws AgentNotAvailableException
+     */
+    Agent acquire() throws AgentNotAvailableException;
 
+    /**
+     * Release agent, set status to idle
+     */
+    void release(Agent agent);
+
+    /**
+     * Get agent settings by token
+     */
     AgentSettings settings(String token);
 
-    String agentQueue(Agent agent);
-
-    void handleJob(JobKey key);
-
-    Cmd buildCmdFromNode(Node node, JobKey jobKey, Agent agent);
-
-    void resetAgentStatus(AgentStatus agentStatus, Agent agent);
+    /**
+     * Get queue name for agent
+     */
+    String getQueueName(Agent agent);
 }

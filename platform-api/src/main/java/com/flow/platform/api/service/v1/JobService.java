@@ -16,14 +16,12 @@
 
 package com.flow.platform.api.service.v1;
 
-import com.flow.platform.api.domain.v1.Flow;
 import com.flow.platform.api.domain.job.JobCategory;
-import com.flow.platform.domain.v1.JobKey;
+import com.flow.platform.api.domain.v1.Flow;
 import com.flow.platform.api.domain.v1.JobV1;
 import com.flow.platform.core.domain.Page;
 import com.flow.platform.core.domain.Pageable;
-import com.flow.platform.tree.Node;
-import com.flow.platform.tree.NodePath;
+import com.flow.platform.domain.v1.JobKey;
 import java.util.List;
 import java.util.Map;
 
@@ -56,6 +54,11 @@ public interface JobService {
      * Create and start a new job
      */
     JobV1 create(Flow flow, JobCategory eventType, Map<String, String> envs);
+
+    /**
+     * Send job to job queue
+     */
+    void enqueue(JobKey key);
 
     /**
      * Delete job by flow

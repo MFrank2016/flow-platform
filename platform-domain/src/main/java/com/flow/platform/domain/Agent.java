@@ -24,12 +24,14 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
+import lombok.ToString;
 
 /**
  * @author gy@fir.im
  */
 @NoArgsConstructor
 @EqualsAndHashCode(of = "path", callSuper = false)
+@ToString(of = {"path", "status"})
 public class Agent extends Webhookable {
 
     /**
@@ -123,13 +125,7 @@ public class Agent extends Webhookable {
         return getStatus() == AgentStatus.IDLE;
     }
 
-    @Override
-    public String toString() {
-        return "Agent{" +
-            "zone='" + path.getZone() + '\'' +
-            ", name='" + path.getName() + '\'' +
-            ", status=" + status + '\'' +
-            ", sessionId=" + sessionId +
-            '}';
+    public String fullPath() {
+        return this.path.fullPath();
     }
 }

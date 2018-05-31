@@ -23,9 +23,9 @@ import com.flow.platform.api.domain.job.JobStatus;
 import com.flow.platform.api.domain.v1.JobTree;
 import com.flow.platform.api.domain.v1.JobV1;
 import com.flow.platform.api.service.v1.AgentManagerService;
+import com.flow.platform.api.service.v1.CmdManager;
 import com.flow.platform.api.service.v1.JobService;
 import com.flow.platform.domain.Agent;
-import com.flow.platform.domain.AgentStatus;
 import com.flow.platform.domain.CmdStatus;
 import com.flow.platform.tree.Cmd;
 import com.flow.platform.tree.Node;
@@ -56,6 +56,9 @@ public class CmdWebhookConsumer implements MessageListener {
 
     @Autowired
     private AgentManagerService agentManagerService;
+
+    @Autowired
+    private CmdManager cmdManager;
 
     @Autowired
     private AmqpTemplate jobCmdTemplate;
@@ -119,13 +122,12 @@ public class CmdWebhookConsumer implements MessageListener {
 
                 if (Objects.isNull(nextNode)) {
                     job.setStatus(JobStatus.SUCCESS);
-                    agentManagerService.resetAgentStatus(AgentStatus.IDLE, agent);
+                    agentManagerService.release(agent);
                 }
 
                 if (!Objects.isNull(nextNode)) {
-                    Cmd nextCmd = agentManagerService.buildCmdFromNode(nextNode, cmd.getJobKey(), agent);
-
-                    jobCmdTemplate.send(agentManagerService.agentQueue(agent),
+                    Cmd nextCmd = cmdManager.create(cmd.getJobKey(), nextNode, agent.getToken());
+                    jobCmdTemplate.send(agentManagerService.getQueueName(agent),
                         new Message(nextCmd.toBytes(), new MessageProperties()));
                 }
             }

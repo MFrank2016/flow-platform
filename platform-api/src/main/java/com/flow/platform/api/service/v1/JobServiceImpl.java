@@ -137,8 +137,14 @@ public class JobServiceImpl extends CurrentUser implements JobService {
         // persistent job and job tree
         jobDaoV1.save(job);
         jobTreeDao.save(new JobTree(job.getKey(), tree));
-        jobQueueTemplate.convertAndSend(job.getKey());
+
+        enqueue(job.getKey());
         return job;
+    }
+
+    @Override
+    public void enqueue(JobKey key) {
+        jobQueueTemplate.convertAndSend(key);
     }
 
     @Override

@@ -25,6 +25,10 @@ public class ZkException extends RuntimeException {
         super(message, cause);
     }
 
+    public ZkException(String message) {
+        super(message);
+    }
+
     public static class WatchingException extends ZkException {
 
         public WatchingException(String path, Throwable raw) {

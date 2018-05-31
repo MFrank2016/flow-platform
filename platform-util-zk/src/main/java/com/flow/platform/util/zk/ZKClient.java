@@ -25,6 +25,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 import org.apache.curator.RetryPolicy;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
@@ -36,6 +37,7 @@ import org.apache.curator.framework.recipes.cache.PathChildrenCache;
 import org.apache.curator.framework.recipes.cache.PathChildrenCacheListener;
 import org.apache.curator.framework.recipes.cache.TreeCache;
 import org.apache.curator.framework.recipes.cache.TreeCacheListener;
+import org.apache.curator.framework.recipes.locks.InterProcessMutex;
 import org.apache.curator.retry.ExponentialBackoffRetry;
 import org.apache.zookeeper.CreateMode;
 import org.apache.zookeeper.KeeperException;
@@ -164,6 +166,26 @@ public class ZKClient implements Closeable {
      */
     public String createEphemeral(String path) {
         return createEphemeralPrivate(path, null);
+    }
+
+    public void lock(String path, Consumer<String> consumer) throws ZkException {
+        InterProcessMutex lock = new InterProcessMutex(client, path);
+
+        try {
+            if (!lock.acquire(0, TimeUnit.SECONDS)) {
+                throw new ZkException("Cannot acquire the lock on path: " + path);
+            }
+
+            consumer.accept(path);
+        } catch (Exception e) {
+            throw new ZkException("Cannot acquire the lock on path: " + path);
+        } finally {
+            try {
+                lock.release();
+            } catch (Exception e) {
+                throw new ZkException("Error on release lock for path : " + path);
+            }
+        }
     }
 
     private String createEphemeralPrivate(String path, byte[] data) {

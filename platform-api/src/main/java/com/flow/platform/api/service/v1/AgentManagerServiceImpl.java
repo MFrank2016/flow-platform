@@ -17,7 +17,7 @@
 package com.flow.platform.api.service.v1;
 
 import com.flow.platform.api.dao.v1.AgentDao;
-import com.flow.platform.api.domain.v1.JobV1;
+import com.flow.platform.api.exception.AgentNotAvailableException;
 import com.flow.platform.api.util.ZKHelper;
 import com.flow.platform.core.exception.FlowException;
 import com.flow.platform.core.exception.NotFoundException;
@@ -26,10 +26,6 @@ import com.flow.platform.domain.Agent;
 import com.flow.platform.domain.AgentPath;
 import com.flow.platform.domain.AgentSettings;
 import com.flow.platform.domain.AgentStatus;
-import com.flow.platform.domain.v1.JobKey;
-import com.flow.platform.tree.Cmd;
-import com.flow.platform.tree.Node;
-import com.flow.platform.tree.YmlEnvs;
 import com.flow.platform.util.zk.ZKClient;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -45,10 +41,7 @@ import org.apache.curator.framework.recipes.cache.PathChildrenCacheEvent.Type;
 import org.apache.curator.framework.recipes.cache.PathChildrenCacheListener;
 import org.apache.zookeeper.data.Stat;
 import org.springframework.amqp.core.AmqpAdmin;
-import org.springframework.amqp.core.Message;
-import org.springframework.amqp.core.MessageProperties;
 import org.springframework.amqp.core.Queue;
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -60,33 +53,20 @@ import org.springframework.stereotype.Service;
 public class AgentManagerServiceImpl extends ApplicationEventService implements AgentManagerService {
 
     @Autowired
-    private JobService jobServiceV1;
-
-    @Autowired
     private AgentDao agentDao;
 
     @Autowired
     private ZKClient zkClient;
 
     @Autowired
-    private RabbitTemplate jobCmdTemplate;
-
-    @Autowired
     private AmqpAdmin amqpAdmin;
-
-    @Autowired
-    private JobNodeManager jobNodeManager;
-
-    private final static String ZK_ROOT_NODE = "/flow-agents";
-
-    private final static String SPLIT_CHARS = "===";
 
     @PostConstruct
     public void init() {
         createRoot();
 
         // detect node online or offline
-        zkClient.watchChildren(ZK_ROOT_NODE, new ZkNodeWatcherEvent());
+        zkClient.watchChildren(AgentPath.ROOT, new ZkNodeWatcherEvent());
     }
 
     @Override
@@ -94,6 +74,8 @@ public class AgentManagerServiceImpl extends ApplicationEventService implements 
         Agent agent = new Agent(agentPath);
         agent.setToken(UUID.randomUUID().toString());
         agentDao.save(agent);
+
+        declareQueue(agent);
         return agent;
     }
 
@@ -107,62 +89,37 @@ public class AgentManagerServiceImpl extends ApplicationEventService implements 
         return appendAgentsStatus(agentDao.list());
     }
 
-    public void resetAgentStatus(AgentStatus agentStatus, Agent agent) {
-        zkClient.setData(zkNodePath(agent), agentStatus.toString().getBytes());
-    }
-
-    public void handleJob(JobKey jobKey) {
-        log.trace("Handle job to lock agent and send first node to queue , key is " + jobKey);
-
-        JobV1 job = jobServiceV1.find(jobKey);
-        Agent agent = selectAgent();
-
-        Node root = jobNodeManager.root(job.getKey());
-        Node next = jobNodeManager.next(job.getKey(), root.getPath());
-
-        Cmd cmd = buildCmdFromNode(next, job.getKey(), agent);
-
-        log.trace("Send cmd to queue:  " + buildQueueName(agent.getPath()));
-        jobCmdTemplate.send(buildQueueName(agent.getPath()),
-            new Message(cmd.toJson().getBytes(), new MessageProperties()));
+    @Override
+    public void release(Agent agent) {
+        byte[] bytes = AgentStatus.IDLE.name().getBytes();
+        zkClient.setData(agent.fullPath(), bytes);
     }
 
     @Override
-    public Cmd buildCmdFromNode(Node node, JobKey jobKey, Agent agent) {
-        // trans node to cmd
-        Cmd cmd = new Cmd();
-        cmd.setNodePath(node.getPath());
-        cmd.setContent(node.getContent());
-        cmd.setContext(node.getContext());
-        cmd.put(YmlEnvs.TIMEOUT, "100");
-        cmd.put(YmlEnvs.WORK_DIR, "/tmp"); //TODO: Working dir
-
-        if (!Objects.isNull(agent)) {
-            // lock agent
-            cmd.put(YmlEnvs.AGENT_TOKEN, agent.getToken());
-        }
-
-        cmd.setJobKey(jobKey);
-
-        return cmd;
-    }
-
-    @Override
-    public Agent selectAgent() {
+    public Agent acquire() throws AgentNotAvailableException {
         List<Agent> availableAgents = findAvailableAgents();
 
-        if (availableAgents.size() == 0) {
+        if (availableAgents.isEmpty()) {
             throw new NotFoundException("No available agent");
         }
 
         Agent selectedAgent = availableAgents.get(0);
-        lockAgent(selectedAgent);
+
+        // create lock try to set agent status
+        try {
+            zkClient.lock(selectedAgent.fullPath(), (path) -> {
+                byte[] data = AgentStatus.BUSY.name().getBytes();
+                zkClient.setData(path, data);
+            });
+        } catch (Throwable e) {
+            throw new AgentNotAvailableException(e.getMessage());
+        }
+
         return selectedAgent;
     }
 
     @Override
     public AgentSettings settings(String token) {
-
         Agent agent = agentDao.getByToken(token);
 
         if (Objects.isNull(agent)) {
@@ -174,53 +131,26 @@ public class AgentManagerServiceImpl extends ApplicationEventService implements 
         agentSettings.setRabbitmqHost("127.0.0.1");
         agentSettings.setZookeeperUrl("127.0.0.1:2181");
         agentSettings.setCallbackQueueName("cmd.callback.queue");
-        agentSettings.setListeningQueueName(buildQueueName(agent.getPath()));
+        agentSettings.setListeningQueueName(getQueueName(agent));
 
         return agentSettings;
     }
 
     @Override
-    public String agentQueue(Agent agent) {
-        return buildQueueName(agent.getPath());
+    public String getQueueName(Agent agent) {
+        return agent.getPath().toString();
     }
 
-    private void report(AgentPath agentPath, AgentStatus agentStatus) {
-        if (agentStatus == AgentStatus.IDLE) {
-            declareQueue(buildQueueName(agentPath));
-            return;
-        }
-
-        if (agentStatus == AgentStatus.OFFLINE) {
-
-        }
-    }
-
-    private Queue declareQueue(String name) {
+    /**
+     * Declare queue with agent name
+     */
+    private Queue declareQueue(Agent agent) {
         Map<String, Object> cmdQueueArgs = new HashMap<>();
         cmdQueueArgs.put("x-max-length", Integer.MAX_VALUE);
         cmdQueueArgs.put("x-max-priority", 255);
-        Queue queue = new Queue(name, true, false, false, cmdQueueArgs);
+        Queue queue = new Queue(getQueueName(agent), true, false, false, cmdQueueArgs);
         amqpAdmin.declareQueue(queue);
         return queue;
-    }
-
-    private void lockAgent(Agent agent) {
-        try {
-            zkClient.getClient().inTransaction()
-                .check()
-                .forPath(zkNodePath(agent))
-                .and()
-                .setData().withVersion(agent.getVersion())
-                .forPath(zkNodePath(agent), AgentStatus.BUSY.toString().getBytes())
-                .and()
-                .commit();
-        } catch (Throwable e) {
-            throw new FlowException("Lock agent failure: " + agent.toString());
-        }
-    }
-
-    private String zkNodePath(Agent agent) {
-        return ZK_ROOT_NODE + "/" + agent.getZone() + SPLIT_CHARS + agent.getName();
     }
 
     private List<Agent> findAvailableAgents() {
@@ -237,17 +167,15 @@ public class AgentManagerServiceImpl extends ApplicationEventService implements 
     }
 
     private void createRoot() {
-        zkClient.create(ZK_ROOT_NODE, null);
+        zkClient.create(AgentPath.ROOT, null);
     }
 
     private Agent appendAgentStatus(Agent agent) {
-        if (Objects.isNull(agent)) {
-            return agent;
-        }
+        Objects.requireNonNull(agent, "Agent cannot be null");
 
         try {
             Stat stat = new Stat();
-            agent.setStatus(AgentStatus.valueOf(new String(zkClient.getData(zkNodePath(agent), stat))));
+            agent.setStatus(AgentStatus.valueOf(new String(zkClient.getData(agent.fullPath(), stat))));
             agent.setVersion(stat.getVersion());
         } catch (Throwable throwable) {
             agent.setStatus(AgentStatus.OFFLINE);
@@ -256,38 +184,34 @@ public class AgentManagerServiceImpl extends ApplicationEventService implements 
     }
 
     private List<Agent> appendAgentsStatus(List<Agent> agents) {
-
         for (Agent agent : agents) {
             appendAgentStatus(agent);
         }
-
         return agents;
     }
 
-    private String buildQueueName(AgentPath agentPath) {
-        return agentPath.getZone() + SPLIT_CHARS + agentPath.getName();
-    }
-
-    class ZkNodeWatcherEvent implements PathChildrenCacheListener {
+    private class ZkNodeWatcherEvent implements PathChildrenCacheListener {
 
         @Override
-        public void childEvent(CuratorFramework client, PathChildrenCacheEvent event) throws Exception {
+        public void childEvent(CuratorFramework client, PathChildrenCacheEvent event) {
             final Type eventType = event.getType();
             final String path = event.getData().getPath();
             final String name = ZKHelper.getNameFromPath(path);
+
             log.debug("Receive zookeeper event {} {}", eventType, path);
 
-            AgentPath agentPath = new AgentPath(name.split(SPLIT_CHARS)[0], name.split(SPLIT_CHARS)[1]);
+            AgentPath agentPath = AgentPath.parse(name);
 
             if (eventType == Type.CHILD_ADDED) {
-                report(agentPath, AgentStatus.IDLE);
-                // report online
                 return;
             }
 
             if (eventType == Type.CHILD_REMOVED) {
-                // report offline
-                report(agentPath, AgentStatus.OFFLINE);
+                return;
+            }
+
+            if (eventType == Type.CHILD_UPDATED) {
+                return;
             }
         }
     }
