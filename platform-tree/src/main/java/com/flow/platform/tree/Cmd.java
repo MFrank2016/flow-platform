@@ -19,7 +19,6 @@ package com.flow.platform.tree;
 import com.flow.platform.domain.CmdStatus;
 import com.flow.platform.domain.CmdType;
 import com.flow.platform.domain.Jsonable;
-import com.flow.platform.domain.v1.JobKey;
 import com.google.common.collect.Sets;
 import java.util.HashMap;
 import java.util.Map;
@@ -36,7 +35,7 @@ import lombok.ToString;
 @NoArgsConstructor
 @ToString
 @EqualsAndHashCode
-public class Cmd extends Jsonable{
+public class Cmd extends Jsonable {
 
     /**
      * Finish status set
@@ -51,11 +50,11 @@ public class Cmd extends Jsonable{
 
     @Getter
     @Setter
-    private  NodePath nodePath;
+    private NodePath nodePath;
 
     @Getter
     @Setter
-    private JobKey jobKey;
+    private String jobKey;
 
     @Getter
     @Setter

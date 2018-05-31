@@ -33,6 +33,15 @@ import lombok.ToString;
 @EqualsAndHashCode(of = {"flowId", "number"}, callSuper = false)
 public class JobKey extends Jsonable {
 
+    private final static String SPLITTER = "-";
+
+    public static JobKey create(String keyInStr) {
+        String[] tokens = keyInStr.split(SPLITTER);
+        long flowId = Long.parseLong(tokens[0]);
+        long number = Long.parseLong(tokens[1]);
+        return new JobKey(flowId, number);
+    }
+
     @Expose
     @Getter
     @Setter
@@ -49,5 +58,9 @@ public class JobKey extends Jsonable {
 
         this.flowId = flowId;
         this.number = number;
+    }
+
+    public String getId() {
+        return flowId + SPLITTER + number;
     }
 }

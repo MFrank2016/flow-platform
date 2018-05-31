@@ -27,6 +27,7 @@ import com.flow.platform.api.service.v1.CmdManager;
 import com.flow.platform.api.service.v1.JobService;
 import com.flow.platform.domain.Agent;
 import com.flow.platform.domain.CmdStatus;
+import com.flow.platform.domain.v1.JobKey;
 import com.flow.platform.tree.Cmd;
 import com.flow.platform.tree.Node;
 import com.flow.platform.tree.TreeManager;
@@ -72,13 +73,15 @@ public class CmdResultConsumer {
         log.debug("Cmd Webhook Consumer received: {}", cmd);
 
         try {
-            JobV1 job = jobServiceV1.find(cmd.getJobKey());
+            JobKey jobKey = JobKey.create(cmd.getJobKey());
+
+            JobV1 job = jobServiceV1.find(jobKey);
             if (Objects.isNull(job)) {
                 log.trace("Not found Job");
                 return;
             }
 
-            JobTree jobTree = jobTreeDao.get(cmd.getJobKey());
+            JobTree jobTree = jobTreeDao.get(jobKey);
             if (Objects.isNull(jobTree)) {
                 log.trace("Not found jobTree");
                 return;
@@ -113,7 +116,7 @@ public class CmdResultConsumer {
                 }
 
                 if (!Objects.isNull(nextNode)) {
-                    Cmd nextCmd = cmdManager.create(cmd.getJobKey(), nextNode, agent.getToken());
+                    Cmd nextCmd = cmdManager.create(jobKey, nextNode, agent.getToken());
                     jobCmdTemplate.send(agentManagerService.getQueueName(agent),
                         new Message(nextCmd.toBytes(), new MessageProperties()));
                 }

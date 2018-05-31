@@ -37,7 +37,7 @@ public class CmdManagerImpl implements CmdManager {
         cmd.put(YmlEnvs.TIMEOUT, "100");
         cmd.put(YmlEnvs.WORK_DIR, "/tmp"); //TODO: Working dir
         cmd.put(YmlEnvs.AGENT_TOKEN, token);
-        cmd.setJobKey(key);
+        cmd.setJobKey(key.getId());
         return cmd;
     }
 }
