@@ -36,7 +36,6 @@ import java.util.Objects;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.amqp.core.AmqpTemplate;
 import org.springframework.amqp.core.Message;
-import org.springframework.amqp.core.MessageListener;
 import org.springframework.amqp.core.MessageProperties;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -46,7 +45,7 @@ import org.springframework.stereotype.Component;
  */
 @Component
 @Log4j2
-public class CmdResultConsumer implements MessageListener {
+public class CmdResultConsumer {
 
     @Autowired
     private JobService jobServiceV1;
@@ -69,22 +68,10 @@ public class CmdResultConsumer implements MessageListener {
     @Autowired
     private JobDao jobDaoV1;
 
-    @Override
-    public void onMessage(Message message) {
-
-        if (Objects.isNull(message)) {
-            return;
-        }
-        String context = new String(message.getBody());
-
-        if (Strings.isNullOrEmpty(context)) {
-            return;
-        }
-        log.debug("Cmd Webhook Consumer received: {}", context);
+    public void handleMessage(Cmd cmd) {
+        log.debug("Cmd Webhook Consumer received: {}", cmd);
 
         try {
-            Cmd cmd = Cmd.parse(context, Cmd.class);
-
             JobV1 job = jobServiceV1.find(cmd.getJobKey());
             if (Objects.isNull(job)) {
                 log.trace("Not found Job");

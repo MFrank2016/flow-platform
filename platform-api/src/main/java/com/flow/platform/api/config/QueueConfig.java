@@ -16,6 +16,7 @@
 
 package com.flow.platform.api.config;
 
+import com.flow.platform.api.consumer.v1.CmdResultConsumer;
 import com.flow.platform.api.consumer.v1.JobQueueConsumer;
 import com.flow.platform.api.service.SyncService;
 import com.flow.platform.core.queue.MemoryQueue;
