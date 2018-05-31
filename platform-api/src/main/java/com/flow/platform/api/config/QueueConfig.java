@@ -17,7 +17,6 @@
 package com.flow.platform.api.config;
 
 import com.flow.platform.api.consumer.v1.JobQueueConsumer;
-import com.flow.platform.api.consumer.v1.CmdWebhookConsumer;
 import com.flow.platform.api.service.SyncService;
 import com.flow.platform.core.queue.MemoryQueue;
 import com.flow.platform.core.queue.PriorityMessage;
@@ -65,7 +64,7 @@ public class QueueConfig {
     private JobQueueConsumer jobQueueConsumer;
 
     @Autowired
-    private CmdWebhookConsumer cmdWebhookConsumer;
+    private CmdResultConsumer cmdWebhookConsumer;
 
     /**
      * Queue to process cmd callback task

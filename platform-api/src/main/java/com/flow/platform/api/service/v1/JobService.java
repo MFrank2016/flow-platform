@@ -17,6 +17,7 @@
 package com.flow.platform.api.service.v1;
 
 import com.flow.platform.api.domain.job.JobCategory;
+import com.flow.platform.api.domain.job.JobStatus;
 import com.flow.platform.api.domain.v1.Flow;
 import com.flow.platform.api.domain.v1.JobV1;
 import com.flow.platform.core.domain.Page;
@@ -59,6 +60,11 @@ public interface JobService {
      * Send job to job queue
      */
     void enqueue(JobKey key);
+
+    /**
+     * Set job status
+     */
+    void setStatus(JobKey key, JobStatus status);
 
     /**
      * Delete job by flow

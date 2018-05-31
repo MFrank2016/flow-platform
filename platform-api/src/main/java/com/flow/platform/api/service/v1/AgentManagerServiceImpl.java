@@ -19,7 +19,7 @@ package com.flow.platform.api.service.v1;
 import com.flow.platform.api.dao.v1.AgentDao;
 import com.flow.platform.api.exception.AgentNotAvailableException;
 import com.flow.platform.api.util.ZKHelper;
-import com.flow.platform.core.exception.FlowException;
+import com.flow.platform.core.exception.NotFoundException;
 import com.flow.platform.core.service.ApplicationEventService;
 import com.flow.platform.domain.Agent;
 import com.flow.platform.domain.AgentPath;
@@ -90,6 +90,18 @@ public class AgentManagerServiceImpl extends ApplicationEventService implements 
     }
 
     @Override
+    public Agent find(String token) {
+        Agent agent = agentDao.getByToken(token);
+
+        if (Objects.isNull(agent)) {
+            throw new NotFoundException("Agent not found for token: " + token);
+        }
+
+        appendAgentStatus(agent);
+        return agent;
+    }
+
+    @Override
     public List<Agent> list() {
         List<Agent> agents = agentDao.list();
         return appendAgentsStatus(agents);
@@ -125,11 +137,7 @@ public class AgentManagerServiceImpl extends ApplicationEventService implements 
 
     @Override
     public AgentSettings settings(String token) {
-        Agent agent = agentDao.getByToken(token);
-
-        if (Objects.isNull(agent)) {
-            throw new FlowException("Agent not found this token");
-        }
+        Agent agent = find(token);
 
         AgentSettings agentSettings = new AgentSettings();
         agentSettings.setAgentPath(agent.getPath());

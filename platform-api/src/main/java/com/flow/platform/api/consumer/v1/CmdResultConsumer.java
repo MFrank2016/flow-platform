@@ -46,7 +46,7 @@ import org.springframework.stereotype.Component;
  */
 @Component
 @Log4j2
-public class CmdWebhookConsumer implements MessageListener {
+public class CmdResultConsumer implements MessageListener {
 
     @Autowired
     private JobService jobServiceV1;

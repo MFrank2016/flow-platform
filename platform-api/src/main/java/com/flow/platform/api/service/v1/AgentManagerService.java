@@ -38,6 +38,11 @@ public interface AgentManagerService {
     Agent find(AgentPath agentPath);
 
     /**
+     * Find agent by token
+     */
+    Agent find(String token);
+
+    /**
      * List all agent
      */
     List<Agent> list();

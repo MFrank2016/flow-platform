@@ -16,6 +16,7 @@
 
 package com.flow.platform.api.consumer.v1;
 
+import com.flow.platform.api.domain.job.JobStatus;
 import com.flow.platform.api.domain.v1.JobV1;
 import com.flow.platform.api.exception.AgentNotAvailableException;
 import com.flow.platform.api.service.v1.AgentManagerService;
@@ -71,14 +72,21 @@ public class JobQueueConsumer {
             Node next = jobNodeManager.next(key, root.getPath());
 
             Cmd cmd = cmdManager.create(job.getKey(), next, agent.getToken());
+
+            // send cmd to agent queue
             String queueName = agentManagerService.getQueueName(agent);
             jobCmdTemplate.send(queueName, new Message(cmd.toJson().getBytes(), new MessageProperties()));
             log.trace("Send cmd to queue:  " + queueName);
+
+            // set job status to running
+            jobServiceV1.setStatus(key, JobStatus.RUNNING);
+
         } catch (AgentNotAvailableException e) {
             log.warn("Cannot find available agent for job: " + key);
             jobServiceV1.enqueue(key);
         } catch (Throwable e) {
             log.error(e.getMessage());
+            jobServiceV1.setStatus(key, JobStatus.FAILURE);
         }
     }
 

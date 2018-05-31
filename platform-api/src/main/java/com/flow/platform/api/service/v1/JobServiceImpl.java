@@ -21,6 +21,7 @@ import com.flow.platform.api.dao.v1.JobDao;
 import com.flow.platform.api.dao.v1.JobTreeDao;
 import com.flow.platform.api.domain.job.JobCategory;
 import com.flow.platform.api.domain.job.JobNumber;
+import com.flow.platform.api.domain.job.JobStatus;
 import com.flow.platform.api.domain.v1.Flow;
 import com.flow.platform.api.domain.v1.FlowStatus;
 import com.flow.platform.api.domain.v1.FlowYml;
@@ -145,6 +146,11 @@ public class JobServiceImpl extends CurrentUser implements JobService {
     @Override
     public void enqueue(JobKey key) {
         jobQueueTemplate.convertAndSend(key);
+    }
+
+    @Override
+    public void setStatus(JobKey key, JobStatus status) {
+        jobDaoV1.setStatus(key, status);
     }
 
     @Override

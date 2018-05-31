@@ -16,6 +16,7 @@
 
 package com.flow.platform.api.dao.v1;
 
+import com.flow.platform.api.domain.job.JobStatus;
 import com.flow.platform.domain.v1.JobKey;
 import com.flow.platform.api.domain.v1.JobV1;
 import com.flow.platform.core.dao.BaseDao;
@@ -28,6 +29,8 @@ import java.util.List;
  * @author yang
  */
 public interface JobDao extends BaseDao<JobKey, JobV1> {
+
+    void setStatus(JobKey key, JobStatus status);
 
     List<JobV1> listLatestByFlows(Collection<Long> flows);
 

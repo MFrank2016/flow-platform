@@ -16,6 +16,7 @@
 
 package com.flow.platform.api.dao.v1;
 
+import com.flow.platform.api.domain.job.JobStatus;
 import com.flow.platform.domain.v1.JobKey;
 import com.flow.platform.api.domain.v1.JobV1;
 import com.flow.platform.core.dao.AbstractBaseDao;
@@ -39,6 +40,16 @@ public class JobDaoImpl extends AbstractBaseDao<JobKey, JobV1> implements JobDao
     @Override
     protected String getKeyName() {
         return "key";
+    }
+
+    @Override
+    public void setStatus(JobKey key, JobStatus status) {
+        execute(session -> session
+            .createQuery("update JobV1 set status = :status where key.flowId = :flowId and key.number = :number")
+            .setParameter("status", status)
+            .setParameter("flowId", key.getFlowId())
+            .setParameter("number", key.getNumber())
+            .executeUpdate());
     }
 
     @Override
