@@ -16,19 +16,17 @@
 
 package com.flow.platform.api.config;
 
-import com.flow.platform.api.consumer.v1.CmdResultConsumer;
-import com.flow.platform.api.consumer.v1.JobQueueConsumer;
 import com.flow.platform.api.service.SyncService;
 import com.flow.platform.core.queue.MemoryQueue;
 import com.flow.platform.core.queue.PriorityMessage;
 import com.flow.platform.queue.PlatformQueue;
 import org.springframework.amqp.core.AmqpAdmin;
 import org.springframework.amqp.core.Queue;
+import org.springframework.amqp.rabbit.annotation.EnableRabbit;
+import org.springframework.amqp.rabbit.config.SimpleRabbitListenerContainerFactory;
 import org.springframework.amqp.rabbit.connection.CachingConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitAdmin;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
-import org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer;
-import org.springframework.amqp.rabbit.listener.adapter.MessageListenerAdapter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -40,14 +38,15 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
  *
  * @author yang
  */
+@EnableRabbit
 @Configuration
 public class QueueConfig {
 
     public final static long DEFAULT_CMD_CALLBACK_QUEUE_PRIORITY = 1L;
 
-    private final static String JOB_QUEUE_NAME = "job.queue";
+    public final static String JOB_QUEUE_NAME = "job.queue";
 
-    private final static String CMD_WEBHOOK_QUEUE_NAME = "cmd.callback.queue";
+    public final static String CMD_CALLBACK_QUEUE_NAME = "cmd.callback.queue";
 
     @Value("${api.queue.hosts}")
     private String hosts;
@@ -60,12 +59,6 @@ public class QueueConfig {
 
     @Autowired
     private ThreadPoolTaskExecutor taskExecutor;
-
-    @Autowired
-    private JobQueueConsumer jobQueueConsumer;
-
-    @Autowired
-    private CmdResultConsumer cmdWebhookConsumer;
 
     /**
      * Queue to process cmd callback task
@@ -89,7 +82,7 @@ public class QueueConfig {
     public AmqpAdmin amqpAdmin() {
         RabbitAdmin admin = new RabbitAdmin(connectionFactory());
         admin.declareQueue(new Queue(JOB_QUEUE_NAME));
-        admin.declareQueue(new Queue(CMD_WEBHOOK_QUEUE_NAME));
+        admin.declareQueue(new Queue(CMD_CALLBACK_QUEUE_NAME));
         return admin;
     }
 
@@ -102,27 +95,12 @@ public class QueueConfig {
     }
 
     @Bean
-    public SimpleMessageListenerContainer jobQueueListener() {
-        SimpleMessageListenerContainer container = buildContainer();
-        container.setQueueNames(JOB_QUEUE_NAME);
-        container.setConcurrentConsumers(1);
-        container.setMessageListener(new MessageListenerAdapter(jobQueueConsumer));
-        return container;
-    }
-
-    @Bean
-    public SimpleMessageListenerContainer cmdWebhookQueueListener() {
-        SimpleMessageListenerContainer container = buildContainer();
-        container.setQueueNames(CMD_WEBHOOK_QUEUE_NAME);
-        container.setConcurrentConsumers(1);
-        container.setMessageListener(new MessageListenerAdapter(cmdWebhookConsumer));
-        return container;
-    }
-
-    private SimpleMessageListenerContainer buildContainer() {
-        SimpleMessageListenerContainer container = new SimpleMessageListenerContainer();
-        container.setConnectionFactory(connectionFactory());
-        return container;
+    public SimpleRabbitListenerContainerFactory rabbitListenerContainerFactory() {
+        SimpleRabbitListenerContainerFactory factory = new SimpleRabbitListenerContainerFactory();
+        factory.setConnectionFactory(connectionFactory());
+        factory.setConcurrentConsumers(1);
+        factory.setMaxConcurrentConsumers(1);
+        return factory;
     }
 
     private CachingConnectionFactory connectionFactory() {

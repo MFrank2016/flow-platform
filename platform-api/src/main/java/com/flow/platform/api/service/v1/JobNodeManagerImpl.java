@@ -18,9 +18,12 @@ package com.flow.platform.api.service.v1;
 
 import com.flow.platform.api.dao.v1.JobTreeDao;
 import com.flow.platform.api.domain.v1.JobKey;
+import com.flow.platform.api.domain.v1.JobTree;
 import com.flow.platform.tree.Node;
 import com.flow.platform.tree.NodePath;
 import com.flow.platform.tree.NodeTree;
+import com.flow.platform.tree.Result;
+import com.flow.platform.tree.TreeManager;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -46,6 +49,26 @@ public class JobNodeManagerImpl implements JobNodeManager {
     @Override
     public Node next(JobKey key, NodePath path) {
         return getTree(key).next(path);
+    }
+
+    @Override
+    public void execute(JobKey key, NodePath path) {
+        JobTree jobTree = jobTreeDao.get(key);
+
+        TreeManager treeManager = new TreeManager(jobTree.getTree());
+        treeManager.execute(path, null);
+
+        jobTreeDao.update(jobTree);
+    }
+
+    @Override
+    public void finish(JobKey key, NodePath path, Result result) {
+        JobTree jobTree = jobTreeDao.get(key);
+
+        TreeManager treeManager = new TreeManager(jobTree.getTree());
+        treeManager.onFinish(result);
+
+        jobTreeDao.update(jobTree);
     }
 
     private NodeTree getTree(JobKey key) {

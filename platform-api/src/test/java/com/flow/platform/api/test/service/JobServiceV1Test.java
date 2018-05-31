@@ -19,11 +19,14 @@ package com.flow.platform.api.test.service;
 import com.flow.platform.api.domain.v1.Flow;
 import com.flow.platform.api.domain.job.JobCategory;
 import com.flow.platform.api.domain.v1.JobV1;
+import com.flow.platform.api.service.v1.JobNodeManager;
 import com.flow.platform.api.service.v1.JobService;
 import com.flow.platform.api.test.FlowHelper;
 import com.flow.platform.api.test.TestBase;
 import com.flow.platform.core.domain.Page;
 import com.flow.platform.core.domain.Pageable;
+import com.flow.platform.tree.Node;
+import com.flow.platform.tree.NodeStatus;
 import com.google.common.collect.Lists;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -45,6 +48,9 @@ public class JobServiceV1Test extends TestBase {
     private JobService jobServiceV1;
 
     @Autowired
+    private JobNodeManager jobNodeManager;
+
+    @Autowired
     private FlowHelper flowHelper;
 
     @Before
@@ -53,20 +59,14 @@ public class JobServiceV1Test extends TestBase {
     }
 
     @Test
-    public void should_create_and_delete_job() throws Throwable {
+    public void should_create_job() throws Throwable {
         Flow flow = flowHelper.createFlowWithYml("flow-job", "yml/demo_flow2.yaml");
         JobV1 job = jobServiceV1.create(flow, JobCategory.MANUAL, null);
-
         Assert.assertNotNull(jobDaoV1.get(job.getKey()));
         Assert.assertNotNull(jobTreeDao.get(job.getKey()));
 
-
-
-        Thread.sleep(10000);
-
-        jobServiceV1.delete(flow);
-        Assert.assertNull(jobDaoV1.get(job.getKey()));
-        Assert.assertNull(jobTreeDao.get(job.getKey()));
+        Node root = jobNodeManager.root(job.getKey());
+        Assert.assertEquals(NodeStatus.RUNNING, root.getStatus());
     }
 
     @Test

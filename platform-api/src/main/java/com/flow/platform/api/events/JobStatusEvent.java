@@ -14,22 +14,22 @@
  * limitations under the License.
  */
 
-package com.flow.platform.api.service.v1;
+package com.flow.platform.api.events;
 
-import com.flow.platform.api.domain.v1.JobKey;
-import com.flow.platform.domain.v1.Cmd;
-import com.flow.platform.tree.Node;
+import com.flow.platform.api.domain.job.JobStatus;
+import lombok.Getter;
+import org.springframework.context.ApplicationEvent;
 
 /**
  * @author yang
  */
-public interface CmdManager {
+public class JobStatusEvent extends ApplicationEvent {
 
-    String META_JOB_KEY = "job.key";
+    @Getter
+    private final JobStatus status;
 
-    String META_JOB_NODE_PATH = "job.node.path";
-
-    String META_AGENT_TOKEN = "agent.token";
-
-    Cmd create(JobKey key, Node node, String token);
+    public JobStatusEvent(Object source, JobStatus status) {
+        super(source);
+        this.status = status;
+    }
 }

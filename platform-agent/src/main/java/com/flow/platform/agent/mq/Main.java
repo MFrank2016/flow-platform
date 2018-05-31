@@ -16,9 +16,8 @@
 
 package com.flow.platform.agent.mq;
 
-import com.flow.platform.agent.CmdConsumer;
 import com.flow.platform.domain.CmdStatus;
-import com.flow.platform.tree.Cmd;
+import com.flow.platform.domain.v1.Cmd;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;

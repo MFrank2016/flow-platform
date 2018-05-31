@@ -14,39 +14,52 @@
  * limitations under the License.
  */
 
-package com.flow.platform.api.service.v1;
+package com.flow.platform.domain.v1;
 
-import com.flow.platform.api.domain.v1.JobKey;
-import com.flow.platform.tree.Node;
-import com.flow.platform.tree.NodePath;
-import com.flow.platform.tree.Result;
+import java.time.ZonedDateTime;
+import java.util.HashMap;
+import java.util.Map;
+import lombok.Getter;
+import lombok.Setter;
 
 /**
- * To handle method of node tree for job
- *
  * @author yang
  */
-public interface JobNodeManager {
+public final class ExecutedCmd extends Cmd {
 
     /**
-     * Get root job node
+     * Exit code for script content
      */
-    Node root(JobKey key);
+    @Getter
+    @Setter
+    private Integer code;
 
     /**
-     * Get job node by path
+     * The script execute duration
      */
-    Node get(JobKey key, NodePath path);
+    @Getter
+    @Setter
+    private Long duration = 0L;
 
     /**
-     * Get next node by path
+     * Extra message for error
      */
-    Node next(JobKey key, NodePath path);
+    @Getter
+    @Setter
+    private String errMsg;
 
     /**
-     * Execute node for job, update node status on tree
+     * Start time
      */
-    void execute(JobKey key, NodePath path);
+    @Getter
+    @Setter
+    private ZonedDateTime startAt;
 
-    void finish(JobKey key, NodePath path, Result result);
+    /**
+     * Output environment variable
+     */
+    @Getter
+    @Setter
+    private Map<String, String> output = new HashMap<>();
+
 }

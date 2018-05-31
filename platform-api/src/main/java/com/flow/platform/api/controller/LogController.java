@@ -17,7 +17,7 @@
 package com.flow.platform.api.controller;
 
 import com.flow.platform.core.exception.IllegalParameterException;
-import com.flow.platform.tree.Cmd;
+import com.flow.platform.domain.v1.Cmd;
 import java.util.Objects;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;

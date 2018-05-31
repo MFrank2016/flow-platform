@@ -17,30 +17,20 @@
 package com.flow.platform.agent;
 
 import com.flow.platform.cmd.CmdExecutor;
-import com.flow.platform.cmd.Log;
-import com.flow.platform.cmd.Log.Type;
 import com.flow.platform.cmd.ProcListener;
-import com.flow.platform.domain.Cmd;
 import com.flow.platform.domain.CmdResult;
-import com.flow.platform.domain.CmdStatus;
 import com.flow.platform.domain.CmdType;
 import com.flow.platform.domain.Jsonable;
 import com.flow.platform.tree.YmlEnvs;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import java.time.ZonedDateTime;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 import lombok.extern.log4j.Log4j2;
 
 /**
@@ -84,7 +74,7 @@ public class CmdManager {
      *
      * @param cmd Cmd object
      */
-    public void execute(final com.flow.platform.tree.Cmd cmd) {
+    public void execute(final com.flow.platform.domain.v1.Cmd cmd) {
         if (cmd.getType() == CmdType.RUN_SHELL) {
             // check max concurrent proc
 
@@ -149,13 +139,13 @@ public class CmdManager {
 
     private abstract class TaskRunner implements Runnable {
 
-        private final com.flow.platform.tree.Cmd cmd;
+        private final com.flow.platform.domain.v1.Cmd cmd;
 
-        public TaskRunner(com.flow.platform.tree.Cmd cmd) {
+        public TaskRunner(com.flow.platform.domain.v1.Cmd cmd) {
             this.cmd = cmd;
         }
 
-        public com.flow.platform.tree.Cmd getCmd() {
+        public com.flow.platform.domain.v1.Cmd getCmd() {
             return cmd;
         }
     }

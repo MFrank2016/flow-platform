@@ -16,8 +16,10 @@
 
 package com.flow.platform.api.consumer.v1;
 
+import com.flow.platform.api.config.QueueConfig;
 import com.flow.platform.api.domain.job.JobStatus;
 import com.flow.platform.api.domain.v1.JobV1;
+import com.flow.platform.api.events.JobStatusEvent;
 import com.flow.platform.api.exception.AgentNotAvailableException;
 import com.flow.platform.api.service.v1.AgentManagerService;
 import com.flow.platform.api.service.v1.CmdManager;
@@ -25,23 +27,27 @@ import com.flow.platform.api.service.v1.JobNodeManager;
 import com.flow.platform.api.service.v1.JobService;
 import com.flow.platform.core.exception.IllegalStatusException;
 import com.flow.platform.core.exception.NotFoundException;
+import com.flow.platform.core.service.ApplicationEventService;
 import com.flow.platform.domain.Agent;
 import com.flow.platform.api.domain.v1.JobKey;
-import com.flow.platform.tree.Cmd;
+import com.flow.platform.domain.v1.Cmd;
 import com.flow.platform.tree.Node;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.amqp.core.Message;
 import org.springframework.amqp.core.MessageProperties;
+import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 /**
+ * Receive JobKey item from job queue and dispatch to related agent
+ *
  * @author yang
  */
 @Component
 @Log4j2
-public class JobQueueConsumer {
+public class JobQueueConsumer extends ApplicationEventService {
 
     @Autowired
     private JobService jobServiceV1;
@@ -61,6 +67,7 @@ public class JobQueueConsumer {
     /**
      * Receive message from job queue and send related cmd to agent
      */
+    @RabbitListener(queues = QueueConfig.JOB_QUEUE_NAME)
     public void handleMessage(JobKey key) {
         log.debug("Job received: {}", key);
 
@@ -78,8 +85,12 @@ public class JobQueueConsumer {
             jobCmdTemplate.send(queueName, new Message(cmd.toJson().getBytes(), new MessageProperties()));
             log.trace("Send cmd to queue:  " + queueName);
 
+            // update node status in job tree
+            jobNodeManager.execute(key, next.getPath());
+
             // set job status to running
             jobServiceV1.setStatus(key, JobStatus.RUNNING);
+            this.dispatchEvent(new JobStatusEvent(this, JobStatus.RUNNING));
 
         } catch (AgentNotAvailableException e) {
             log.warn("Cannot find available agent for job: " + key);

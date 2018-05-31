@@ -20,6 +20,7 @@ import com.flow.platform.agent.mq.Pusher;
 import com.flow.platform.cmd.ProcListener;
 import com.flow.platform.domain.CmdResult;
 import com.flow.platform.domain.CmdStatus;
+import com.flow.platform.domain.v1.Cmd;
 import com.flow.platform.tree.Result;
 import java.util.List;
 import java.util.Objects;
@@ -31,11 +32,11 @@ import lombok.extern.log4j.Log4j2;
 @Log4j2
 public class ProcEventHandler implements ProcListener {
 
-    private final com.flow.platform.tree.Cmd cmd;
+    private final Cmd cmd;
     private final List<ProcListener> extraProcEventListeners;
     private final ReportManager reportManager = ReportManager.getInstance();
 
-    public ProcEventHandler(com.flow.platform.tree.Cmd cmd,
+    public ProcEventHandler(Cmd cmd,
                             List<ProcListener> extraProcEventListeners) {
         this.cmd = cmd;
         this.extraProcEventListeners = extraProcEventListeners;

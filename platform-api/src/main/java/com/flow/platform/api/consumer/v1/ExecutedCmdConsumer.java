@@ -16,28 +16,27 @@
 
 package com.flow.platform.api.consumer.v1;
 
-import com.flow.platform.api.dao.v1.AgentDao;
-import com.flow.platform.api.dao.v1.JobDao;
-import com.flow.platform.api.dao.v1.JobTreeDao;
+import com.flow.platform.api.config.QueueConfig;
 import com.flow.platform.api.domain.job.JobStatus;
-import com.flow.platform.api.domain.v1.JobTree;
+import com.flow.platform.api.domain.v1.JobKey;
 import com.flow.platform.api.domain.v1.JobV1;
 import com.flow.platform.api.service.v1.AgentManagerService;
 import com.flow.platform.api.service.v1.CmdManager;
+import com.flow.platform.api.service.v1.JobNodeManager;
 import com.flow.platform.api.service.v1.JobService;
 import com.flow.platform.domain.Agent;
 import com.flow.platform.domain.CmdStatus;
-import com.flow.platform.api.domain.v1.JobKey;
-import com.flow.platform.tree.Cmd;
+import com.flow.platform.domain.v1.Cmd;
 import com.flow.platform.tree.Node;
-import com.flow.platform.tree.TreeManager;
-import com.flow.platform.tree.YmlEnvs;
+import com.flow.platform.tree.NodePath;
+import com.flow.platform.tree.Result;
 import com.google.common.base.Strings;
 import java.util.Objects;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.amqp.core.AmqpTemplate;
 import org.springframework.amqp.core.Message;
 import org.springframework.amqp.core.MessageProperties;
+import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -46,13 +45,13 @@ import org.springframework.stereotype.Component;
  */
 @Component
 @Log4j2
-public class CmdResultConsumer {
+public class ExecutedCmdConsumer {
 
     @Autowired
     private JobService jobServiceV1;
 
     @Autowired
-    private JobTreeDao jobTreeDao;
+    private JobNodeManager jobNodeManager;
 
     @Autowired
     private AgentManagerService agentManagerService;
@@ -63,17 +62,15 @@ public class CmdResultConsumer {
     @Autowired
     private AmqpTemplate jobCmdTemplate;
 
-    @Autowired
-    private AgentDao agentDao;
-
-    @Autowired
-    private JobDao jobDaoV1;
-
+    @RabbitListener(queues = QueueConfig.CMD_CALLBACK_QUEUE_NAME)
     public void handleMessage(Cmd cmd) {
         log.debug("Cmd Webhook Consumer received: {}", cmd);
 
+        JobKey jobKey = JobKey.create(cmd.getMeta().get(CmdManager.META_JOB_KEY));
+        NodePath nodePath = NodePath.create(cmd.getMeta().get(CmdManager.META_JOB_NODE_PATH));
+        String token = cmd.getMeta().get(CmdManager.META_AGENT_TOKEN);
+
         try {
-            JobKey jobKey = JobKey.create(cmd.getJobKey());
 
             JobV1 job = jobServiceV1.find(jobKey);
             if (Objects.isNull(job)) {
@@ -81,50 +78,41 @@ public class CmdResultConsumer {
                 return;
             }
 
-            JobTree jobTree = jobTreeDao.get(jobKey);
-            if (Objects.isNull(jobTree)) {
-                log.trace("Not found jobTree");
-                return;
-            }
-
-            String token = cmd.get(YmlEnvs.AGENT_TOKEN);
             if (Strings.isNullOrEmpty(token)) {
                 log.trace("Not found agent token");
                 return;
             }
 
-            Agent agent = agentDao.getByToken(token);
-            if (Objects.isNull(agent)) {
-                log.trace("Not found agent， token is " + token);
+            Agent agent = agentManagerService.find(token);
+
+            log.info("Cmd is " + nodePath + ", Cmd status is " + cmd.getStatus());
+
+            if (cmd.getStatus() == CmdStatus.RUNNING) {
+                // do not handle it
                 return;
             }
 
-            log.info("Cmd is " + cmd.getNodePath() + ", Cmd status is " + cmd.getStatus());
-
-            TreeManager treeManager = new TreeManager(jobTree.getTree());
-            if (cmd.getStatus() == CmdStatus.RUNNING) {
-                job.setStatus(JobStatus.RUNNING);
-                treeManager.execute(cmd.getNodePath(), null);
-            }
-
             if (Cmd.FINISH_STATUS.contains(cmd.getStatus())) {
-                Node nextNode = treeManager.onFinish(cmd.getResult());
 
-                if (Objects.isNull(nextNode)) {
-                    job.setStatus(JobStatus.SUCCESS);
+                // update nodes and parent for finish
+                jobNodeManager.finish(jobKey, nodePath, toResult(cmd));
+
+                // find next available node
+                Node next = jobNodeManager.next(jobKey, nodePath);
+
+                // No more available node
+                if (Objects.isNull(next)) {
                     agentManagerService.release(agent);
+                    Node root = jobNodeManager.root(jobKey);
+                    jobServiceV1.setStatus(job.getKey(), toJobStatus(root));
+                    return;
                 }
 
-                if (!Objects.isNull(nextNode)) {
-                    Cmd nextCmd = cmdManager.create(jobKey, nextNode, agent.getToken());
-                    jobCmdTemplate.send(agentManagerService.getQueueName(agent),
-                        new Message(nextCmd.toBytes(), new MessageProperties()));
-                }
+                // has node to execute
+                Cmd nextCmd = cmdManager.create(jobKey, next, agent.getToken());
+                String agentQueueName = agentManagerService.getQueueName(agent);
+                jobCmdTemplate.send(agentQueueName, new Message(nextCmd.toBytes(), new MessageProperties()));
             }
-
-            // update job and tree
-            jobTreeDao.update(jobTree);
-            jobDaoV1.update(job);
 
         } catch (Throwable throwable) {
             throwable.printStackTrace();
@@ -132,5 +120,16 @@ public class CmdResultConsumer {
         }
 
         log.trace("Handle message finish!");
+    }
+
+    private Result toResult(Cmd cmd) {
+        return null;
+    }
+
+    /**
+     * Translate root node status to job status
+     */
+    private JobStatus toJobStatus(Node root) {
+        return null;
     }
 }

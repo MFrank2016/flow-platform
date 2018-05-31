@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.flow.platform.tree;
+package com.flow.platform.domain.v1;
 
 import com.flow.platform.domain.CmdStatus;
 import com.flow.platform.domain.CmdType;
@@ -23,18 +23,14 @@ import com.google.common.collect.Sets;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 
 /**
  * @author yh@fir.im
  */
-@NoArgsConstructor
-@ToString
-@EqualsAndHashCode
+@ToString(of = {"type"})
 public class Cmd extends Jsonable {
 
     /**
@@ -48,45 +44,45 @@ public class Cmd extends Jsonable {
         Sets.newHashSet(CmdStatus.EXCEPTION, CmdStatus.KILLED, CmdStatus.REJECTED,
             CmdStatus.TIMEOUT_KILL, CmdStatus.STOPPED);
 
+    /**
+     * Timeout in seconds
+     */
     @Getter
     @Setter
-    private NodePath nodePath;
+    private Long timeout = 1800L;
 
+    /**
+     * Work directory
+     */
     @Getter
     @Setter
-    private String jobKey;
+    private String workDir;
 
+    /**
+     * Content will be executed
+     */
     @Getter
     @Setter
     private String content;
 
-    @Getter
-    @Setter
-    private Map<String, String> context = new HashMap<>();
-
     /**
      * Command type (Required)
      */
-    @Setter
     @Getter
+    @Setter
     private CmdType type = CmdType.RUN_SHELL;
 
     /**
-     * record current status
+     * Record current status
      */
-    @Setter
     @Getter
+    @Setter
     private CmdStatus status = CmdStatus.PENDING;
 
-    @Setter
+    /**
+     * Meta data for extra information
+     */
     @Getter
-    private Result result;
-
-    public String get(YmlEnvs ymlEnvs) {
-        return context.get(ymlEnvs.name());
-    }
-
-    public String put(YmlEnvs ymlEnvs, String content) {
-        return context.put(ymlEnvs.name(), content);
-    }
+    @Setter
+    private Map<String, String> meta = new HashMap<>();
 }

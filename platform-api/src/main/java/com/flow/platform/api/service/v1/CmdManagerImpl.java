@@ -17,9 +17,8 @@
 package com.flow.platform.api.service.v1;
 
 import com.flow.platform.api.domain.v1.JobKey;
-import com.flow.platform.tree.Cmd;
+import com.flow.platform.domain.v1.Cmd;
 import com.flow.platform.tree.Node;
-import com.flow.platform.tree.YmlEnvs;
 import org.springframework.stereotype.Component;
 
 /**
@@ -32,12 +31,15 @@ public class CmdManagerImpl implements CmdManager {
     public Cmd create(JobKey key, Node node, String token) {
         // trans node to cmd
         Cmd cmd = new Cmd();
-        cmd.setNodePath(node.getPath());
+        cmd.setTimeout(1800L);
         cmd.setContent(node.getContent());
-        cmd.put(YmlEnvs.TIMEOUT, "100");
-        cmd.put(YmlEnvs.WORK_DIR, "/tmp"); //TODO: Working dir
-        cmd.put(YmlEnvs.AGENT_TOKEN, token);
-        cmd.setJobKey(key.getId());
+        cmd.setWorkDir("/tmp");
+
+        // set meta data
+        cmd.getMeta().put(META_JOB_KEY, key.getId());
+        cmd.getMeta().put(META_JOB_NODE_PATH, node.getPath().toString());
+        cmd.getMeta().put(META_AGENT_TOKEN, token);
+
         return cmd;
     }
 }
