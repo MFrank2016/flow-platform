@@ -17,7 +17,7 @@
 package com.flow.platform.api.dao.v1;
 
 import com.flow.platform.api.domain.job.JobStatus;
-import com.flow.platform.domain.v1.JobKey;
+import com.flow.platform.api.domain.v1.JobKey;
 import com.flow.platform.api.domain.v1.JobV1;
 import com.flow.platform.core.dao.BaseDao;
 import com.flow.platform.core.domain.Page;

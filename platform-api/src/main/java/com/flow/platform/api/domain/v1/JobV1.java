@@ -19,7 +19,6 @@ package com.flow.platform.api.domain.v1;
 import com.flow.platform.api.domain.EnvObject;
 import com.flow.platform.api.domain.job.JobCategory;
 import com.flow.platform.api.domain.job.JobStatus;
-import com.flow.platform.domain.v1.JobKey;
 import com.google.gson.annotations.Expose;
 import java.time.ZonedDateTime;
 import java.util.EnumSet;

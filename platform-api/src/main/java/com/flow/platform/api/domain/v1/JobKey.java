@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.flow.platform.domain.v1;
+package com.flow.platform.api.domain.v1;
 
 import com.flow.platform.domain.Jsonable;
 import com.google.gson.annotations.Expose;
@@ -36,10 +36,14 @@ public class JobKey extends Jsonable {
     private final static String SPLITTER = "-";
 
     public static JobKey create(String keyInStr) {
-        String[] tokens = keyInStr.split(SPLITTER);
-        long flowId = Long.parseLong(tokens[0]);
-        long number = Long.parseLong(tokens[1]);
-        return new JobKey(flowId, number);
+        try {
+            String[] tokens = keyInStr.split(SPLITTER);
+            long flowId = Long.parseLong(tokens[0]);
+            long number = Long.parseLong(tokens[1]);
+            return new JobKey(flowId, number);
+        } catch (Throwable e) {
+            throw new IllegalArgumentException("Illegal job key string format: " + keyInStr);
+        }
     }
 
     @Expose
@@ -60,6 +64,9 @@ public class JobKey extends Jsonable {
         this.number = number;
     }
 
+    /**
+     * Get job key in string format
+     */
     public String getId() {
         return flowId + SPLITTER + number;
     }

@@ -7,7 +7,7 @@
 
   <!--Job V1 Class-->
   <class name="com.flow.platform.api.domain.v1.JobV1" table="job_v1">
-    <composite-id name="key" class="com.flow.platform.domain.v1.JobKey">
+    <composite-id name="key" class="com.flow.platform.api.domain.v1.JobKey">
       <key-property name="flowId" type="long" column="flow_id"/>
       <key-property name="number" type="long" column="build_number"/>
     </composite-id>
@@ -41,7 +41,7 @@
 
   <!--JobTree V1 Class-->
   <class name="com.flow.platform.api.domain.v1.JobTree" table="job_tree_v1">
-    <composite-id name="key" class="com.flow.platform.domain.v1.JobKey">
+    <composite-id name="key" class="com.flow.platform.api.domain.v1.JobKey">
       <key-property name="flowId" type="long" column="flow_id"/>
       <key-property name="number" type="long" column="build_number"/>
     </composite-id>

@@ -24,7 +24,7 @@ import com.flow.platform.api.domain.job.JobCategory;
 import com.flow.platform.api.domain.job.NodeResult;
 import com.flow.platform.api.domain.permission.Actions;
 import com.flow.platform.api.domain.user.User;
-import com.flow.platform.domain.v1.JobKey;
+import com.flow.platform.api.domain.v1.JobKey;
 import com.flow.platform.api.domain.v1.JobV1;
 import com.flow.platform.api.security.WebSecurity;
 import com.flow.platform.api.service.ArtifactService;

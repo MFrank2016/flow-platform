@@ -16,7 +16,7 @@
 
 package com.flow.platform.api.dao.v1;
 
-import com.flow.platform.domain.v1.JobKey;
+import com.flow.platform.api.domain.v1.JobKey;
 import com.flow.platform.api.domain.v1.JobTree;
 import com.flow.platform.core.dao.AbstractBaseDao;
 import org.springframework.stereotype.Repository;

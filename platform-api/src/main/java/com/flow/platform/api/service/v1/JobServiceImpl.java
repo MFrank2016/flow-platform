@@ -35,7 +35,7 @@ import com.flow.platform.core.domain.Page;
 import com.flow.platform.core.domain.Pageable;
 import com.flow.platform.core.exception.IllegalStatusException;
 import com.flow.platform.core.exception.NotFoundException;
-import com.flow.platform.domain.v1.JobKey;
+import com.flow.platform.api.domain.v1.JobKey;
 import com.flow.platform.tree.NodeTree;
 import java.time.ZonedDateTime;
 import java.util.List;

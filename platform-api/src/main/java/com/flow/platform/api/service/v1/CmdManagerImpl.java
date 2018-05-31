@@ -16,7 +16,7 @@
 
 package com.flow.platform.api.service.v1;
 
-import com.flow.platform.domain.v1.JobKey;
+import com.flow.platform.api.domain.v1.JobKey;
 import com.flow.platform.tree.Cmd;
 import com.flow.platform.tree.Node;
 import com.flow.platform.tree.YmlEnvs;

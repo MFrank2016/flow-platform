@@ -27,7 +27,7 @@ import com.flow.platform.api.service.v1.CmdManager;
 import com.flow.platform.api.service.v1.JobService;
 import com.flow.platform.domain.Agent;
 import com.flow.platform.domain.CmdStatus;
-import com.flow.platform.domain.v1.JobKey;
+import com.flow.platform.api.domain.v1.JobKey;
 import com.flow.platform.tree.Cmd;
 import com.flow.platform.tree.Node;
 import com.flow.platform.tree.TreeManager;

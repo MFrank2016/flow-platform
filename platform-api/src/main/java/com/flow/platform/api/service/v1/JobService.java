@@ -22,7 +22,7 @@ import com.flow.platform.api.domain.v1.Flow;
 import com.flow.platform.api.domain.v1.JobV1;
 import com.flow.platform.core.domain.Page;
 import com.flow.platform.core.domain.Pageable;
-import com.flow.platform.domain.v1.JobKey;
+import com.flow.platform.api.domain.v1.JobKey;
 import java.util.List;
 import java.util.Map;
 
