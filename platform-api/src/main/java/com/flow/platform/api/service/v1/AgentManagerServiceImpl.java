@@ -16,6 +16,7 @@
 
 package com.flow.platform.api.service.v1;
 
+import com.flow.platform.api.config.QueueConfig;
 import com.flow.platform.api.dao.v1.AgentDao;
 import com.flow.platform.api.exception.AgentNotAvailableException;
 import com.flow.platform.api.util.ZKHelper;
@@ -143,7 +144,7 @@ public class AgentManagerServiceImpl extends ApplicationEventService implements 
         agentSettings.setAgentPath(agent.getPath());
         agentSettings.setRabbitmqHost("127.0.0.1");
         agentSettings.setZookeeperUrl("127.0.0.1:2181");
-        agentSettings.setCallbackQueueName("cmd.callback.queue");
+        agentSettings.setCallbackQueueName(QueueConfig.CMD_CALLBACK_QUEUE_NAME);
         agentSettings.setListeningQueueName(getQueueName(agent));
 
         return agentSettings;

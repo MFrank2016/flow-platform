@@ -20,18 +20,26 @@ import com.flow.platform.api.config.QueueConfig;
 import com.flow.platform.api.domain.job.JobStatus;
 import com.flow.platform.api.domain.v1.JobKey;
 import com.flow.platform.api.domain.v1.JobV1;
+import com.flow.platform.api.envs.EnvUtil;
+import com.flow.platform.api.events.CmdSentEvent;
+import com.flow.platform.api.events.JobStatusEvent;
 import com.flow.platform.api.service.v1.AgentManagerService;
 import com.flow.platform.api.service.v1.CmdManager;
 import com.flow.platform.api.service.v1.JobNodeManager;
 import com.flow.platform.api.service.v1.JobService;
+import com.flow.platform.core.exception.IllegalStatusException;
+import com.flow.platform.core.service.ApplicationEventService;
 import com.flow.platform.domain.Agent;
 import com.flow.platform.domain.CmdStatus;
 import com.flow.platform.domain.v1.Cmd;
 import com.flow.platform.domain.v1.ExecutedCmd;
 import com.flow.platform.tree.Node;
 import com.flow.platform.tree.NodePath;
+import com.flow.platform.tree.NodeStatus;
 import com.flow.platform.tree.Result;
 import com.google.common.base.Strings;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.amqp.core.AmqpTemplate;
@@ -42,11 +50,23 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 /**
+ * Receive cmd result from cmd callback queue
+ *
  * @author yh@fir.im
  */
 @Component
 @Log4j2
-public class ExecutedCmdConsumer {
+public class CmdCallbackConsumer extends ApplicationEventService {
+
+    private final static Map<NodeStatus, JobStatus> STATUS_MAP = new HashMap<>(5);
+
+    static {
+        STATUS_MAP.put(NodeStatus.PENDING, JobStatus.CREATED);
+        STATUS_MAP.put(NodeStatus.SUCCESS, JobStatus.SUCCESS);
+        STATUS_MAP.put(NodeStatus.FAILURE, JobStatus.FAILURE);
+        STATUS_MAP.put(NodeStatus.KILLED, JobStatus.STOPPED);
+        STATUS_MAP.put(NodeStatus.RUNNING, JobStatus.RUNNING);
+    }
 
     @Autowired
     private JobService jobServiceV1;
@@ -67,70 +87,70 @@ public class ExecutedCmdConsumer {
     public void handleMessage(ExecutedCmd cmd) {
         log.debug("Cmd Webhook Consumer received: {}", cmd);
 
+        if (!cmd.isExecuted()) {
+            return;
+        }
+
         JobKey jobKey = JobKey.create(cmd.getMeta().get(CmdManager.META_JOB_KEY));
         NodePath nodePath = NodePath.create(cmd.getMeta().get(CmdManager.META_JOB_NODE_PATH));
         String token = cmd.getMeta().get(CmdManager.META_AGENT_TOKEN);
 
         try {
-
             JobV1 job = jobServiceV1.find(jobKey);
-            if (Objects.isNull(job)) {
-                log.trace("Not found Job");
-                return;
-            }
-
-            if (Strings.isNullOrEmpty(token)) {
-                log.trace("Not found agent token");
-                return;
-            }
-
             Agent agent = agentManagerService.find(token);
-
             log.info("Cmd is " + nodePath + ", Cmd status is " + cmd.getStatus());
 
-            if (cmd.getStatus() == CmdStatus.RUNNING) {
-                // do not handle it
+            // update nodes and parent for finish
+            jobNodeManager.finish(jobKey, nodePath, toResult(cmd, nodePath));
+
+            // find next available node
+            Node next = jobNodeManager.next(jobKey, nodePath);
+
+            // No more available node
+            if (Objects.isNull(next)) {
+                agentManagerService.release(agent);
+                Node root = jobNodeManager.root(jobKey);
+                JobStatus jobStatus = toJobStatus(root);
+                jobServiceV1.setStatus(job.getKey(), jobStatus);
+                this.dispatchEvent(new JobStatusEvent(this, jobStatus));
                 return;
             }
 
-            if (Cmd.FINISH_STATUS.contains(cmd.getStatus())) {
+            // has node to execute
+            Cmd nextCmd = cmdManager.create(jobKey, next, agent.getToken());
+            String agentQueueName = agentManagerService.getQueueName(agent);
+            jobNodeManager.execute(jobKey, next.getPath());
+            jobCmdTemplate.send(agentQueueName, new Message(nextCmd.toBytes(), new MessageProperties()));
 
-                // update nodes and parent for finish
-                jobNodeManager.finish(jobKey, nodePath, toResult(cmd));
-
-                // find next available node
-                Node next = jobNodeManager.next(jobKey, nodePath);
-
-                // No more available node
-                if (Objects.isNull(next)) {
-                    agentManagerService.release(agent);
-                    Node root = jobNodeManager.root(jobKey);
-                    jobServiceV1.setStatus(job.getKey(), toJobStatus(root));
-                    return;
-                }
-
-                // has node to execute
-                Cmd nextCmd = cmdManager.create(jobKey, next, agent.getToken());
-                String agentQueueName = agentManagerService.getQueueName(agent);
-                jobCmdTemplate.send(agentQueueName, new Message(nextCmd.toBytes(), new MessageProperties()));
-            }
+            this.dispatchEvent(new CmdSentEvent(this, nextCmd));
+            log.trace("Handle message finish!");
 
         } catch (Throwable throwable) {
-            throwable.printStackTrace();
             log.error("Handle message exception: " + throwable.getMessage());
+            jobServiceV1.setStatus(jobKey, JobStatus.FAILURE);
+            this.dispatchEvent(new JobStatusEvent(this, JobStatus.FAILURE));
         }
-
-        log.trace("Handle message finish!");
     }
 
-    private Result toResult(Cmd cmd) {
-        return null;
+    private Result toResult(ExecutedCmd cmd, NodePath path) {
+        Result result = new Result();
+        result.setCode(cmd.getCode());
+        result.setDuration(cmd.getDuration());
+        result.setErrMsg(cmd.getErrMsg());
+        result.setPath(path);
+
+        EnvUtil.merge(cmd.getOutput(), result.getContext(), false);
+        return result;
     }
 
     /**
      * Translate root node status to job status
      */
     private JobStatus toJobStatus(Node root) {
-        return null;
+        JobStatus jobStatus = STATUS_MAP.get(root.getStatus());
+        if (Objects.isNull(jobStatus)) {
+            throw new IllegalStatusException("Root status cannot handle : " + root.getStatus());
+        }
+        return jobStatus;
     }
 }

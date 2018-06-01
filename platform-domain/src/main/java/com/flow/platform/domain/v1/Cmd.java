@@ -30,19 +30,16 @@ import lombok.ToString;
 /**
  * @author yh@fir.im
  */
-@ToString(of = {"type"})
+@ToString(of = {"type", "status"})
 public class Cmd extends Jsonable {
 
-    /**
-     * Finish status set
-     */
-    public static final Set<CmdStatus> FINISH_STATUS =
-        Sets.newHashSet(CmdStatus.LOGGED, CmdStatus.EXCEPTION, CmdStatus.KILLED, CmdStatus.REJECTED,
-            CmdStatus.TIMEOUT_KILL, CmdStatus.STOPPED);
-
-    public static final Set<CmdStatus> FAILURE_STATUS =
-        Sets.newHashSet(CmdStatus.EXCEPTION, CmdStatus.KILLED, CmdStatus.REJECTED,
-            CmdStatus.TIMEOUT_KILL, CmdStatus.STOPPED);
+    public static final Set<CmdStatus> FAILURE_STATUS = Sets.newHashSet(
+        CmdStatus.EXCEPTION,
+        CmdStatus.KILLED,
+        CmdStatus.REJECTED,
+        CmdStatus.TIMEOUT_KILL,
+        CmdStatus.STOPPED
+    );
 
     /**
      * Timeout in seconds
@@ -72,9 +69,6 @@ public class Cmd extends Jsonable {
     @Setter
     private CmdType type = CmdType.RUN_SHELL;
 
-    /**
-     * Record current status
-     */
     @Getter
     @Setter
     private CmdStatus status = CmdStatus.PENDING;
@@ -85,4 +79,11 @@ public class Cmd extends Jsonable {
     @Getter
     @Setter
     private Map<String, String> meta = new HashMap<>();
+
+    /**
+     * Indicate cmd is executed >= level 2
+     */
+    public boolean isExecuted() {
+        return this.status.getLevel() >= CmdStatus.EXECUTED.getLevel();
+    }
 }

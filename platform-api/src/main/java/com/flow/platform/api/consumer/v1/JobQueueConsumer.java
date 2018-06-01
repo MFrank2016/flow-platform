@@ -19,6 +19,7 @@ package com.flow.platform.api.consumer.v1;
 import com.flow.platform.api.config.QueueConfig;
 import com.flow.platform.api.domain.job.JobStatus;
 import com.flow.platform.api.domain.v1.JobV1;
+import com.flow.platform.api.events.CmdSentEvent;
 import com.flow.platform.api.events.JobStatusEvent;
 import com.flow.platform.api.exception.AgentNotAvailableException;
 import com.flow.platform.api.service.v1.AgentManagerService;
@@ -78,15 +79,12 @@ public class JobQueueConsumer extends ApplicationEventService {
             Node root = jobNodeManager.root(job.getKey());
             Node next = jobNodeManager.next(key, root.getPath());
 
-            Cmd cmd = cmdManager.create(job.getKey(), next, agent.getToken());
-
             // send cmd to agent queue
+            Cmd cmd = cmdManager.create(job.getKey(), next, agent.getToken());
             String queueName = agentManagerService.getQueueName(agent);
             jobCmdTemplate.send(queueName, new Message(cmd.toJson().getBytes(), new MessageProperties()));
-            log.trace("Send cmd to queue:  " + queueName);
-
-            // update node status in job tree
             jobNodeManager.execute(key, next.getPath());
+            this.dispatchEvent(new CmdSentEvent(this, cmd));
 
             // set job status to running
             jobServiceV1.setStatus(key, JobStatus.RUNNING);

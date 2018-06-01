@@ -80,7 +80,7 @@ public class TreeManager {
     public Node onFinish(Result result) {
         Node current = tree.get(result.getPath());
         if (current.getStatus() == NodeStatus.PENDING) {
-            throw new IllegalStateException("The node has to start execute first");
+            throw new IllegalStateException("The node has to start execute from the first");
         }
 
         current.setStatus(getNodeStatusFromResult(result));
