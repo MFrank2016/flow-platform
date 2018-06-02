@@ -21,14 +21,19 @@ import com.flow.platform.agent.config.QueueConfig;
 import com.flow.platform.agent.mq.Pusher;
 import com.flow.platform.cmd.CmdExecutor;
 import com.flow.platform.cmd.ProcListener;
+import com.flow.platform.domain.CmdResult;
+import com.flow.platform.domain.CmdStatus;
 import com.flow.platform.domain.CmdType;
 import com.flow.platform.domain.Jsonable;
 import com.flow.platform.domain.v1.Cmd;
 import com.google.common.collect.Lists;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -59,11 +64,14 @@ public class CmdManager {
     private final ExecutorService executor = Executors.newCachedThreadPool(AgentManager.DEFAULT_THREAD_FACTORY);
 
     @Getter
-    private final ExecutorService cmdExecutor = createExecutorForRunShell();
+    private ExecutorService cmdExecutor = createExecutorForRunShell();
 
     // handle extra listeners
     @Getter
     private final List<ProcListener> extraProcEventListeners = new ArrayList<>(5);
+
+    @Getter
+    private final Map<Cmd, CmdRunner> currentRunners = new HashMap<>(5);
 
     private final Pusher cmdCallback;
 
@@ -78,7 +86,9 @@ public class CmdManager {
      */
     public void execute(final Cmd cmd) {
         if (cmd.getType() == CmdType.RUN_SHELL) {
-            cmdExecutor.execute(new ShellCmdRunner(cmd));
+            ShellCmdRunner runner = new ShellCmdRunner(cmd);
+            currentRunners.put(cmd, runner);
+            cmdExecutor.execute(runner);
             return;
         }
 
@@ -96,6 +106,21 @@ public class CmdManager {
 
         if (cmd.getType() == CmdType.SYSTEM_INFO) {
             throw new UnsupportedOperationException();
+        }
+    }
+
+    public synchronized void kill() {
+        for (Entry<Cmd, CmdRunner> entry : currentRunners.entrySet()) {
+            entry.getValue().kill();
+        }
+
+        try {
+            cmdExecutor.shutdownNow();
+        } catch (Throwable ignore) {
+
+        } finally {
+            cmdExecutor = createExecutorForRunShell(); // reset cmd executor
+            log.trace("Cmd thread terminated");
         }
     }
 
@@ -144,7 +169,6 @@ public class CmdManager {
         return Jsonable.GSON_CONFIG.toJson(dic);
     }
 
-
     private abstract class CmdRunner implements Runnable {
 
         @Getter
@@ -152,6 +176,10 @@ public class CmdManager {
 
         CmdRunner(Cmd cmd) {
             this.cmd = cmd;
+        }
+
+        void kill() {
+
         }
 
         void reject() {
@@ -167,29 +195,32 @@ public class CmdManager {
         @Getter
         private final LogEventHandler logEventHandler;
 
+        @Getter
+        private final CmdExecutor executor;
+
         ShellCmdRunner(Cmd cmd) {
             super(cmd);
             this.procEventHandler = new ProcEventHandler(cmdCallback, getCmd(), extraProcEventListeners);
             this.logEventHandler = new LogEventHandler(cmd);
+
+            this.executor = new CmdExecutor(
+                procEventHandler,
+                logEventHandler,
+                cmd.getContext(),
+                cmd.getWorkDir(),
+                cmd.getOutputFilter(),
+                cmd.getTimeout(),
+                Lists.newArrayList(getCmd().getContent()));
         }
 
         @Override
         public void run() {
-            try {
-                CmdExecutor executor = new CmdExecutor(
-                    procEventHandler,
-                    logEventHandler,
-                    cmd.getContext(),
-                    cmd.getWorkDir(),
-                    cmd.getOutputFilter(),
-                    cmd.getTimeout(),
-                    Lists.newArrayList(getCmd().getContent()));
+            executor.run();
+        }
 
-                executor.run();
-            } catch (Throwable e) {
-                log.error("Cannot init CmdExecutor for cmd: " + cmd, e);
-                procEventHandler.onException(e);
-            }
+        @Override
+        void kill() {
+            executor.destroy();
         }
 
         @Override

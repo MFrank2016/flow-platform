@@ -170,6 +170,9 @@ public final class CmdExecutor {
     @Getter
     private ZonedDateTime finishAt;
 
+    @Getter
+    private Process process;
+
     /**
      * Default time out is 1800 seconds
      */
@@ -242,28 +245,28 @@ public final class CmdExecutor {
     public void run() {
         try {
             startAt = ZonedDateTime.now();
-            Process p = pBuilder.start();
+            process = pBuilder.start();
+            processId = getPid(process);
             procListener.onStarted();
-            processId = getPid(p);
 
             // thread to send cmd list to bash
-            executor.execute(createCmdListExec(p.getOutputStream(), cmdList));
+            executor.execute(createCmdListExec(process.getOutputStream(), cmdList));
 
             // thread to read stdout and stderr stream and put log to logging queue
-            executor.execute(createStdStreamReader(Log.Type.STDOUT, p.getInputStream()));
-            executor.execute(createStdStreamReader(Log.Type.STDERR, p.getErrorStream()));
+            executor.execute(createStdStreamReader(Log.Type.STDOUT, process.getInputStream()));
+            executor.execute(createStdStreamReader(Log.Type.STDERR, process.getErrorStream()));
 
             // thread to make consume logging queue
             executor.execute(createCmdLoggingReader());
 
             // wait for max process timeout
             exitCode = CmdResult.EXIT_VALUE_FOR_TIMEOUT;
-            if (p.waitFor(timeout.longValue(), TimeUnit.SECONDS)) {
-                exitCode = p.exitValue();
+            if (process.waitFor(timeout.longValue(), TimeUnit.SECONDS)) {
+                exitCode = process.exitValue();
             }
 
             procListener.onExecuted(exitCode);
-            log.trace("====== 1. Process executed : {} ======", exitCode);
+            log.trace("====== Process executed : {} ======", exitCode);
 
             // wait for log thread with max 30 seconds to continue upload log
             logThreadCountDown.await(DEFAULT_LOGGING_WAITING_SECONDS, TimeUnit.SECONDS);
@@ -275,19 +278,29 @@ public final class CmdExecutor {
             }
 
             procListener.onLogged(output);
-            log.trace("====== 2. Logging executed ======");
+            log.trace("====== Logging executed ======");
 
-        } catch (InterruptedException ignore) {
-            log.warn(ignore.getMessage());
-
+        } catch (InterruptedException e) {
+            finishAt = ZonedDateTime.now();
+            duration = ChronoUnit.SECONDS.between(startAt, finishAt);
+            procListener.onException(e);
+            log.trace("====== Interrupted ======");
         } catch (Throwable e) {
             procListener.onException(e);
             log.warn(e.getMessage());
         } finally {
             finishAt = ZonedDateTime.now();
             duration = ChronoUnit.SECONDS.between(startAt, finishAt);
-            log.trace("====== 3. Process Done ======");
+            log.trace("====== Process Done ======");
         }
+    }
+
+    public void destroy() {
+        if (Objects.isNull(process)) {
+            return;
+        }
+
+        process.destroy();
     }
 
     private String getExecutor() {
