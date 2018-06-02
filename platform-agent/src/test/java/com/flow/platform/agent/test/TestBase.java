@@ -19,7 +19,10 @@ package com.flow.platform.agent.test;
 import com.flow.platform.agent.config.AgentConfig;
 import com.flow.platform.domain.AgentPath;
 import com.flow.platform.domain.AgentSettings;
+import java.io.File;
 import java.io.IOException;
+import java.net.URL;
+import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import org.junit.AfterClass;
@@ -60,5 +63,12 @@ public abstract class TestBase {
 
             Files.deleteIfExists(logDir);
         } catch (IOException e) { }
+    }
+
+    String getResourceContent(String path) throws IOException {
+        ClassLoader classLoader = CmdManagerTest.class.getClassLoader();
+        URL resource = classLoader.getResource(path);
+        return org.apache.curator.shaded.com.google.common.io.Files.toString(
+            new File(resource.getFile()), Charset.forName("UTF-8"));
     }
 }

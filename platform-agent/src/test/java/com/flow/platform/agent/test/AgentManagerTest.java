@@ -17,9 +17,18 @@
 package com.flow.platform.agent.test;
 
 import com.flow.platform.agent.AgentManager;
+import com.flow.platform.agent.CmdManager;
 import com.flow.platform.agent.config.AgentConfig;
+import com.flow.platform.agent.mq.RabbitClient;
+import com.flow.platform.cmd.AbstractProcListener;
 import com.flow.platform.domain.AgentPath;
+import com.flow.platform.domain.v1.Cmd;
 import com.flow.platform.util.zk.ZKClient;
+import com.google.common.collect.Lists;
+import java.util.Base64;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -58,19 +67,53 @@ public class AgentManagerTest extends TestBase {
     }
 
     @Test
-    public void should_agent_registered() throws InterruptedException {
+    public void should_agent_registered_and_cmd_executed() throws Throwable {
         // when: start agent
-        AgentManager agent = new AgentManager(AgentConfig.getInstance());
+        AgentConfig config = AgentConfig.getInstance();
+        AgentManager agent = new AgentManager(config);
+
         ExecutorService pool = Executors.newFixedThreadPool(1);
         pool.execute(agent);
+        Thread.sleep(5000);
+
+        // when:
+        AgentPath path = config.getPath();
+        Assert.assertTrue(zkClient.exist(path.fullPath()));
+
+        // when: send cmd to queue
+        Cmd cmd = new Cmd();
+        cmd.setId(Base64.getEncoder().encodeToString("10-0@hello/world".getBytes()));
+        cmd.setTimeout(1800);
+        cmd.setContent(getResourceContent("test.sh"));
+        cmd.setWorkDir("/tmp");
+        cmd.setOutputFilter(Lists.newArrayList("FLOW_UT_OUTPUT"));
+
+        CountDownLatch countDown = new CountDownLatch(1);
+        Map<String, String> cmdOutput = new HashMap<>();
+
+        CmdManager.getInstance().getExtraProcEventListeners().add(new AbstractProcListener() {
+            @Override
+            public void onLogged(Map<String, String> output) {
+                cmdOutput.putAll(output);
+                countDown.countDown();
+            }
+        });
+
+        RabbitClient sender = new RabbitClient(config.getQueue().getHost(), config.getCmdQueueName(), null);
+        sender.send(cmd.toJson());
+
+        // then: verify cmd been executed
+        countDown.await(10, TimeUnit.SECONDS);
+        Assert.assertEquals(2, cmdOutput.size());
+        Assert.assertEquals("11", cmdOutput.get("FLOW_UT_OUTPUT_1"));
+        Assert.assertEquals("2", cmdOutput.get("FLOW_UT_OUTPUT_2"));
+
+        // finally
+        agent.stop();
+        sender.deleteQueue();
 
         pool.awaitTermination(10, TimeUnit.SECONDS);
         pool.shutdown();
-
-        // when:
-        AgentPath path = AgentConfig.getInstance().getPath();
-        Assert.assertTrue(zkClient.exist(path.fullPath()));
-        agent.stop();
     }
 
     @After

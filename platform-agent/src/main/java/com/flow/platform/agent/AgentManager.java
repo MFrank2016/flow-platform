@@ -19,9 +19,17 @@ package com.flow.platform.agent;
 import com.flow.platform.agent.config.AgentConfig;
 import com.flow.platform.agent.config.QueueConfig;
 import com.flow.platform.agent.config.ZookeeperConfig;
-import com.flow.platform.agent.mq.Pusher;
+import com.flow.platform.agent.mq.RabbitClient;
 import com.flow.platform.domain.AgentStatus;
+import com.flow.platform.domain.Jsonable;
+import com.flow.platform.domain.v1.Cmd;
 import com.flow.platform.util.zk.ZKClient;
+import com.google.gson.JsonParseException;
+import com.rabbitmq.client.AMQP.BasicProperties;
+import com.rabbitmq.client.Channel;
+import com.rabbitmq.client.DefaultConsumer;
+import com.rabbitmq.client.Envelope;
+import java.io.IOException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
@@ -54,12 +62,12 @@ public class AgentManager implements Runnable, TreeCacheListener, AutoCloseable 
     private final ZKClient zkClient;
 
     @Getter
-    private final CmdQueueConsumer cmdConsumer;
+    private final RabbitClient cmdConsumerClient;
 
-    public AgentManager(AgentConfig config) {
+    public AgentManager(AgentConfig config) throws IOException {
         this.config = config;
         this.zkClient = initZookeeperClient(config.getZk());
-        this.cmdConsumer = initCmdQueueConsumer(config.getQueue());
+        this.cmdConsumerClient = initCmdQueueConsumer(config.getQueue());
     }
 
     /**
@@ -87,11 +95,6 @@ public class AgentManager implements Runnable, TreeCacheListener, AutoCloseable 
         }
     }
 
-    private void exit() {
-        log.info("One Agent is running in other place. Please first to stop another agent, thx!");
-        Runtime.getRuntime().exit(1);
-    }
-
     @Override
     public void childEvent(CuratorFramework client, TreeCacheEvent event) {
         ChildData eventData = event.getData();
@@ -113,6 +116,7 @@ public class AgentManager implements Runnable, TreeCacheListener, AutoCloseable 
 
     @Override
     public void close() {
+        closeCmdManager();
         closeZookeeper();
         closeRabbitQueue();
         stop();
@@ -135,7 +139,15 @@ public class AgentManager implements Runnable, TreeCacheListener, AutoCloseable 
     }
 
     private void closeRabbitQueue() {
-        cmdConsumer.close();
+        cmdConsumerClient.close();
+    }
+
+    private void closeCmdManager() {
+        try {
+            CmdManager.getInstance().close();
+        } catch (Exception e) {
+            log.warn("Error when close CmdManager: " + e.getMessage());
+        }
     }
 
     private ZKClient initZookeeperClient(ZookeeperConfig config) {
@@ -144,10 +156,35 @@ public class AgentManager implements Runnable, TreeCacheListener, AutoCloseable 
         return new ZKClient(config.getHost(), ZK_RETRY_PERIOD, ZK_RECONNECT_TIME);
     }
 
-    private CmdQueueConsumer initCmdQueueConsumer(QueueConfig config) {
+    private RabbitClient initCmdQueueConsumer(QueueConfig config) throws IOException {
         String host = config.getHost();
         String cmdQueueName = config.getCmdQueueName();
         ExecutorService pool = Executors.newFixedThreadPool(1, DEFAULT_THREAD_FACTORY);
-        return new CmdQueueConsumer(host, cmdQueueName, pool);
+
+        RabbitClient client = new RabbitClient(host, cmdQueueName, pool);
+        Channel channel = client.getChannel();
+        channel.basicConsume(cmdQueueName, true, new CmdQueueConsumer(channel));
+
+        return client;
+    }
+
+    private class CmdQueueConsumer extends DefaultConsumer {
+
+        CmdQueueConsumer(Channel channel) {
+            super(channel);
+        }
+
+        @Override
+        public void handleDelivery(String consumerTag, Envelope envelope, BasicProperties properties, byte[] body) {
+            log.trace("Received cmd : " + new String(body));
+
+            try {
+                Cmd cmd = Jsonable.parse(body, Cmd.class);
+                log.trace("Cmd parsed : " + cmd.toString());
+                CmdManager.getInstance().execute(cmd);
+            } catch (JsonParseException e) {
+                log.warn("Unable to parse cmd from zk node: " + new String(body));
+            }
+        }
     }
 }

@@ -52,10 +52,7 @@ public class CmdManagerTest extends TestBase {
 
     @Before
     public void init() throws IOException {
-        ClassLoader classLoader = CmdManagerTest.class.getClassLoader();
-        URL resource = classLoader.getResource("test.sh");
-        script = Files.toString(new File(resource.getFile()), Charset.forName("UTF-8"));
-
+        script = getResourceContent("test.sh");
         cmdManager.getExtraProcEventListeners().clear();
     }
 

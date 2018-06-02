@@ -18,7 +18,7 @@ package com.flow.platform.agent;
 
 import com.flow.platform.agent.config.AgentConfig;
 import com.flow.platform.agent.config.QueueConfig;
-import com.flow.platform.agent.mq.Pusher;
+import com.flow.platform.agent.mq.RabbitClient;
 import com.flow.platform.cmd.CmdExecutor;
 import com.flow.platform.cmd.ProcListener;
 import com.flow.platform.domain.CmdType;
@@ -47,7 +47,7 @@ import lombok.extern.log4j.Log4j2;
  * @author gy@fir.im
  */
 @Log4j2
-public class CmdManager {
+public final class CmdManager implements AutoCloseable {
 
     private final static CmdManager Instance = new CmdManager();
 
@@ -71,10 +71,10 @@ public class CmdManager {
     @Getter
     private final Map<Cmd, CmdRunner> currentRunners = new ConcurrentHashMap<>(5);
 
-    private final Pusher cmdCallback;
+    private final RabbitClient cmdCallbackClient;
 
     private CmdManager() {
-        this.cmdCallback = initCmdCallback(config.getQueue());
+        this.cmdCallbackClient = initCmdCallback(config.getQueue());
     }
 
     /**
@@ -123,10 +123,21 @@ public class CmdManager {
         }
     }
 
-    private Pusher initCmdCallback(QueueConfig config) {
+    @Override
+    public void close() throws Exception {
+        cmdExecutor.shutdownNow();
+
+        if (!cmdExecutor.awaitTermination(10, TimeUnit.SECONDS)) {
+            cmdExecutor.shutdownNow();
+        }
+
+        currentRunners.clear();
+    }
+
+    private RabbitClient initCmdCallback(QueueConfig config) {
         String host = config.getHost();
         String callbackQueueName = config.getCallbackQueueName();
-        return new Pusher(host, callbackQueueName);
+        return new RabbitClient(host, callbackQueueName, null);
     }
 
     private ThreadPoolExecutor createExecutorForRunShell() {
@@ -199,7 +210,7 @@ public class CmdManager {
 
         ShellCmdRunner(Cmd cmd) {
             super(cmd);
-            this.procEventHandler = new ProcEventHandler(cmdCallback, getCmd(), extraProcEventListeners);
+            this.procEventHandler = new ProcEventHandler(cmdCallbackClient, getCmd(), extraProcEventListeners);
             this.logEventHandler = new LogEventHandler(cmd);
 
             this.executor = new CmdExecutor(

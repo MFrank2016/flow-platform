@@ -16,7 +16,7 @@
 
 package com.flow.platform.agent;
 
-import com.flow.platform.agent.mq.Pusher;
+import com.flow.platform.agent.mq.RabbitClient;
 import com.flow.platform.cmd.ProcListener;
 import com.flow.platform.domain.CmdStatus;
 import com.flow.platform.domain.v1.Cmd;
@@ -36,13 +36,13 @@ public class ProcEventHandler implements ProcListener {
 
     private final List<ProcListener> extra;
 
-    private final Pusher pusher;
+    private final RabbitClient pusher;
 
     private final ExecutedCmd result;
 
     private ZonedDateTime startAt;
 
-    ProcEventHandler(Pusher pusher, Cmd cmd, List<ProcListener> extra) {
+    ProcEventHandler(RabbitClient pusher, Cmd cmd, List<ProcListener> extra) {
         this.pusher = pusher;
         this.extra = extra;
         this.result = ExecutedCmd.transfer(cmd);
