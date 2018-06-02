@@ -50,6 +50,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.log4j.Log4j2;
 
 /**
@@ -138,9 +139,11 @@ public final class CmdExecutor {
     private ProcessBuilder pBuilder;
 
     @Getter
+    @Setter
     private ProcListener procListener = new NullProcListener();
 
     @Getter
+    @Setter
     private LogListener logListener = new NullLogListener();
 
     @Getter

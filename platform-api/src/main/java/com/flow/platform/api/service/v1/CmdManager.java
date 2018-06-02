@@ -31,5 +31,10 @@ public interface CmdManager {
 
     String META_AGENT_TOKEN = "agent.token";
 
+    /**
+     * Get cmd id from job key and node path
+     */
+    String getId(JobKey key, Node node);
+
     Cmd create(JobKey key, Node node, String token);
 }

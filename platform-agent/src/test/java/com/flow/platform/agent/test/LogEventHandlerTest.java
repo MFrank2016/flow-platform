@@ -16,8 +16,6 @@
 
 package com.flow.platform.agent.test;
 
-import com.flow.platform.agent.CmdManager;
-import com.flow.platform.agent.Config;
 import com.flow.platform.agent.LogEventHandler;
 import com.flow.platform.cmd.Log;
 import com.flow.platform.domain.Cmd;
@@ -39,10 +37,7 @@ public class LogEventHandlerTest extends TestBase {
 
     @Before
     public void init() {
-        System.setProperty(Config.PROP_ENABLE_REALTIME_AGENT_LOG, "false");
-        Assert.assertEquals(false, Config.enableRealtimeLog());
 
-//        CmdManager.getInstance().kill();
     }
 
     @Test

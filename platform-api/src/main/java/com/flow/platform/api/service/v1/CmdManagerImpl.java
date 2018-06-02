@@ -19,6 +19,7 @@ package com.flow.platform.api.service.v1;
 import com.flow.platform.api.domain.v1.JobKey;
 import com.flow.platform.domain.v1.Cmd;
 import com.flow.platform.tree.Node;
+import java.util.Base64;
 import org.springframework.stereotype.Component;
 
 /**
@@ -27,10 +28,19 @@ import org.springframework.stereotype.Component;
 @Component
 public class CmdManagerImpl implements CmdManager {
 
+    private final static String CMD_ID_SPLITTER = "@";
+
+    @Override
+    public String getId(JobKey key, Node node) {
+        String source = key.getId() + CMD_ID_SPLITTER + node.getPath().toString();
+        return Base64.getEncoder().encodeToString(source.getBytes());
+    }
+
     @Override
     public Cmd create(JobKey key, Node node, String token) {
         // trans node to cmd
         Cmd cmd = new Cmd();
+        cmd.setId(getId(key, node));
         cmd.setTimeout(1800);
         cmd.setContent(node.getContent());
         cmd.setWorkDir("/tmp");
