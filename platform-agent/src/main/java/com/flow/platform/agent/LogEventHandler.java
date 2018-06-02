@@ -90,7 +90,6 @@ public class LogEventHandler implements LogListener {
             return;
         }
 
-        // init rabbit queue
         try {
             initWebSocketSession(config.getUrl().getWebsocket(), 10);
         } catch (Throwable warn) {
@@ -109,17 +108,17 @@ public class LogEventHandler implements LogListener {
         writeZipStream(stdoutLogZipStream, item.getContent());
     }
 
-    private void sendRealTimeLog(Log log) {
+    private void sendRealTimeLog(Log item) {
         if (Objects.isNull(wsSession)) {
             return;
         }
 
         try {
-            String format = websocketLogFormat(log);
+            String format = websocketLogFormat(item);
             wsSession.getBasicRemote().sendText(format);
-            LogEventHandler.log.debug("Log sent: {}", format);
+            log.debug("Log sent: {}", format);
         } catch (Throwable e) {
-            LogEventHandler.log.warn("Fail to send real time log to queue");
+            log.warn("Fail to send real time log to queue");
         }
     }
 
@@ -172,7 +171,7 @@ public class LogEventHandler implements LogListener {
         }
 
         try {
-            Path target = Paths.get(logPath.toString(), getLogFileName(cmd, logType, false));
+            Path target = Paths.get(logPath.getParent().toString(), getLogFileName(cmd, logType, false));
             Files.move(logPath, target);
 
             if (logUpload(cmd.getId(), target)) {

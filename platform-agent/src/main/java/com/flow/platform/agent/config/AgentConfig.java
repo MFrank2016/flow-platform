@@ -75,10 +75,6 @@ public final class AgentConfig {
     private final String callbackQueueName;
 
     @Getter
-    @Setter
-    private final Path logDir = Paths.get(USER_HOME, ".flow-agent", "run-log");
-
-    @Getter
     private final QueueConfig queue = new QueueConfig();
 
     @Getter
@@ -86,6 +82,14 @@ public final class AgentConfig {
 
     @Getter
     private final UpstreamUrlConfig url = new UpstreamUrlConfig();
+
+    @Getter
+    @Setter
+    private Integer numOfConcurrentCmd = 1;
+
+    @Getter
+    @Setter
+    private Path logDir = Paths.get(USER_HOME, ".flow-agent", "run-log");
 
     private AgentConfig(String token, AgentSettings settings) {
         this.token = token;

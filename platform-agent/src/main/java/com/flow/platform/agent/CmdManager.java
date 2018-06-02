@@ -31,6 +31,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import lombok.Getter;
 import lombok.extern.log4j.Log4j2;
 
@@ -45,18 +48,22 @@ public class CmdManager {
 
     private final static CmdManager Instance = new CmdManager();
 
-    static CmdManager getInstance() {
+    public static CmdManager getInstance() {
         return Instance;
     }
 
+    private final AgentConfig config = AgentConfig.getInstance();
+
     // Executor to execute operations
-    private ExecutorService executor = Executors.newCachedThreadPool(AgentManager.DEFAULT_THREAD_FACTORY);
+    @Getter
+    private final ExecutorService executor = Executors.newCachedThreadPool(AgentManager.DEFAULT_THREAD_FACTORY);
+
+    @Getter
+    private final ExecutorService cmdExecutor = createExecutorForRunShell();
 
     // handle extra listeners
     @Getter
     private final List<ProcListener> extraProcEventListeners = new ArrayList<>(5);
-
-    private final AgentConfig config = AgentConfig.getInstance();
 
     private final Pusher cmdCallback;
 
@@ -69,9 +76,9 @@ public class CmdManager {
      *
      * @param cmd Cmd object
      */
-    void execute(final Cmd cmd) {
+    public void execute(final Cmd cmd) {
         if (cmd.getType() == CmdType.RUN_SHELL) {
-            executor.execute(new ShellCmdRunner(cmd));
+            cmdExecutor.execute(new ShellCmdRunner(cmd));
             return;
         }
 
@@ -96,6 +103,22 @@ public class CmdManager {
         String host = config.getHost();
         String callbackQueueName = config.getCallbackQueueName();
         return new Pusher(host, callbackQueueName);
+    }
+
+    private ThreadPoolExecutor createExecutorForRunShell() {
+        return new ThreadPoolExecutor(
+            config.getNumOfConcurrentCmd(),
+            config.getNumOfConcurrentCmd(),
+            0L,
+            TimeUnit.SECONDS,
+            new LinkedBlockingQueue<>(),
+            AgentManager.DEFAULT_THREAD_FACTORY,
+            (r, executor) -> {
+                if (r instanceof CmdRunner) {
+                    CmdRunner runner = (CmdRunner) r;
+                    runner.reject();
+                }
+            });
     }
 
     /**
@@ -124,21 +147,24 @@ public class CmdManager {
 
     private abstract class CmdRunner implements Runnable {
 
+        @Getter
         protected final Cmd cmd;
 
         CmdRunner(Cmd cmd) {
             this.cmd = cmd;
         }
 
-        public Cmd getCmd() {
-            return cmd;
+        void reject() {
+
         }
     }
 
     private class ShellCmdRunner extends CmdRunner {
 
+        @Getter
         private final ProcEventHandler procEventHandler;
 
+        @Getter
         private final LogEventHandler logEventHandler;
 
         ShellCmdRunner(Cmd cmd) {
@@ -164,6 +190,17 @@ public class CmdManager {
                 log.error("Cannot init CmdExecutor for cmd: " + cmd, e);
                 procEventHandler.onException(e);
             }
+        }
+
+        @Override
+        void reject() {
+            String errMsg = "Reject cmd " + cmd.getId() + " since over the limit proc of agent";
+
+            procEventHandler.onStarted();
+            procEventHandler.onExecuted(-1);
+            procEventHandler.onException(new IllegalStateException(errMsg));
+
+            log.warn(errMsg);
         }
     }
 }
