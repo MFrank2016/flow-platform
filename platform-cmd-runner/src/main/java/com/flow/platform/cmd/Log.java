@@ -41,7 +41,7 @@ public final class Log {
 
     private String content;
 
-    private Integer number;
+    private Integer number = 0;
 
     public Type getType() {
         return type;

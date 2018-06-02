@@ -142,7 +142,7 @@ public class AgentManagerServiceImpl extends ApplicationEventService implements 
 
         AgentSettings agentSettings = new AgentSettings();
         agentSettings.setAgentPath(agent.getPath());
-        agentSettings.setRabbitmqHost("127.0.0.1");
+        agentSettings.setMqUri("127.0.0.1");
         agentSettings.setZookeeperUrl("127.0.0.1:2181");
         agentSettings.setCallbackQueueName(QueueConfig.CMD_CALLBACK_QUEUE_NAME);
         agentSettings.setListeningQueueName(getQueueName(agent));

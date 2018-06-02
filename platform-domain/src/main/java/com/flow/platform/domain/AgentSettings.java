@@ -77,7 +77,7 @@ public class AgentSettings extends Jsonable {
     @Getter
     @Setter
     @Expose
-    private String rabbitmqHost;
+    private String mqUri;
 
     @Setter
     @Getter

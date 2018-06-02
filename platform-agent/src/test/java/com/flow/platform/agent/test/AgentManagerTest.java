@@ -17,12 +17,13 @@
 package com.flow.platform.agent.test;
 
 import com.flow.platform.agent.AgentManager;
-import com.flow.platform.agent.Config;
-import com.flow.platform.domain.Cmd;
-import com.flow.platform.domain.CmdType;
+import com.flow.platform.agent.config.AgentConfig;
+import com.flow.platform.domain.AgentPath;
 import com.flow.platform.util.zk.ZKClient;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import org.apache.curator.test.TestingServer;
-import org.apache.curator.utils.ZKPaths;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Assert;
@@ -38,67 +39,44 @@ import org.junit.runners.MethodSorters;
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class AgentManagerTest extends TestBase {
 
-    private static final String ZK_ROOT = "/flow-agents";
-    private static final String ZONE = "ali";
-    private static final String MACHINE = "f-cont-f11f827bd8af1";
-
     private static TestingServer server;
 
     private ZKClient zkClient;
 
     @BeforeClass
     public static void init() throws Throwable {
-        System.setProperty(Config.PROP_ENABLE_REALTIME_AGENT_LOG, "false");
-        System.setProperty(Config.PROP_UPLOAD_AGENT_LOG, "false");
-        System.setProperty(Config.PROP_REPORT_STATUS, "false");
-
-        server = new TestingServer();
+        server = new TestingServer(2181);
         server.start();
     }
 
     @Before
     public void beforeEach() {
-        zkClient = new ZKClient(server.getConnectString(), 1000, 1);
+        String connectString = server.getConnectString();
+        zkClient = new ZKClient(connectString, 1000, 1);
         zkClient.start();
-
-        zkClient.create(ZK_ROOT, null);
-        zkClient.create(ZKPaths.makePath(ZK_ROOT, ZONE), null);
+        zkClient.create(AgentPath.ROOT, null);
     }
 
     @Test
-    public void should_agent_registered() throws Throwable {
-        // when: start agent in thread
-        AgentManager agent = new AgentManager(server.getConnectString(), 20000, ZONE, MACHINE);
-        new Thread(agent).start();
-        Thread.sleep(5000); // wait for agent registration
+    public void should_agent_registered() throws InterruptedException {
+        // when: start agent
+        AgentManager agent = new AgentManager(AgentConfig.getInstance());
+        ExecutorService pool = Executors.newFixedThreadPool(1);
+        pool.execute(agent);
+
+        pool.awaitTermination(10, TimeUnit.SECONDS);
+        pool.shutdown();
 
         // when:
-        String agentNodePath = ZKPaths.makePath(ZK_ROOT, ZONE, MACHINE);
-        Assert.assertEquals(true, zkClient.exist(agentNodePath));
-        agent.stop();
-    }
-
-    @Test
-    public void should_receive_command() throws Throwable {
-        AgentManager agent = new AgentManager(server.getConnectString(), 20000, ZONE, MACHINE);
-        new Thread(agent).start();
-        Thread.sleep(5000); // waiting for node created
-
-        // when: send command to agent
-        Cmd cmd = new Cmd(ZONE, MACHINE, CmdType.RUN_SHELL, "echo hello");
-        cmd.setId("mock-cmd-id");
-        zkClient.setData(agent.getNodePath(), cmd.toBytes());
-        Thread.sleep(2000); // waiting for cmd received
-
-        // then: check agent status when command received
-        Assert.assertEquals(1, agent.getCmdHistory().size());
-        Assert.assertEquals(cmd, agent.getCmdHistory().get(0));
+        AgentPath path = AgentConfig.getInstance().getPath();
+        Assert.assertTrue(zkClient.exist(path.fullPath()));
         agent.stop();
     }
 
     @After
     public void after() throws Throwable {
-        zkClient.delete(ZKPaths.makePath(ZK_ROOT, ZONE, MACHINE), true);
+        AgentPath path = AgentConfig.getInstance().getPath();
+        zkClient.delete(path.fullPath(), true);
         zkClient.close();
     }
 

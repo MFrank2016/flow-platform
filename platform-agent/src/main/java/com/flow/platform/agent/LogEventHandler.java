@@ -17,11 +17,14 @@
 package com.flow.platform.agent;
 
 import com.flow.platform.agent.config.AgentConfig;
+import com.flow.platform.agent.config.UpstreamUrlConfig;
 import com.flow.platform.cmd.Log;
 import com.flow.platform.cmd.LogListener;
-import com.flow.platform.domain.AgentPath;
 import com.flow.platform.domain.v1.Cmd;
 import com.flow.platform.util.CommandUtil.Unix;
+import com.flow.platform.util.http.HttpClient;
+import com.flow.platform.util.http.HttpResponse;
+import com.google.common.base.Charsets;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.URI;
@@ -40,6 +43,11 @@ import javax.websocket.Endpoint;
 import javax.websocket.EndpointConfig;
 import javax.websocket.Session;
 import lombok.extern.log4j.Log4j2;
+import org.apache.http.HttpEntity;
+import org.apache.http.entity.ContentType;
+import org.apache.http.entity.mime.MultipartEntityBuilder;
+import org.apache.http.entity.mime.content.FileBody;
+import org.apache.http.entity.mime.content.StringBody;
 import org.glassfish.tyrus.client.ClientManager;
 
 /**
@@ -54,9 +62,9 @@ public class LogEventHandler implements LogListener {
 
     private final static String REALTIME_LOG_SPLITTER = "#";
 
-    private final static Path DEFAULT_LOG_PATH = AgentConfig.getInstance().getLogDir();
-
     private final Cmd cmd;
+
+    private final Path logPath;
 
     private Path stdoutLogPath;
 
@@ -67,7 +75,9 @@ public class LogEventHandler implements LogListener {
     private Session wsSession;
 
     public LogEventHandler(Cmd cmd) {
+        AgentConfig config = AgentConfig.getInstance();
         this.cmd = cmd;
+        this.logPath = config.getLogDir();
 
         // init zip log path
         try {
@@ -75,8 +85,6 @@ public class LogEventHandler implements LogListener {
         } catch (IOException e) {
             log.error("Fail to init cmd log file", e);
         }
-
-        AgentConfig config = AgentConfig.getInstance();
 
         if (!config.getUrl().hasWebsocket()) {
             return;
@@ -92,13 +100,13 @@ public class LogEventHandler implements LogListener {
     }
 
     @Override
-    public void onLog(Log log) {
-        LogEventHandler.log.debug(log.toString());
+    public void onLog(Log item) {
+        log.debug(item.toString());
 
-        sendRealTimeLog(log);
+        sendRealTimeLog(item);
 
         // write stdout & stderr
-        writeZipStream(stdoutLogZipStream, log.getContent());
+        writeZipStream(stdoutLogZipStream, item.getContent());
     }
 
     private void sendRealTimeLog(Log log) {
@@ -125,15 +133,14 @@ public class LogEventHandler implements LogListener {
         }
     }
 
+    /**
+     * Create websocket log: {cmd.id}#{cmd.type}#{log number}##{log content}
+     */
     public String websocketLogFormat(Log log) {
-        AgentPath agentPath = AgentConfig.getInstance().getPath();
-
         return new StringBuilder(100)
+            .append(cmd.getId()).append(REALTIME_LOG_SPLITTER)
             .append(cmd.getType()).append(REALTIME_LOG_SPLITTER)
             .append(log.getNumber()).append(REALTIME_LOG_SPLITTER)
-            .append(agentPath.getZone()).append(REALTIME_LOG_SPLITTER)
-            .append(agentPath.getName()).append(REALTIME_LOG_SPLITTER)
-            .append(cmd.getId()).append(REALTIME_LOG_SPLITTER)
             .append(log.getContent())
             .toString();
     }
@@ -156,24 +163,51 @@ public class LogEventHandler implements LogListener {
         }
     }
 
-
+    /**
+     * Rename xxx.out.tmp to xxx.out.zip and upload zip package to server
+     */
     private void renameAndUpload(Path logPath, Log.Type logType) {
-        // rename xxx.out.tmp to xxx.out.zip and renameAndUpload to server
-        if (Files.exists(logPath)) {
-            try {
-                Path target = Paths.get(DEFAULT_LOG_PATH.toString(), getLogFileName(cmd, logType, false));
-                Files.move(logPath, target);
-
-                // delete if uploaded
-                ReportManager reportManager = ReportManager.getInstance();
-
-                if (reportManager.cmdLogUploadSync(cmd.getId(), target)) {
-                    Files.deleteIfExists(target);
-                }
-            } catch (IOException warn) {
-                log.warn("Exception while move update log name from temp: {}", warn.getMessage());
-            }
+        if (!Files.exists(logPath)) {
+            return;
         }
+
+        try {
+            Path target = Paths.get(logPath.toString(), getLogFileName(cmd, logType, false));
+            Files.move(logPath, target);
+
+            if (logUpload(cmd.getId(), target)) {
+                Files.deleteIfExists(target);
+            }
+        } catch (IOException warn) {
+            log.warn("Exception while move update log name from temp: {}", warn.getMessage());
+        }
+    }
+
+    private boolean logUpload(final String cmdId, final Path path) {
+        UpstreamUrlConfig config = AgentConfig.getInstance().getUrl();
+        if (!config.hasCmdLog()) {
+            return false;
+        }
+
+        HttpEntity entity = MultipartEntityBuilder.create()
+            .addPart("file", new FileBody(path.toFile(), ContentType.create("application/zip")))
+            .addPart("cmdId", new StringBody(cmdId, ContentType.create("text/plain", Charsets.UTF_8)))
+            .setContentType(ContentType.MULTIPART_FORM_DATA)
+            .build();
+
+        String url = config.getCmdLog();
+        HttpResponse<String> response = HttpClient.build(url)
+            .post(entity)
+            .retry(5)
+            .bodyAsString();
+
+        if (!response.hasSuccess()) {
+            log.warn("Fail to upload zipped cmd log to: {}", url);
+            return false;
+        }
+
+        log.trace("Zipped cmd log uploaded on {}", path);
+        return true;
     }
 
     private boolean closeZipAndFileStream(final ZipOutputStream zipStream, final FileOutputStream fileStream) {
@@ -225,13 +259,13 @@ public class LogEventHandler implements LogListener {
     private void initZipLogFile(final Cmd cmd) throws IOException {
         // init log directory
         try {
-            Files.createDirectories(DEFAULT_LOG_PATH);
+            Files.createDirectories(logPath);
         } catch (FileAlreadyExistsException ignore) {
-            log.warn("Log path {} already exist", DEFAULT_LOG_PATH);
+            log.warn("Log path {} already exist", logPath);
         }
 
         // init zipped log file for tmp
-        Path stdoutPath = Paths.get(DEFAULT_LOG_PATH.toString(), getLogFileName(cmd, Log.Type.STDOUT, true));
+        Path stdoutPath = Paths.get(logPath.toString(), getLogFileName(cmd, Log.Type.STDOUT, true));
         Files.deleteIfExists(stdoutPath);
 
         stdoutLogPath = Files.createFile(stdoutPath);

@@ -16,53 +16,49 @@
 
 package com.flow.platform.agent.test;
 
-import com.flow.platform.agent.Config;
+import com.flow.platform.agent.config.AgentConfig;
+import com.flow.platform.domain.AgentPath;
 import com.flow.platform.domain.AgentSettings;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
 
 /**
  * @author gy@fir.im
  */
 public abstract class TestBase {
 
-    protected static Path TEMP_LOG_DIR;
-
-    static {
-        if (System.getenv("TMPDIR") != null) {
-            TEMP_LOG_DIR = Paths.get(System.getenv("TMPDIR"), "flow-agent-log");
-        } else {
-            TEMP_LOG_DIR = Paths.get(System.getenv("HOME"), "flow-agent-log-ut");
-        }
-
-        System.setProperty(Config.PROP_LOG_DIR, TEMP_LOG_DIR.toString());
-    }
+    static final String TOKEN = "123123";
 
     @BeforeClass
-    public static void beforeClassBase() {
-        Config.AGENT_SETTINGS = new AgentSettings(
-                "ws://localhost:8080/logging",
-                "http://localhost:8080/cmd/report",
-                "http://localhost:8080/cmd/log/upload");
+    public static void stubForConfig() {
+        AgentSettings settings = new AgentSettings();
+        settings.setWebSocketUrl("ws://localhost:8080/logging");
+        settings.setCmdLogUrl("http://localhost:8080/cmd/log/upload");
+        settings.setAgentPath(new AgentPath("hello", "world"));
+        settings.setCallbackQueueName("cmd.callback.queue");
+        settings.setListeningQueueName("agent.hello.world");
+        settings.setMqUri("amqp://127.0.0.1:5672");
+        settings.setZookeeperUrl("127.0.0.1:2181");
+
+        AgentConfig.load(settings, TOKEN);
     }
 
     @AfterClass
     public static void afterClassBase() {
+        Path logDir = AgentConfig.getInstance().getLogDir();
         try {
-            Files.list(TEMP_LOG_DIR).forEach(path -> {
+            Files.list(logDir).forEach(path -> {
                 try {
                     Files.deleteIfExists(path);
                 } catch (IOException e) {
-
+                    e.printStackTrace();
                 }
             });
 
-            Files.deleteIfExists(TEMP_LOG_DIR);
+            Files.deleteIfExists(logDir);
         } catch (IOException e) { }
     }
 }

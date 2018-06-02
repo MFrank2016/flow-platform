@@ -39,13 +39,13 @@ public abstract class RabbitClient {
     @Getter
     private final String queueName;
 
-    public RabbitClient(String host, String queueName, ExecutorService executorService) {
+    public RabbitClient(String uri, String queueName, ExecutorService executorService) {
         this.queueName = queueName;
 
-        ConnectionFactory connectionFactory = new ConnectionFactory();
-        connectionFactory.setHost(host);
-
         try {
+            ConnectionFactory connectionFactory = new ConnectionFactory();
+            connectionFactory.setUri(uri);
+
             if (Objects.isNull(executorService)) {
                 connection = connectionFactory.newConnection();
             } else{
@@ -54,7 +54,7 @@ public abstract class RabbitClient {
             channel = connection.createChannel();
             channel.queueDeclare(queueName, true, false, false, null);
         } catch (Throwable throwable) {
-            log.error("Unable to connect queue : " + host + " - " + queueName);
+            log.error("Unable to connect queue : " + uri + " - " + queueName);
         }
     }
 

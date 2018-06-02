@@ -25,6 +25,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Objects;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.ToString;
 
 /**
@@ -51,6 +52,11 @@ public final class AgentConfig {
         return Instance;
     }
 
+    public static AgentConfig load(AgentSettings settings, String token) {
+        Instance = new AgentConfig(token, settings);
+        return Instance;
+    }
+
     public static AgentConfig getInstance() {
         Objects.requireNonNull(Instance, "AgentConfig should be loaded at beginning");
         return Instance;
@@ -69,6 +75,7 @@ public final class AgentConfig {
     private final String callbackQueueName;
 
     @Getter
+    @Setter
     private final Path logDir = Paths.get(USER_HOME, ".flow-agent", "run-log");
 
     @Getter
@@ -92,8 +99,8 @@ public final class AgentConfig {
         url.setWebsocket(settings.getWebSocketUrl());
         url.setCmdLog(settings.getCmdLogUrl());
 
-        queue.setHost(settings.getRabbitmqHost());
+        queue.setHost(settings.getMqUri());
         queue.setCmdQueueName(settings.getListeningQueueName());
-        queue.setCmdQueueName(settings.getCallbackQueueName());
+        queue.setCallbackQueueName(settings.getCallbackQueueName());
     }
 }

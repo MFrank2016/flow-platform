@@ -18,13 +18,10 @@ package com.flow.platform.agent.test;
 
 import com.flow.platform.agent.LogEventHandler;
 import com.flow.platform.cmd.Log;
-import com.flow.platform.domain.Cmd;
 import com.flow.platform.domain.CmdType;
-import com.github.tomakehurst.wiremock.junit.WireMockRule;
+import com.flow.platform.domain.v1.Cmd;
 import java.util.UUID;
 import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 
 /**
@@ -32,19 +29,13 @@ import org.junit.Test;
  */
 public class LogEventHandlerTest extends TestBase {
 
-    @Rule
-    public WireMockRule wireMockRule = new WireMockRule(8080);
-
-    @Before
-    public void init() {
-
-    }
-
     @Test
-    public void should_get_correct_format_websocket() throws Throwable {
+    public void should_get_correct_format_websocket() {
         // given:
-        Cmd cmd = new Cmd("TestZone", "TestAgent", CmdType.RUN_SHELL, "hello");
+        Cmd cmd = new Cmd();
         cmd.setId(UUID.randomUUID().toString());
+        cmd.setType(CmdType.RUN_SHELL);
+
         LogEventHandler logEventHandler = new LogEventHandler(cmd);
 
         // when:
@@ -52,9 +43,7 @@ public class LogEventHandlerTest extends TestBase {
         String socketIoData = logEventHandler.websocketLogFormat(new Log(Log.Type.STDOUT, mockLogContent));
 
         // then:
-        String expect = String
-            .format("%s#%s#%s#%s#%s#%s", CmdType.RUN_SHELL, null, cmd.getZoneName(), cmd.getAgentName(), cmd.getId(),
-                mockLogContent);
+        String expect = String.format("%s#%s#%s#%s", cmd.getId(), CmdType.RUN_SHELL, 0, mockLogContent);
         Assert.assertEquals(expect, socketIoData);
     }
 }
