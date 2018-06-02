@@ -21,19 +21,17 @@ import com.flow.platform.agent.config.QueueConfig;
 import com.flow.platform.agent.mq.Pusher;
 import com.flow.platform.cmd.CmdExecutor;
 import com.flow.platform.cmd.ProcListener;
-import com.flow.platform.domain.CmdResult;
-import com.flow.platform.domain.CmdStatus;
 import com.flow.platform.domain.CmdType;
 import com.flow.platform.domain.Jsonable;
 import com.flow.platform.domain.v1.Cmd;
 import com.google.common.collect.Lists;
-import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -71,7 +69,7 @@ public class CmdManager {
     private final List<ProcListener> extraProcEventListeners = new ArrayList<>(5);
 
     @Getter
-    private final Map<Cmd, CmdRunner> currentRunners = new HashMap<>(5);
+    private final Map<Cmd, CmdRunner> currentRunners = new ConcurrentHashMap<>(5);
 
     private final Pusher cmdCallback;
 
@@ -86,9 +84,7 @@ public class CmdManager {
      */
     public void execute(final Cmd cmd) {
         if (cmd.getType() == CmdType.RUN_SHELL) {
-            ShellCmdRunner runner = new ShellCmdRunner(cmd);
-            currentRunners.put(cmd, runner);
-            cmdExecutor.execute(runner);
+            cmdExecutor.execute(new ShellCmdRunner(cmd));
             return;
         }
 
@@ -110,8 +106,11 @@ public class CmdManager {
     }
 
     public synchronized void kill() {
-        for (Entry<Cmd, CmdRunner> entry : currentRunners.entrySet()) {
+        Iterator<Entry<Cmd, CmdRunner>> iterator = currentRunners.entrySet().iterator();
+        while(iterator.hasNext()) {
+            Entry<Cmd, CmdRunner> entry = iterator.next();
             entry.getValue().kill();
+            iterator.remove();
         }
 
         try {
@@ -211,11 +210,17 @@ public class CmdManager {
                 cmd.getOutputFilter(),
                 cmd.getTimeout(),
                 Lists.newArrayList(getCmd().getContent()));
+
+            currentRunners.put(cmd, this);
         }
 
         @Override
         public void run() {
-            executor.run();
+            try {
+                executor.run();
+            } finally {
+                currentRunners.remove(cmd);
+            }
         }
 
         @Override

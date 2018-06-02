@@ -34,7 +34,7 @@ import lombok.extern.log4j.Log4j2;
 @Log4j2
 public class ProcEventHandler implements ProcListener {
 
-    private final List<ProcListener> extraProcEventListeners;
+    private final List<ProcListener> extra;
 
     private final Pusher pusher;
 
@@ -42,9 +42,9 @@ public class ProcEventHandler implements ProcListener {
 
     private ZonedDateTime startAt;
 
-    ProcEventHandler(Pusher pusher, Cmd cmd, List<ProcListener> extraProcEventListeners) {
+    ProcEventHandler(Pusher pusher, Cmd cmd, List<ProcListener> extra) {
         this.pusher = pusher;
-        this.extraProcEventListeners = extraProcEventListeners;
+        this.extra = extra;
         this.result = ExecutedCmd.transfer(cmd);
     }
 
@@ -52,7 +52,7 @@ public class ProcEventHandler implements ProcListener {
     public void onStarted() {
         startAt = DateUtil.now();
 
-        for (ProcListener listener : extraProcEventListeners) {
+        for (ProcListener listener : extra) {
             listener.onStarted();
         }
     }
@@ -64,7 +64,7 @@ public class ProcEventHandler implements ProcListener {
         result.setStatus(CmdStatus.EXECUTED);
         pusher.send(result.toJson());
 
-        for (ProcListener listener : extraProcEventListeners) {
+        for (ProcListener listener : extra) {
             listener.onExecuted(code);
         }
     }
@@ -76,7 +76,7 @@ public class ProcEventHandler implements ProcListener {
         result.setDuration(ChronoUnit.SECONDS.between(startAt, DateUtil.now()));
         pusher.send(result.toJson());
 
-        for (ProcListener listener : extraProcEventListeners) {
+        for (ProcListener listener : extra) {
             listener.onLogged(output);
         }
     }
@@ -88,7 +88,7 @@ public class ProcEventHandler implements ProcListener {
         result.setDuration(ChronoUnit.SECONDS.between(startAt, DateUtil.now()));
         pusher.send(result.toJson());
 
-        for (ProcListener listener : extraProcEventListeners) {
+        for (ProcListener listener : extra) {
             listener.onException(e);
         }
     }

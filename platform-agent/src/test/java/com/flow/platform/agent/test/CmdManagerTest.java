@@ -19,7 +19,6 @@ package com.flow.platform.agent.test;
 import com.flow.platform.agent.CmdManager;
 import com.flow.platform.agent.config.AgentConfig;
 import com.flow.platform.cmd.AbstractProcListener;
-import com.flow.platform.cmd.ProcListener;
 import com.flow.platform.domain.CmdType;
 import com.flow.platform.domain.v1.Cmd;
 import com.google.common.collect.Lists;
@@ -66,7 +65,7 @@ public class CmdManagerTest extends TestBase {
     }
 
     @Test
-    public void should_has_cmd_log() throws Throwable {
+    public void should_be_executed_from_cmd_manager() throws Throwable {
         Cmd cmd = new Cmd();
         cmd.setType(CmdType.RUN_SHELL);
         cmd.setContent(script);
@@ -82,6 +81,7 @@ public class CmdManagerTest extends TestBase {
         });
 
         cmdManager.execute(cmd);
+        Assert.assertEquals(1, cmdManager.getCurrentRunners().size());
 
         ExecutorService cmdExecutor = cmdManager.getCmdExecutor();
         cmdExecutor.shutdown();
@@ -90,6 +90,7 @@ public class CmdManagerTest extends TestBase {
         AgentConfig config = AgentConfig.getInstance();
         String logDir = config.getLogDir().toString();
 
+        Assert.assertEquals(0, cmdManager.getCurrentRunners().size());
         Assert.assertEquals(2, sizeOfOutput.get());
         Assert.assertTrue(java.nio.file.Files.exists(Paths.get(logDir, cmd.getId() + ".out.zip")));
     }
@@ -117,6 +118,7 @@ public class CmdManagerTest extends TestBase {
         Thread.sleep(2);
 
         cmdManager.kill();
+        Assert.assertEquals(0, cmdManager.getCurrentRunners().size());
     }
 //
 //
