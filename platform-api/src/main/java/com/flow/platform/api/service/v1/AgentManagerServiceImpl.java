@@ -27,9 +27,7 @@ import com.flow.platform.domain.AgentPath;
 import com.flow.platform.domain.AgentSettings;
 import com.flow.platform.domain.AgentStatus;
 import com.flow.platform.util.zk.ZKClient;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 import javax.annotation.PostConstruct;
@@ -142,7 +140,7 @@ public class AgentManagerServiceImpl extends ApplicationEventService implements 
 
         AgentSettings agentSettings = new AgentSettings();
         agentSettings.setAgentPath(agent.getPath());
-        agentSettings.setMqUri("127.0.0.1");
+        agentSettings.setMqUri("amqp://127.0.0.1:5672");
         agentSettings.setZookeeperUrl("127.0.0.1:2181");
         agentSettings.setCallbackQueueName(QueueConfig.CMD_CALLBACK_QUEUE_NAME);
         agentSettings.setListeningQueueName(getQueueName(agent));
@@ -152,17 +150,14 @@ public class AgentManagerServiceImpl extends ApplicationEventService implements 
 
     @Override
     public String getQueueName(Agent agent) {
-        return agent.getPath().toString();
+        return "agent." + agent.getPath().toString();
     }
 
     /**
      * Declare queue with agent name
      */
     private Queue declareQueue(Agent agent) {
-        Map<String, Object> cmdQueueArgs = new HashMap<>();
-        cmdQueueArgs.put("x-max-length", Integer.MAX_VALUE);
-        cmdQueueArgs.put("x-max-priority", 255);
-        Queue queue = new Queue(getQueueName(agent), true, false, false, cmdQueueArgs);
+        Queue queue = new Queue(getQueueName(agent), true, false, false, QueueConfig.DEFAULT_QUEUE_ARGS);
         amqpAdmin.declareQueue(queue);
         return queue;
     }

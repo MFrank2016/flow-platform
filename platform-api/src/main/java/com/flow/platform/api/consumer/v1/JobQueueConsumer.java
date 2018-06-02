@@ -33,6 +33,7 @@ import com.flow.platform.domain.Agent;
 import com.flow.platform.api.domain.v1.JobKey;
 import com.flow.platform.domain.v1.Cmd;
 import com.flow.platform.tree.Node;
+import com.flow.platform.util.ObjectUtil;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.amqp.core.Message;
 import org.springframework.amqp.core.MessageProperties;
@@ -82,7 +83,7 @@ public class JobQueueConsumer extends ApplicationEventService {
             // send cmd to agent queue
             Cmd cmd = cmdManager.create(job.getKey(), next, agent.getToken());
             String queueName = agentManagerService.getQueueName(agent);
-            jobCmdTemplate.send(queueName, new Message(cmd.toJson().getBytes(), new MessageProperties()));
+            jobCmdTemplate.send(queueName, new Message(ObjectUtil.toBytes(cmd), new MessageProperties()));
             jobNodeManager.execute(key, next.getPath());
             this.dispatchEvent(new CmdSentEvent(this, cmd));
 

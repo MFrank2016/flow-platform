@@ -23,6 +23,7 @@ import com.flow.platform.agent.mq.RabbitClient;
 import com.flow.platform.domain.AgentStatus;
 import com.flow.platform.domain.Jsonable;
 import com.flow.platform.domain.v1.Cmd;
+import com.flow.platform.util.ObjectUtil;
 import com.flow.platform.util.zk.ZKClient;
 import com.google.gson.JsonParseException;
 import com.rabbitmq.client.AMQP.BasicProperties;
@@ -30,6 +31,7 @@ import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.DefaultConsumer;
 import com.rabbitmq.client.Envelope;
 import java.io.IOException;
+import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
@@ -176,15 +178,15 @@ public class AgentManager implements Runnable, TreeCacheListener, AutoCloseable 
 
         @Override
         public void handleDelivery(String consumerTag, Envelope envelope, BasicProperties properties, byte[] body) {
-            log.trace("Received cmd : " + new String(body));
+            Cmd cmd = (Cmd) ObjectUtil.fromBytes(body);
 
-            try {
-                Cmd cmd = Jsonable.parse(body, Cmd.class);
-                log.trace("Cmd parsed : " + cmd.toString());
-                CmdManager.getInstance().execute(cmd);
-            } catch (JsonParseException e) {
+            if (Objects.isNull(cmd)) {
                 log.warn("Unable to parse cmd from zk node: " + new String(body));
+                return;
             }
+
+            log.trace("Cmd parsed : " + cmd);
+            CmdManager.getInstance().execute(cmd);
         }
     }
 }

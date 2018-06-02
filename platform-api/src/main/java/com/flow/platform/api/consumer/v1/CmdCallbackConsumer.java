@@ -30,14 +30,13 @@ import com.flow.platform.api.service.v1.JobService;
 import com.flow.platform.core.exception.IllegalStatusException;
 import com.flow.platform.core.service.ApplicationEventService;
 import com.flow.platform.domain.Agent;
-import com.flow.platform.domain.CmdStatus;
 import com.flow.platform.domain.v1.Cmd;
 import com.flow.platform.domain.v1.ExecutedCmd;
 import com.flow.platform.tree.Node;
 import com.flow.platform.tree.NodePath;
 import com.flow.platform.tree.NodeStatus;
 import com.flow.platform.tree.Result;
-import com.google.common.base.Strings;
+import com.flow.platform.util.ObjectUtil;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -84,7 +83,13 @@ public class CmdCallbackConsumer extends ApplicationEventService {
     private AmqpTemplate jobCmdTemplate;
 
     @RabbitListener(queues = QueueConfig.CMD_CALLBACK_QUEUE_NAME)
-    public void handleMessage(ExecutedCmd cmd) {
+    public void handleMessage(byte[] data) {
+        ExecutedCmd cmd = (ExecutedCmd) ObjectUtil.fromBytes(data);
+        if (Objects.isNull(cmd)) {
+            log.warn("Cmd webhook consumer cannot parse the data: " + new String(data));
+            return;
+        }
+
         log.debug("Cmd Webhook Consumer received: {}", cmd);
 
         if (!cmd.isExecuted()) {
@@ -120,7 +125,7 @@ public class CmdCallbackConsumer extends ApplicationEventService {
             Cmd nextCmd = cmdManager.create(jobKey, next, agent.getToken());
             String agentQueueName = agentManagerService.getQueueName(agent);
             jobNodeManager.execute(jobKey, next.getPath());
-            jobCmdTemplate.send(agentQueueName, new Message(nextCmd.toBytes(), new MessageProperties()));
+            jobCmdTemplate.send(agentQueueName, new Message(ObjectUtil.toBytes(nextCmd), new MessageProperties()));
 
             this.dispatchEvent(new CmdSentEvent(this, nextCmd));
             log.trace("Handle message finish!");

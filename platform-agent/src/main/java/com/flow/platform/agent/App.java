@@ -59,7 +59,7 @@ public class App {
             log.trace("====== Agent Started ======");
 
         } catch (Throwable e) {
-            log.error("Cannot load agent config from zone", e);
+            log.error(e);
             Runtime.getRuntime().exit(1);
         }
     }

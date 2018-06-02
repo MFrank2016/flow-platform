@@ -38,6 +38,7 @@ import com.flow.platform.domain.v1.ExecutedCmd;
 import com.flow.platform.tree.Node;
 import com.flow.platform.tree.NodePath;
 import com.flow.platform.tree.NodeStatus;
+import com.flow.platform.util.ObjectUtil;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import org.junit.Assert;
@@ -99,7 +100,7 @@ public class JobIntegrationTest extends TestBase {
         // when: mock step 1 callback
         CountDownLatch cmdCountDown = createCountDownForCmdEvent(NodePath.create("root", "step2"));
         ExecutedCmd executed = createExecutedCmd(0, CmdStatus.EXECUTED, NodePath.create("root", "step1"));
-        cmdCallbackConsumer.handleMessage(executed);
+        cmdCallbackConsumer.handleMessage(ObjectUtil.toBytes(executed));
 
         // then: check job and node status for step 1
         JobV1 loadedJob  = jobServiceV1.find(job.getKey());
@@ -117,7 +118,7 @@ public class JobIntegrationTest extends TestBase {
         // when: mock step 2 callback with error code but allow failure
         cmdCountDown = createCountDownForCmdEvent(NodePath.create("root", "step3"));
         executed = createExecutedCmd(1, CmdStatus.EXECUTED, NodePath.create("root", "step2"));
-        cmdCallbackConsumer.handleMessage(executed);
+        cmdCallbackConsumer.handleMessage(ObjectUtil.toBytes(executed));
 
         // then: check job and node status for step 2
         loadedJob  = jobServiceV1.find(job.getKey());
@@ -135,7 +136,7 @@ public class JobIntegrationTest extends TestBase {
 
         // when: mock step 3 callback
         executed = createExecutedCmd(0, CmdStatus.EXECUTED, NodePath.create("root", "step3"));
-        cmdCallbackConsumer.handleMessage(executed);
+        cmdCallbackConsumer.handleMessage(ObjectUtil.toBytes(executed));
 
         CountDownLatch jobFinishCountDown = new CountDownLatch(1);
         springContext.registerApplicationListener((ApplicationListener<JobStatusEvent>) event -> {

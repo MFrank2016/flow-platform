@@ -62,7 +62,7 @@ public class ProcEventHandler implements ProcListener {
         result.setCode(code);
         result.setDuration(ChronoUnit.SECONDS.between(startAt, DateUtil.now()));
         result.setStatus(CmdStatus.EXECUTED);
-        pusher.send(result.toJson());
+        pusher.send(result);
 
         for (ProcListener listener : extra) {
             listener.onExecuted(code);
@@ -74,7 +74,7 @@ public class ProcEventHandler implements ProcListener {
         result.setOutput(output);
         result.setStatus(CmdStatus.LOGGED);
         result.setDuration(ChronoUnit.SECONDS.between(startAt, DateUtil.now()));
-        pusher.send(result.toJson());
+        pusher.send(result);
 
         for (ProcListener listener : extra) {
             listener.onLogged(output);
@@ -86,7 +86,7 @@ public class ProcEventHandler implements ProcListener {
         result.setErrMsg(e.getMessage());
         result.setStatus(CmdStatus.EXCEPTION);
         result.setDuration(ChronoUnit.SECONDS.between(startAt, DateUtil.now()));
-        pusher.send(result.toJson());
+        pusher.send(result);
 
         for (ProcListener listener : extra) {
             listener.onException(e);

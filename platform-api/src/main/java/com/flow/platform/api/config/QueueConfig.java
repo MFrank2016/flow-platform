@@ -20,6 +20,8 @@ import com.flow.platform.api.service.SyncService;
 import com.flow.platform.core.queue.MemoryQueue;
 import com.flow.platform.core.queue.PriorityMessage;
 import com.flow.platform.queue.PlatformQueue;
+import java.util.HashMap;
+import java.util.Map;
 import org.springframework.amqp.core.AmqpAdmin;
 import org.springframework.amqp.core.Queue;
 import org.springframework.amqp.rabbit.annotation.EnableRabbit;
@@ -47,6 +49,13 @@ public class QueueConfig {
     public final static String JOB_QUEUE_NAME = "job.queue";
 
     public final static String CMD_CALLBACK_QUEUE_NAME = "cmd.callback.queue";
+
+    public final static Map<String, Object> DEFAULT_QUEUE_ARGS = new HashMap<>(2);
+
+    static {
+        DEFAULT_QUEUE_ARGS.put("x-max-length", Integer.MAX_VALUE);
+        DEFAULT_QUEUE_ARGS.put("x-max-priority", 255);
+    }
 
     @Value("${api.queue.hosts}")
     private String hosts;
@@ -81,8 +90,8 @@ public class QueueConfig {
     @Bean
     public AmqpAdmin amqpAdmin() {
         RabbitAdmin admin = new RabbitAdmin(connectionFactory());
-        admin.declareQueue(new Queue(JOB_QUEUE_NAME));
-        admin.declareQueue(new Queue(CMD_CALLBACK_QUEUE_NAME));
+        admin.declareQueue(new Queue(JOB_QUEUE_NAME, true, false, false, DEFAULT_QUEUE_ARGS));
+        admin.declareQueue(new Queue(CMD_CALLBACK_QUEUE_NAME, true, false, false, DEFAULT_QUEUE_ARGS));
         return admin;
     }
 

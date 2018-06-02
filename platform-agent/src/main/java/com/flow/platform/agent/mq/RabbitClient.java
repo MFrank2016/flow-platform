@@ -16,12 +16,14 @@
 
 package com.flow.platform.agent.mq;
 
+import com.flow.platform.util.ObjectUtil;
 import com.flow.platform.util.StringUtil;
-import com.google.common.base.Charsets;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import lombok.Getter;
@@ -34,6 +36,13 @@ import lombok.extern.log4j.Log4j2;
 public class RabbitClient {
 
     private final static String DEFAULT_EXCHANGE = StringUtil.EMPTY;
+
+    private final static Map<String, Object> DEFAULT_QUEUE_ARGS = new HashMap<>(2);
+
+    static {
+        DEFAULT_QUEUE_ARGS.put("x-max-length", Integer.MAX_VALUE);
+        DEFAULT_QUEUE_ARGS.put("x-max-priority", 255);
+    }
 
     @Getter
     private Channel channel;
@@ -56,17 +65,17 @@ public class RabbitClient {
             } else{
                 connection = connectionFactory.newConnection(executorService);
             }
-            channel = connection.createChannel();
-            channel.queueDeclare(queueName, true, false, false, null);
 
+            channel = connection.createChannel();
+            channel.queueDeclare(queueName, true, false, false, DEFAULT_QUEUE_ARGS);
         } catch (Throwable throwable) {
             log.error("Unable to connect queue : " + uri + " - " + queueName);
         }
     }
 
-    public void send(String message) {
+    public void send(Object object) {
         try {
-            getChannel().basicPublish(DEFAULT_EXCHANGE, getQueueName(), null, message.getBytes(Charsets.UTF_8));
+            getChannel().basicPublish(DEFAULT_EXCHANGE, getQueueName(), null, ObjectUtil.toBytes(object));
         } catch (Throwable throwable) {
             log.error(throwable.getMessage());
         }
