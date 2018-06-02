@@ -27,6 +27,20 @@ import lombok.Setter;
  */
 public final class ExecutedCmd extends Cmd {
 
+    public static ExecutedCmd transfer(Cmd cmd) {
+        ExecutedCmd r = new ExecutedCmd();
+        r.setId(cmd.getId());
+        r.setMeta(cmd.getMeta());
+        r.setStatus(cmd.getStatus());
+        r.setContent(cmd.getContent());
+        r.setTimeout(cmd.getTimeout());
+        r.setContext(cmd.getContext());
+        r.setType(cmd.getType());
+        r.setWorkDir(cmd.getWorkDir());
+        r.setOutputFilter(cmd.getOutputFilter());
+        return r;
+    }
+
     /**
      * Exit code for script content
      */

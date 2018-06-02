@@ -19,31 +19,42 @@ package com.flow.platform.agent.mq;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
+import java.util.Objects;
+import java.util.concurrent.ExecutorService;
+import lombok.Getter;
+import lombok.extern.log4j.Log4j2;
 
 /**
  * @author yh@fir.im
  */
-public abstract class MqSettings {
+@Log4j2
+public abstract class RabbitClient {
 
-    protected Channel channel;
+    @Getter
+    private Channel channel;
 
-    protected Connection connection;
+    @Getter
+    private Connection connection;
 
-    protected String queueName;
+    @Getter
+    private final String queueName;
 
-    public MqSettings(String host, String queueName) {
+    public RabbitClient(String host, String queueName, ExecutorService executorService) {
         this.queueName = queueName;
 
         ConnectionFactory connectionFactory = new ConnectionFactory();
         connectionFactory.setHost(host);
 
         try {
-            connection = connectionFactory.newConnection();
+            if (Objects.isNull(executorService)) {
+                connection = connectionFactory.newConnection();
+            } else{
+                connection = connectionFactory.newConnection(executorService);
+            }
             channel = connection.createChannel();
             channel.queueDeclare(queueName, true, false, false, null);
-
         } catch (Throwable throwable) {
-            System.out.println(throwable.getMessage());
+            log.error("Unable to connect queue : " + host + " - " + queueName);
         }
     }
 
@@ -51,8 +62,8 @@ public abstract class MqSettings {
         try {
             this.channel.close();
             this.connection.close();
-        } catch (Throwable throwable) {
-            System.out.println(throwable.getMessage());
+        } catch (Throwable e) {
+            log.error("Error when close queue: " + e.getMessage());
         }
     }
 }

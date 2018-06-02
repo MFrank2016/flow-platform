@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 flow.ci
+ * Copyright 2018 fir.im
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,32 +14,20 @@
  * limitations under the License.
  */
 
-package com.flow.platform.cmd;
-
-import java.util.Map;
+package com.flow.platform.domain.v1;
 
 /**
- * @author gy@fir.im
+ * @author yang
  */
-public interface ProcListener {
+public final class CmdMeta {
 
-    /**
-     * Proc start to exec
-     */
-    void onStarted();
+    public final static String META_JOB_KEY = "job.key";
 
-    /**
-     * Proc executed without exception
-     */
-    void onExecuted(int code);
+    public final static String META_JOB_NODE_PATH = "job.node.path";
 
-    /**
-     * Log stream been read
-     */
-    void onLogged(Map<String, String> output);
+    public final static String META_AGENT_TOKEN = "agent.token";
 
-    /**
-     * Proc got exception while executing (option)
-     */
-    void onException(Throwable e);
+    private CmdMeta() {
+
+    }
 }

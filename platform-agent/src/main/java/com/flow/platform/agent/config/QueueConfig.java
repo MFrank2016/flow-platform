@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 flow.ci
+ * Copyright 2018 fir.im
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,32 +14,28 @@
  * limitations under the License.
  */
 
-package com.flow.platform.cmd;
+package com.flow.platform.agent.config;
 
-import java.util.Map;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
 
 /**
- * @author gy@fir.im
+ * @author yang
  */
-public interface ProcListener {
+@ToString
+public final class QueueConfig {
 
-    /**
-     * Proc start to exec
-     */
-    void onStarted();
+    @Getter
+    @Setter
+    private String host;
 
-    /**
-     * Proc executed without exception
-     */
-    void onExecuted(int code);
+    @Getter
+    @Setter
+    private String cmdQueueName;
 
-    /**
-     * Log stream been read
-     */
-    void onLogged(Map<String, String> output);
+    @Getter
+    @Setter
+    private String callbackQueueName;
 
-    /**
-     * Proc got exception while executing (option)
-     */
-    void onException(Throwable e);
 }

@@ -19,7 +19,6 @@ package com.flow.platform.cmd;
 import com.flow.platform.domain.CmdResult;
 import com.flow.platform.util.CommandUtil.Unix;
 import com.flow.platform.util.CommandUtil.Windows;
-import com.flow.platform.util.DateUtil;
 import com.flow.platform.util.SystemUtil;
 import com.google.common.base.Strings;
 import com.google.common.collect.Sets;
@@ -35,7 +34,10 @@ import java.lang.reflect.Field;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.ZonedDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -47,6 +49,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import lombok.Getter;
 import lombok.extern.log4j.Log4j2;
 
 /**
@@ -61,22 +64,23 @@ public final class CmdExecutor {
     private final class NullProcListener implements ProcListener {
 
         @Override
-        public void onStarted(CmdResult result) {
+        public void onStarted() {
 
         }
 
         @Override
-        public void onLogged(CmdResult result) {
+        public void onExecuted(int code) {
 
         }
 
         @Override
-        public void onExecuted(CmdResult result) {
+        public void onLogged(Map<String, String> output) {
 
         }
 
         @Override
-        public void onException(CmdResult result) {
+        public void onException(Throwable e) {
+
         }
     }
 
@@ -128,19 +132,45 @@ public final class CmdExecutor {
 
     private final CountDownLatch logThreadCountDown = new CountDownLatch(1);
 
+    @Getter
+    private final Map<String, String> output = new HashMap<>(10);
+
     private ProcessBuilder pBuilder;
 
+    @Getter
     private ProcListener procListener = new NullProcListener();
 
+    @Getter
     private LogListener logListener = new NullLogListener();
 
+    @Getter
     private List<String> cmdList;
 
+    @Getter
     private Set<String> outputEnvFilters = Collections.emptySet();
 
-    private CmdResult outputResult;
+    @Getter
+    private Integer processId;
 
-    private Integer timeout;
+    @Getter
+    private Integer exitCode;
+
+    /**
+     * Cmd execute duration in seconds
+     */
+    @Getter
+    private Long duration;
+
+    @Getter
+    private ZonedDateTime startAt;
+
+    @Getter
+    private ZonedDateTime finishAt;
+
+    /**
+     * Default time out is 1800 seconds
+     */
+    private Integer timeout = DEFAULT_TIMEOUT;
 
     /**
      * @param procListener nullable
@@ -148,6 +178,7 @@ public final class CmdExecutor {
      * @param inputs nullable input env
      * @param workingDir nullable, for set cmd working directory, default is user.dir
      * @param outputEnvFilters nullable, for start_with or equal env to cmd result output
+     * @param timeout cmd time out in seconds
      * @param cmds exec cmd
      */
     public CmdExecutor(final ProcListener procListener,
@@ -196,9 +227,7 @@ public final class CmdExecutor {
         }
 
         // init timeout
-        if (timeout == null) {
-            this.timeout = DEFAULT_TIMEOUT;
-        } else {
+        if (timeout != null) {
             this.timeout = timeout;
         }
     }
@@ -207,25 +236,12 @@ public final class CmdExecutor {
         this(null, null, null, workingDir, null, null, cmds);
     }
 
-    public void setProcListener(ProcListener procListener) {
-        this.procListener = procListener;
-    }
-
-    public void setLogListener(LogListener logListener) {
-        this.logListener = logListener;
-    }
-
-
-    public CmdResult run() {
-        outputResult = new CmdResult();
-        outputResult.setStartTime(DateUtil.now());
-
+    public void run() {
         try {
+            startAt = ZonedDateTime.now();
             Process p = pBuilder.start();
-            outputResult.setProcessId(getPid(p));
-            outputResult.setProcess(p);
-
-            procListener.onStarted(outputResult);
+            procListener.onStarted();
+            processId = getPid(p);
 
             // thread to send cmd list to bash
             executor.execute(createCmdListExec(p.getOutputStream(), cmdList));
@@ -238,15 +254,13 @@ public final class CmdExecutor {
             executor.execute(createCmdLoggingReader());
 
             // wait for max process timeout
+            exitCode = CmdResult.EXIT_VALUE_FOR_TIMEOUT;
             if (p.waitFor(timeout.longValue(), TimeUnit.SECONDS)) {
-                outputResult.setExitValue(p.exitValue());
-            } else {
-                outputResult.setExitValue(CmdResult.EXIT_VALUE_FOR_TIMEOUT);
+                exitCode = p.exitValue();
             }
 
-            outputResult.setExecutedTime(DateUtil.now());
-            procListener.onExecuted(outputResult);
-            log.trace("====== 1. Process executed : {} ======", outputResult.getExitValue());
+            procListener.onExecuted(exitCode);
+            log.trace("====== 1. Process executed : {} ======", exitCode);
 
             // wait for log thread with max 30 seconds to continue upload log
             logThreadCountDown.await(DEFAULT_LOGGING_WAITING_SECONDS, TimeUnit.SECONDS);
@@ -257,22 +271,20 @@ public final class CmdExecutor {
                 executor.shutdownNow();
             }
 
-            outputResult.setFinishTime(DateUtil.now());
-            procListener.onLogged(outputResult);
+            procListener.onLogged(output);
             log.trace("====== 2. Logging executed ======");
 
         } catch (InterruptedException ignore) {
             log.warn(ignore.getMessage());
+
         } catch (Throwable e) {
-            outputResult.getExceptions().add(e);
-            outputResult.setFinishTime(DateUtil.now());
-            procListener.onException(outputResult);
+            procListener.onException(e);
             log.warn(e.getMessage());
         } finally {
+            finishAt = ZonedDateTime.now();
+            duration = ChronoUnit.SECONDS.between(startAt, finishAt);
             log.trace("====== 3. Process Done ======");
         }
-
-        return outputResult;
     }
 
     private String getExecutor() {
@@ -363,9 +375,7 @@ public final class CmdExecutor {
                 Integer count = 0;
                 while ((line = reader.readLine()) != null) {
                     if (Objects.equals(line, endTerm)) {
-                        if (outputResult != null) {
-                            readEnv(reader, outputResult.getOutput(), outputEnvFilters);
-                        }
+                        readEnv(reader);
                         break;
                     }
                     count += 1;
@@ -384,9 +394,7 @@ public final class CmdExecutor {
      * Start when find log match 'endTerm', and load all env,
      * put env item which match 'start with filter' to CmdResult.output map
      */
-    private void readEnv(final BufferedReader reader,
-                         final Map<String, String> output,
-                         final Set<String> filters) throws IOException {
+    private void readEnv(final BufferedReader reader) throws IOException {
         String line;
         String currentKey = null;
         StringBuilder value = null;
@@ -395,7 +403,7 @@ public final class CmdExecutor {
             int index = line.indexOf('=');
 
             // reset value builder and current key
-            if (index != -1 && !isMatchEnvFilter(line, filters)) {
+            if (index != -1 && !isMatchEnvFilter(line, outputEnvFilters)) {
                 if (value != null && currentKey != null) {
                     output.put(currentKey, value.toString());
                 }
@@ -405,7 +413,7 @@ public final class CmdExecutor {
                 continue;
             }
 
-            if (isMatchEnvFilter(line, filters)) {
+            if (isMatchEnvFilter(line, outputEnvFilters)) {
 
                 // put previous env to output and reset
                 if (value != null && currentKey != null) {

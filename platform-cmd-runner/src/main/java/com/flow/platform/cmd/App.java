@@ -16,13 +16,14 @@
 
 package com.flow.platform.cmd;
 
-import com.flow.platform.domain.CmdResult;
-
 import com.google.common.collect.Lists;
-import java.io.FileNotFoundException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.*;
+import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Main entrance of cmd runner
@@ -32,24 +33,24 @@ import java.util.concurrent.*;
 public final class App {
 
     private final static ProcListener procListener = new ProcListener() {
+
         @Override
-        public void onStarted(CmdResult result) {
+        public void onStarted() {
 
         }
 
         @Override
-        public void onExecuted(CmdResult result) {
+        public void onExecuted(int code) {
 
         }
 
         @Override
-        public void onLogged(CmdResult result) {
-            assert result.getProcess() != null;
-            System.out.println(result);
+        public void onLogged(Map<String, String> output) {
+
         }
 
         @Override
-        public void onException(CmdResult result) {
+        public void onException(Throwable e) {
 
         }
     };
@@ -97,8 +98,7 @@ public final class App {
             null,
             Lists.newArrayList("sleep 20", "echo $FLOW_INPUT", "echo $PWD", "export FLOW_TEST=112233", "cd ~/"));
 
-        CmdResult result = executor.run();
-        assert result != null;
+        executor.run();
     }
 
     private static class MyThread implements Runnable {

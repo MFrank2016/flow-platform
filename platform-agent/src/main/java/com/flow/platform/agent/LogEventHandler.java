@@ -16,12 +16,12 @@
 
 package com.flow.platform.agent;
 
+import com.flow.platform.agent.config.AgentConfig;
 import com.flow.platform.cmd.Log;
 import com.flow.platform.cmd.LogListener;
-import com.flow.platform.domain.AgentSettings;
-import com.flow.platform.domain.Cmd;
+import com.flow.platform.domain.AgentPath;
+import com.flow.platform.domain.v1.Cmd;
 import com.flow.platform.util.CommandUtil.Unix;
-import com.google.common.base.Strings;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.URI;
@@ -29,6 +29,7 @@ import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -51,12 +52,16 @@ import org.glassfish.tyrus.client.ClientManager;
 @Log4j2
 public class LogEventHandler implements LogListener {
 
-    private final static Path DEFAULT_LOG_PATH = Config.logDir();
+    private final static String REALTIME_LOG_SPLITTER = "#";
+
+    private final static Path DEFAULT_LOG_PATH = AgentConfig.getInstance().getLogDir();
 
     private final Cmd cmd;
 
     private Path stdoutLogPath;
+
     private FileOutputStream stdoutLogStream;
+
     private ZipOutputStream stdoutLogZipStream;
 
     private Session wsSession;
@@ -71,18 +76,18 @@ public class LogEventHandler implements LogListener {
             log.error("Fail to init cmd log file", e);
         }
 
-        AgentSettings config = Config.agentSettings();
+        AgentConfig config = AgentConfig.getInstance();
 
-        if (config == null || !Config.enableRealtimeLog() || Strings.isNullOrEmpty(config.getWebSocketUrl())) {
+        if (!config.getUrl().hasWebsocket()) {
             return;
         }
 
         // init rabbit queue
         try {
-            initWebSocketSession(config.getWebSocketUrl(), 10);
+            initWebSocketSession(config.getUrl().getWebsocket(), 10);
         } catch (Throwable warn) {
             wsSession = null;
-            log.warn("Fail to web socket: " + config.getWebSocketUrl() + ": " + warn.getMessage());
+            log.warn("Fail to web socket: " + config.getUrl().getWebsocket() + ": " + warn.getMessage());
         }
     }
 
@@ -97,7 +102,7 @@ public class LogEventHandler implements LogListener {
     }
 
     private void sendRealTimeLog(Log log) {
-        if (wsSession == null) {
+        if (Objects.isNull(wsSession)) {
             return;
         }
 
@@ -121,10 +126,16 @@ public class LogEventHandler implements LogListener {
     }
 
     public String websocketLogFormat(Log log) {
-        return String
-            .format("%s#%s#%s#%s#%s#%s", cmd.getType(), log.getNumber(), cmd.getZoneName(), cmd.getAgentName(),
-                cmd.getId(),
-                log.getContent());
+        AgentPath agentPath = AgentConfig.getInstance().getPath();
+
+        return new StringBuilder(100)
+            .append(cmd.getType()).append(REALTIME_LOG_SPLITTER)
+            .append(log.getNumber()).append(REALTIME_LOG_SPLITTER)
+            .append(agentPath.getZone()).append(REALTIME_LOG_SPLITTER)
+            .append(agentPath.getName()).append(REALTIME_LOG_SPLITTER)
+            .append(cmd.getId()).append(REALTIME_LOG_SPLITTER)
+            .append(log.getContent())
+            .toString();
     }
 
     private void initWebSocketSession(String url, int wsConnectionTimeout) throws Exception {
@@ -150,13 +161,13 @@ public class LogEventHandler implements LogListener {
         // rename xxx.out.tmp to xxx.out.zip and renameAndUpload to server
         if (Files.exists(logPath)) {
             try {
-                Path target = Paths
-                    .get(DEFAULT_LOG_PATH.toString(), getLogFileName(cmd, logType, false));
+                Path target = Paths.get(DEFAULT_LOG_PATH.toString(), getLogFileName(cmd, logType, false));
                 Files.move(logPath, target);
 
                 // delete if uploaded
                 ReportManager reportManager = ReportManager.getInstance();
-                if (reportManager.cmdLogUploadSync(cmd.getId(), target) && Config.isDeleteLog()) {
+
+                if (reportManager.cmdLogUploadSync(cmd.getId(), target)) {
                     Files.deleteIfExists(target);
                 }
             } catch (IOException warn) {

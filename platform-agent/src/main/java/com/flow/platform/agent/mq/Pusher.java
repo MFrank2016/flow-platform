@@ -16,6 +16,7 @@
 
 package com.flow.platform.agent.mq;
 
+import com.flow.platform.util.StringUtil;
 import com.google.common.base.Charsets;
 import lombok.extern.log4j.Log4j2;
 
@@ -23,28 +24,19 @@ import lombok.extern.log4j.Log4j2;
  * @author yh@fir.im
  */
 @Log4j2
-public class Pusher extends MqSettings {
+public class Pusher extends RabbitClient {
 
-    private static Pusher instance;
+    private final static String DEFAULT_EXCHANGE = StringUtil.EMPTY;
 
     public Pusher(String host, String queueName) {
-        super(host, queueName);
+        super(host, queueName, null);
     }
 
     public void send(String message) {
         try {
-            this.channel.basicPublish("", this.queueName, null, message.getBytes(Charsets.UTF_8));
+            getChannel().basicPublish(DEFAULT_EXCHANGE, getQueueName(), null, message.getBytes(Charsets.UTF_8));
         } catch (Throwable throwable) {
             log.error(throwable.getMessage());
         }
     }
-
-    public static void init(String host, String queueName) {
-        instance = new Pusher(host, queueName);
-    }
-
-    public static void publish(String message) {
-        instance.send(message);
-    }
-
 }

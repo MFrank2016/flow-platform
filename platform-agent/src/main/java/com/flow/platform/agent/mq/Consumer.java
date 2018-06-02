@@ -20,20 +20,22 @@ import com.rabbitmq.client.AMQP.BasicProperties;
 import com.rabbitmq.client.Envelope;
 import com.rabbitmq.client.ShutdownSignalException;
 import java.io.IOException;
+import java.util.concurrent.ExecutorService;
 
 /**
  * @author yh@fir.im
  */
-public abstract class Consumer extends MqSettings implements Runnable, com.rabbitmq.client.Consumer {
+public abstract class Consumer extends RabbitClient implements Runnable, com.rabbitmq.client.Consumer {
 
-    public Consumer(String host, String queueName) {
-        super(host, queueName);
+    public Consumer(String host, String queueName, ExecutorService executorService) {
+        super(host, queueName, executorService);
     }
 
     @Override
     public void run() {
         try {
-            channel.basicConsume(queueName, true, this);
+            String queueName = getQueueName();
+            getChannel().basicConsume(queueName, true, this);
             System.out.println("Start Listening " + queueName + " to receive message");
         } catch (Throwable throwable) {
         }

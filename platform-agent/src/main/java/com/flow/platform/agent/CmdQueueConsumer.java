@@ -19,35 +19,30 @@ package com.flow.platform.agent;
 import com.flow.platform.agent.mq.Consumer;
 import com.flow.platform.domain.Jsonable;
 import com.flow.platform.domain.v1.Cmd;
+import com.google.gson.JsonParseException;
+import java.util.concurrent.ExecutorService;
 import lombok.extern.log4j.Log4j2;
 
 /**
  * @author yh@fir.im
  */
 @Log4j2
-public class CmdConsumer extends Consumer {
+public class CmdQueueConsumer extends Consumer {
 
-    public CmdConsumer(String host, String queueName) {
-        super(host, queueName);
+    CmdQueueConsumer(String host, String queueName, ExecutorService executorService) {
+        super(host, queueName, executorService);
     }
 
     @Override
     public void item(byte[] rawData) {
-        log.trace("Received cmd :" + new String(rawData));
+        log.trace("Received cmd : " + new String(rawData));
 
-        if (rawData == null) {
-            log.warn("Zookeeper node data is null");
-            return;
-        }
-
-        Cmd cmd = Jsonable.parse(rawData, Cmd.class);
-        if (cmd == null) {
+        try {
+            Cmd cmd = Jsonable.parse(rawData, Cmd.class);
+            log.trace("Cmd parsed : " + cmd.toString());
+            CmdManager.getInstance().execute(cmd);
+        } catch (JsonParseException e) {
             log.warn("Unable to parse cmd from zk node: " + new String(rawData));
-            return;
         }
-
-
-        log.trace("Received command: " + cmd.toString());
-        CmdManager.getInstance().execute(cmd);
     }
 }

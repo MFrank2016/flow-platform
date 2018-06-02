@@ -16,13 +16,15 @@
 
 package com.flow.platform.agent;
 
+import com.flow.platform.agent.config.AgentConfig;
+import com.flow.platform.agent.config.QueueConfig;
+import com.flow.platform.agent.config.ZookeeperConfig;
 import com.flow.platform.agent.mq.Pusher;
 import com.flow.platform.domain.AgentStatus;
-import com.flow.platform.domain.Cmd;
-import com.flow.platform.domain.Jsonable;
 import com.flow.platform.util.zk.ZKClient;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
 import lombok.Getter;
 import lombok.extern.log4j.Log4j2;
 import org.apache.curator.framework.CuratorFramework;
@@ -30,7 +32,6 @@ import org.apache.curator.framework.recipes.cache.ChildData;
 import org.apache.curator.framework.recipes.cache.TreeCacheEvent;
 import org.apache.curator.framework.recipes.cache.TreeCacheEvent.Type;
 import org.apache.curator.framework.recipes.cache.TreeCacheListener;
-import org.apache.curator.utils.ZKPaths;
 
 /**
  * @author gy@fir.im
@@ -38,35 +39,27 @@ import org.apache.curator.utils.ZKPaths;
 @Log4j2
 public class AgentManager implements Runnable, TreeCacheListener, AutoCloseable {
 
-    // Zk root path /flow-agents/{zone}/{name}
     private final static Object STATUS_LOCKER = new Object();
 
-    private final static int ZK_RECONNECT_TIME = 1;
+    final static ThreadFactory DEFAULT_THREAD_FACTORY = r -> {
+        Thread t = Executors.defaultThreadFactory().newThread(r);
+        t.setDaemon(true);
+        return t;
+    };
 
-    private final static int ZK_RETRY_PERIOD = 500;
+    @Getter
+    private final AgentConfig config;
 
     @Getter
     private final ZKClient zkClient;
 
     @Getter
-    private final String nodePath;    // zk node path, /flow-agents/{zone}/{name}
+    private final CmdQueueConsumer cmdConsumer;
 
-    @Getter
-    private final List<Cmd> cmdHistory = new LinkedList<>();
-
-    private final static String SPLIT_CHARS = "===";
-
-    public AgentManager(String zkHost, int zkTimeout, String zone, String name) {
-        this.zkClient = new ZKClient(zkHost, ZK_RETRY_PERIOD, ZK_RECONNECT_TIME);
-        this.nodePath = ZKPaths.makePath(Config.ZK_ROOT, zone + SPLIT_CHARS + name);
-
-        // init Pusher message
-        Pusher.init(Config.AGENT_SETTINGS.getRabbitmqHost(), Config.AGENT_SETTINGS.getCallbackQueueName());
-
-        // init consumer to receive
-        new Thread(
-            new CmdConsumer(Config.AGENT_SETTINGS.getRabbitmqHost(), Config.AGENT_SETTINGS.getListeningQueueName()))
-            .start();
+    public AgentManager(AgentConfig config) {
+        this.config = config;
+        this.zkClient = initZookeeperClient(config.getZk());
+        this.cmdConsumer = initCmdQueueConsumer(config.getQueue());
     }
 
     /**
@@ -110,7 +103,6 @@ public class AgentManager implements Runnable, TreeCacheListener, AutoCloseable 
         }
 
         if (event.getType() == Type.NODE_UPDATED) {
-//            onDataChanged(eventData.getPath());
             return;
         }
 
@@ -121,22 +113,9 @@ public class AgentManager implements Runnable, TreeCacheListener, AutoCloseable 
 
     @Override
     public void close() {
-        removeZkNode();
+        closeZookeeper();
+        closeRabbitQueue();
         stop();
-    }
-
-    /**
-     * Force to exit current agent
-     */
-    private void onDeleted() {
-        try {
-//            CmdManager.getInstance().shutdown(null);
-            log.trace("========= Agent been deleted =========");
-
-            stop();
-        } finally {
-            Runtime.getRuntime().exit(1);
-        }
     }
 
     /**
@@ -146,12 +125,29 @@ public class AgentManager implements Runnable, TreeCacheListener, AutoCloseable 
      * @return path of zookeeper or null if failure
      */
     private String registerZkNodeAndWatch() {
-        String path = zkClient.createEphemeral(nodePath, AgentStatus.IDLE.toString().getBytes());
-//        zkClient.watchTree(path, this);
-        return path;
+        String zookeeperPath = config.getPath().fullPath();
+        return zkClient.createEphemeral(zookeeperPath, AgentStatus.IDLE.toString().getBytes());
     }
 
-    private void removeZkNode() {
-        zkClient.deleteWithoutGuaranteed(nodePath, false);
+    private void closeZookeeper() {
+        String zookeeperPath = config.getPath().fullPath();
+        zkClient.deleteWithoutGuaranteed(zookeeperPath, false);
+    }
+
+    private void closeRabbitQueue() {
+        cmdConsumer.close();
+    }
+
+    private ZKClient initZookeeperClient(ZookeeperConfig config) {
+        final int ZK_RECONNECT_TIME = 1;
+        final int ZK_RETRY_PERIOD = 500;
+        return new ZKClient(config.getHost(), ZK_RETRY_PERIOD, ZK_RECONNECT_TIME);
+    }
+
+    private CmdQueueConsumer initCmdQueueConsumer(QueueConfig config) {
+        String host = config.getHost();
+        String cmdQueueName = config.getCmdQueueName();
+        ExecutorService pool = Executors.newFixedThreadPool(1, DEFAULT_THREAD_FACTORY);
+        return new CmdQueueConsumer(host, cmdQueueName, pool);
     }
 }

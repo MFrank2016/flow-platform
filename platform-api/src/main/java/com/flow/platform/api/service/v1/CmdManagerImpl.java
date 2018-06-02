@@ -31,7 +31,7 @@ public class CmdManagerImpl implements CmdManager {
     public Cmd create(JobKey key, Node node, String token) {
         // trans node to cmd
         Cmd cmd = new Cmd();
-        cmd.setTimeout(1800L);
+        cmd.setTimeout(1800);
         cmd.setContent(node.getContent());
         cmd.setWorkDir("/tmp");
 

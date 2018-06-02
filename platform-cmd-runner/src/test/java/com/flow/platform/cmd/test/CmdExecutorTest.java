@@ -3,14 +3,13 @@ package com.flow.platform.cmd.test;
 import com.flow.platform.cmd.CmdExecutor;
 import com.flow.platform.cmd.Log;
 import com.flow.platform.cmd.LogListener;
-import com.flow.platform.domain.CmdResult;
 import com.google.common.collect.Lists;
+import java.util.Map;
 import org.junit.Assert;
 import org.junit.Test;
 
 /**
  * Created by gy@fir.im on 16/05/2017.
- * Copyright fir.im
  */
 public class CmdExecutorTest {
 
@@ -41,23 +40,20 @@ public class CmdExecutorTest {
             null,
             Lists.newArrayList(String.format("source %s", path)));
 
-        CmdResult result = executor.run();
-        Assert.assertEquals(0, result.getExitValue().intValue());
+        executor.run();
 
-        Assert.assertNotNull(result.getStartTime());
-        Assert.assertNotNull(result.getProcess());
-        Assert.assertNotNull(result.getProcessId());
+        Assert.assertEquals(0, executor.getExitCode().intValue());
 
-        Assert.assertNotNull(result.getExitValue());
-        Assert.assertNotNull(result.getDuration());
-        Assert.assertNotNull(result.getExecutedTime());
 
-        Assert.assertNotNull(result.getTotalDuration());
-        Assert.assertNotNull(result.getFinishTime());
+        Assert.assertNotNull(executor.getProcessId());
+        Assert.assertNotNull(executor.getDuration());
+        Assert.assertNotNull(executor.getStartAt());
+        Assert.assertNotNull(executor.getFinishAt());
 
-        Assert.assertEquals(2, result.getOutput().size());
-        Assert.assertEquals("test1", result.getOutput().get("CMD_RUNNER_TEST_1"));
-        Assert.assertEquals("test2", result.getOutput().get("OUTPUT_2"));
+        Map<String, String> output = executor.getOutput();
+        Assert.assertEquals(2, output.size());
+        Assert.assertEquals("test1", output.get("CMD_RUNNER_TEST_1"));
+        Assert.assertEquals("test2", output.get("OUTPUT_2"));
     }
 
     @Test
@@ -74,8 +70,8 @@ public class CmdExecutorTest {
             null,
             Lists.newArrayList(String.format("source %s", path)));
 
-        CmdResult result = executor.run();
-        Assert.assertEquals(0, result.getOutput().size());
-        Assert.assertNotEquals(0, result.getExitValue().intValue());
+        executor.run();
+        Assert.assertEquals(0, executor.getOutput().size());
+        Assert.assertNotEquals(0, executor.getExitCode().intValue());
     }
 }

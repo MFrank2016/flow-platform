@@ -16,6 +16,7 @@
 
 package com.flow.platform.agent;
 
+import com.flow.platform.agent.config.AgentConfig;
 import lombok.extern.log4j.Log4j2;
 
 /**
@@ -40,38 +41,25 @@ public class App {
             token = args[1];
         }
 
-        log.trace("========= Flow Agent Started =========");
+        log.trace("====== Agent Parameters ======");
         log.trace("=== Server: " + baseUrl);
         log.trace("=== Token:  " + token);
 
         Runtime.getRuntime().addShutdownHook(new ShutdownHook());
 
         try {
-            log.trace("=== Start to load configuration");
+            log.trace("====== Init Agent Configuration.... ======");
+            AgentConfig config = AgentConfig.load(baseUrl, token);
 
-            Config.AGENT_SETTINGS = Config.loadAgentConfig(baseUrl, token);
-            log.trace("====== Settings: {}", Config.agentSettings());
+            log.trace("=== Settings: {}", config);
+            log.trace("====== Config Initialized ======");
 
-            Config.ZK_URL = Config.AGENT_SETTINGS.getZookeeperUrl();
-            log.trace("====== Zookeeper host: {}", Config.zkUrl());
+            agentManager = new AgentManager(config);
+            new Thread(agentManager).start();
+            log.trace("====== Agent Started ======");
 
-            Config.ZONE = Config.AGENT_SETTINGS.getAgentPath().getZone();
-            log.trace("====== Working zone: {}", Config.zone());
-
-            Config.NAME = Config.AGENT_SETTINGS.getAgentPath().getName();
-            log.trace("====== Agent agent: {}", Config.name());
-
-            log.trace("========= Config initialized =========");
         } catch (Throwable e) {
             log.error("Cannot load agent config from zone", e);
-            Runtime.getRuntime().exit(1);
-        }
-
-        try {
-            agentManager = new AgentManager(Config.zkUrl(), Config.zkTimeout(), Config.zone(), Config.name());
-            new Thread(agentManager).start();
-        } catch (Throwable e) {
-            log.error("Got exception when agent running", e);
             Runtime.getRuntime().exit(1);
         }
     }

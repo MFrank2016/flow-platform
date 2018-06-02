@@ -21,6 +21,8 @@ import com.flow.platform.domain.CmdType;
 import com.flow.platform.domain.Jsonable;
 import com.google.common.collect.Sets;
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import lombok.Getter;
@@ -30,7 +32,7 @@ import lombok.ToString;
 /**
  * @author yh@fir.im
  */
-@ToString(of = {"type", "status"})
+@ToString(of = {"id", "type", "status"})
 public class Cmd extends Jsonable {
 
     public static final Set<CmdStatus> FAILURE_STATUS = Sets.newHashSet(
@@ -41,12 +43,16 @@ public class Cmd extends Jsonable {
         CmdStatus.STOPPED
     );
 
+    @Getter
+    @Setter
+    private String id;
+
     /**
      * Timeout in seconds
      */
     @Getter
     @Setter
-    private Long timeout = 1800L;
+    private Integer timeout;
 
     /**
      * Work directory
@@ -74,11 +80,25 @@ public class Cmd extends Jsonable {
     private CmdStatus status = CmdStatus.PENDING;
 
     /**
+     * Output filter
+     */
+    @Getter
+    @Setter
+    private List<String> outputFilter = new LinkedList<>();
+
+    /**
      * Meta data for extra information
      */
     @Getter
     @Setter
     private Map<String, String> meta = new HashMap<>();
+
+    /**
+     * Environment variable context
+     */
+    @Getter
+    @Setter
+    private Map<String, String> context = new HashMap<>();
 
     /**
      * Indicate cmd is executed >= level 2

@@ -16,21 +16,22 @@
 
 package com.flow.platform.agent;
 
+import com.flow.platform.agent.config.AgentConfig;
+import com.flow.platform.agent.config.QueueConfig;
+import com.flow.platform.agent.mq.Pusher;
 import com.flow.platform.cmd.CmdExecutor;
 import com.flow.platform.cmd.ProcListener;
-import com.flow.platform.domain.CmdResult;
 import com.flow.platform.domain.CmdType;
 import com.flow.platform.domain.Jsonable;
-import com.flow.platform.tree.YmlEnvs;
+import com.flow.platform.domain.v1.Cmd;
 import com.google.common.collect.Lists;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadFactory;
+import lombok.Getter;
 import lombok.extern.log4j.Log4j2;
 
 /**
@@ -42,79 +43,63 @@ import lombok.extern.log4j.Log4j2;
 @Log4j2
 public class CmdManager {
 
-    private final static CmdManager INSTANCE = new CmdManager();
+    private final static CmdManager Instance = new CmdManager();
 
-    public static CmdManager getInstance() {
-        return INSTANCE;
+    static CmdManager getInstance() {
+        return Instance;
     }
-
-    // Make thread to Daemon thread, those threads exit while JVM exist
-    private final ThreadFactory defaultFactory = r -> {
-        Thread t = Executors.defaultThreadFactory().newThread(r);
-        t.setDaemon(true);
-        return t;
-    };
 
     // Executor to execute operations
-    private ExecutorService defaultExecutor = Executors.newCachedThreadPool(defaultFactory);
+    private ExecutorService executor = Executors.newCachedThreadPool(AgentManager.DEFAULT_THREAD_FACTORY);
 
     // handle extra listeners
-    private List<ProcListener> extraProcEventListeners = new ArrayList<>(5);
+    @Getter
+    private final List<ProcListener> extraProcEventListeners = new ArrayList<>(5);
+
+    private final AgentConfig config = AgentConfig.getInstance();
+
+    private final Pusher cmdCallback;
 
     private CmdManager() {
+        this.cmdCallback = initCmdCallback(config.getQueue());
     }
-
-    public List<ProcListener> getExtraProcEventListeners() {
-        return extraProcEventListeners;
-    }
-
 
     /**
      * Execute command from Cmd object by thread executor
      *
      * @param cmd Cmd object
      */
-    public void execute(final com.flow.platform.domain.v1.Cmd cmd) {
+    void execute(final Cmd cmd) {
         if (cmd.getType() == CmdType.RUN_SHELL) {
-            // check max concurrent proc
-
-            new TaskRunner(cmd) {
-                @Override
-                public void run() {
-                    log.debug("start cmd ...");
-
-//                    LogEventHandler logListener = new LogEventHandler(getCmd());
-
-                    ProcEventHandler procEventHandler =
-                        new ProcEventHandler(getCmd(), extraProcEventListeners);
-
-                    try {
-                        CmdExecutor executor = new CmdExecutor(
-                            procEventHandler,
-                            null,
-                            cmd.getContext(),
-                            cmd.get(YmlEnvs.WORK_DIR),
-                            Collections.EMPTY_LIST, // TODO:  outputEnvFilters
-                            Integer.parseInt(cmd.get(YmlEnvs.TIMEOUT)),
-                            Lists.newArrayList(getCmd().getContent()));
-
-                        executor.run();
-                    } catch (Throwable e) {
-                        log.error("Cannot init CmdExecutor for cmd: " + cmd, e);
-                        CmdResult result = new CmdResult();
-                        result.getExceptions().add(e);
-                        procEventHandler.onException(result);
-                    }
-                }
-            }.run();
-
+            executor.execute(new ShellCmdRunner(cmd));
             return;
         }
+
+        if (cmd.getType() == CmdType.KILL) {
+            throw new UnsupportedOperationException();
+        }
+
+        if (cmd.getType() == CmdType.SHUTDOWN) {
+            throw new UnsupportedOperationException();
+        }
+
+        if (cmd.getType() == CmdType.STOP) {
+            throw new UnsupportedOperationException();
+        }
+
+        if (cmd.getType() == CmdType.SYSTEM_INFO) {
+            throw new UnsupportedOperationException();
+        }
+    }
+
+    private Pusher initCmdCallback(QueueConfig config) {
+        String host = config.getHost();
+        String callbackQueueName = config.getCallbackQueueName();
+        return new Pusher(host, callbackQueueName);
     }
 
     /**
      * collect agent info
-     * @return
      */
     private String collectionAgentInfo() {
         String javaVersion = System.getProperty("java.version");
@@ -129,24 +114,56 @@ public class CmdManager {
         dic.put("osName", osName);
         dic.put("totalMemory", Long.toString(total));
         dic.put("useMemory", Long.toString(use));
-        dic.put("zone", Config.zone());
-        dic.put("name", Config.name());
-        dic.put("agentVersion", Config.getProperty("version"));
+        dic.put("zone", config.getPath().getZone());
+        dic.put("name", config.getPath().getName());
+        dic.put("agentVersion", "1.0");
 
         return Jsonable.GSON_CONFIG.toJson(dic);
     }
 
 
-    private abstract class TaskRunner implements Runnable {
+    private abstract class CmdRunner implements Runnable {
 
-        private final com.flow.platform.domain.v1.Cmd cmd;
+        protected final Cmd cmd;
 
-        public TaskRunner(com.flow.platform.domain.v1.Cmd cmd) {
+        CmdRunner(Cmd cmd) {
             this.cmd = cmd;
         }
 
-        public com.flow.platform.domain.v1.Cmd getCmd() {
+        public Cmd getCmd() {
             return cmd;
+        }
+    }
+
+    private class ShellCmdRunner extends CmdRunner {
+
+        private final ProcEventHandler procEventHandler;
+
+        private final LogEventHandler logEventHandler;
+
+        ShellCmdRunner(Cmd cmd) {
+            super(cmd);
+            this.procEventHandler = new ProcEventHandler(cmdCallback, getCmd(), extraProcEventListeners);
+            this.logEventHandler = new LogEventHandler(cmd);
+        }
+
+        @Override
+        public void run() {
+            try {
+                CmdExecutor executor = new CmdExecutor(
+                    procEventHandler,
+                    logEventHandler,
+                    cmd.getContext(),
+                    cmd.getWorkDir(),
+                    cmd.getOutputFilter(),
+                    cmd.getTimeout(),
+                    Lists.newArrayList(getCmd().getContent()));
+
+                executor.run();
+            } catch (Throwable e) {
+                log.error("Cannot init CmdExecutor for cmd: " + cmd, e);
+                procEventHandler.onException(e);
+            }
         }
     }
 }
