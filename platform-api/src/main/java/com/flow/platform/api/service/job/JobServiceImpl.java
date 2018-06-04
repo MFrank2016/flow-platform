@@ -42,8 +42,6 @@ import com.flow.platform.api.envs.GitEnvs;
 import com.flow.platform.api.envs.JobEnvs;
 import com.flow.platform.api.events.JobStatusChangeEvent;
 import com.flow.platform.api.script.GroovyRunner;
-import com.flow.platform.api.service.GitService;
-import com.flow.platform.api.service.node.EnvService;
 import com.flow.platform.api.util.CommonUtil;
 import com.flow.platform.core.domain.Page;
 import com.flow.platform.core.domain.Pageable;
@@ -115,14 +113,8 @@ public class JobServiceImpl extends ApplicationEventService implements JobServic
     @Autowired
     private JobNodeService jobNodeService;
 
-    @Autowired
-    private GitService gitService;
-
-    @Autowired
-    private EnvService envService;
-
-    @Autowired
-    private CmdService cmdService;
+//    @Autowired
+//    private CmdService cmdService;
 
 
     @Autowired
@@ -333,7 +325,7 @@ public class JobServiceImpl extends ApplicationEventService implements JobServic
         // to run node with customized cmd id
         try {
             NodeResult nodeResult = nodeResultService.find(node.getPath(), job.getId());
-            cmdService.runShell(job, node, nodeResult.getCmdId(), envVars);
+//            cmdService.runShell(job, node, nodeResult.getCmdId(), envVars);
         } catch (IllegalStatusException e) {
             CmdInfo rawCmd = (CmdInfo) e.getData();
             rawCmd.setStatus(CmdStatus.EXCEPTION);
@@ -587,9 +579,9 @@ public class JobServiceImpl extends ApplicationEventService implements JobServic
 
         // to create agent session for job
         try {
-            String sessionId = cmdService.createSession(job, createSessionRetryTimes);
-            job.setSessionId(sessionId);
-            updateJobStatusAndSave(job, JobStatus.SESSION_CREATING);
+//            String sessionId = cmdService.createSession(job, createSessionRetryTimes);
+//            job.setSessionId(sessionId);
+//            updateJobStatusAndSave(job, JobStatus.SESSION_CREATING);
         } catch (IllegalStatusException e) {
             job.setFailureMessage(e.getMessage());
             updateJobStatusAndSave(job, JobStatus.FAILURE);
@@ -698,7 +690,7 @@ public class JobServiceImpl extends ApplicationEventService implements JobServic
      */
     private void stopJob(Job job) {
         setJobStatusByRootResult(job);
-        cmdService.deleteSession(job);
+//        cmdService.deleteSession(job);
     }
 
     @Override
@@ -742,7 +734,7 @@ public class JobServiceImpl extends ApplicationEventService implements JobServic
         // if job is running , please delete session first
         if (job.getStatus() == JobStatus.RUNNING) {
             try {
-                cmdService.deleteSession(job);
+//                cmdService.deleteSession(job);
             } catch (Throwable e) {
                 log.warn("Error on delete session for job {}: {}", job.getId(),
                     ExceptionUtil.findRootCause(e).getMessage());

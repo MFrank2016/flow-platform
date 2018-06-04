@@ -56,7 +56,7 @@ public class ManualJobTest extends TestBase {
         env.put(GitEnvs.FLOW_GIT_SOURCE.name(), GitSource.SSH.name());
         env.put(GitEnvs.FLOW_GIT_URL.name(), GITHUB_TEST_REPO_SSH);
         env.put(GitEnvs.FLOW_GIT_SSH_PRIVATE_KEY.name(), getResourceContent("ssh_private_key"));
-        envService.save(flow, env, false);
+//        envService.save(flow, env, false);
 
         String content = getResourceContent("yml/for_manual_job_test.yml");
         Node yml = nodeService.updateByYml(flow.getName(), content);

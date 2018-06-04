@@ -16,12 +16,9 @@
 
 package com.flow.platform.api.controller;
 
-import com.flow.platform.api.domain.agent.AgentItem;
 import com.flow.platform.api.domain.permission.Actions;
 import com.flow.platform.api.domain.response.BooleanValue;
-import com.flow.platform.api.domain.sync.Sync;
 import com.flow.platform.api.security.WebSecurity;
-import com.flow.platform.api.service.AgentService;
 import com.flow.platform.api.service.SyncService;
 import com.flow.platform.api.service.v1.AgentManagerService;
 import com.flow.platform.core.exception.IllegalParameterException;
@@ -46,9 +43,6 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping(path = "/agents")
 public class AgentController {
-
-    @Autowired
-    private AgentService agentService;
 
     @Autowired
     private AgentManagerService agentManagerService;
@@ -124,7 +118,7 @@ public class AgentController {
         if (agentPath.isEmpty()) {
             throw new IllegalParameterException("Zone and agent name are required");
         }
-        agentService.sendSysCmd(agentPath);
+//        agentService.sendSysCmd(agentPath);
     }
 
     /**
@@ -181,7 +175,7 @@ public class AgentController {
             throw new IllegalParameterException("Agent zone or name are required");
         }
 
-        agentService.close(path);
+//        agentService.close(path);
     }
 
     /**
@@ -210,7 +204,8 @@ public class AgentController {
             throw new IllegalParameterException("Agent zone or name are required");
         }
 
-        return new BooleanValue(agentService.shutdown(path, path.getPassword()));
+//        return new BooleanValue(agentService.shutdown(path, path.getPassword()));
+        return new BooleanValue(true);
     }
 
     /**
@@ -235,7 +230,7 @@ public class AgentController {
      */
     @PostMapping(path = "/callback")
     public void callback(@RequestBody Agent agent) {
-        agentService.onAgentStatusChange(agent);
+//        agentService.onAgentStatusChange(agent);
     }
 
     /**
@@ -262,6 +257,6 @@ public class AgentController {
     @PostMapping(path = "/delete")
     @WebSecurity(action = Actions.ADMIN_DELETE)
     public void delete(@RequestBody AgentPath agentPath) {
-        agentService.delete(agentPath);
+//        agentService.delete(agentPath);
     }
 }

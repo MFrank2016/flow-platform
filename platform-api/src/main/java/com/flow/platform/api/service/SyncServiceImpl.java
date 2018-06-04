@@ -23,10 +23,7 @@ import com.flow.platform.api.domain.sync.SyncRepo;
 import com.flow.platform.api.domain.sync.SyncTask;
 import com.flow.platform.api.domain.sync.SyncType;
 import com.flow.platform.api.envs.EnvUtil;
-import com.flow.platform.api.service.job.CmdService;
-import com.flow.platform.domain.Agent;
 import com.flow.platform.domain.AgentPath;
-import com.flow.platform.domain.AgentStatus;
 import com.flow.platform.domain.Cmd;
 import com.flow.platform.domain.CmdInfo;
 import com.flow.platform.domain.CmdResult;
@@ -74,11 +71,8 @@ public class SyncServiceImpl implements SyncService {
     @Autowired
     private GitService gitService;
 
-    @Autowired
-    private CmdService cmdService;
-
-    @Autowired
-    private AgentService agentService;
+//    @Autowired
+//    private CmdService cmdService;
 
     @Autowired
     private ThreadPoolTaskExecutor taskExecutor;
@@ -216,7 +210,7 @@ public class SyncServiceImpl implements SyncService {
             CmdInfo deleteSession = new CmdInfo(cmd.getAgentPath(), CmdType.DELETE_SESSION, null);
             deleteSession.setWebhook(callbackUrl);
             deleteSession.setSessionId(cmd.getSessionId());
-            cmdService.sendCmd(deleteSession, false, 0);
+//            cmdService.sendCmd(deleteSession, false, 0);
             return;
         }
 
@@ -282,7 +276,7 @@ public class SyncServiceImpl implements SyncService {
             runShell.setSessionId(cmd.getSessionId());
             runShell.setWorkingDir(AppConfig.DEFAULT_AGENT_REPO_DIR);
             runShell.getOutputEnvFilter().addAll(EnvUtil.parseCommaEnvToList(SyncEvent.FLOW_SYNC_LIST));
-            cmdService.sendCmd(runShell, false, 0);
+//            cmdService.sendCmd(runShell, false, 0);
         }
 
         // delete session when queue is empty
@@ -290,7 +284,7 @@ public class SyncServiceImpl implements SyncService {
             CmdInfo deleteSession = new CmdInfo(cmd.getAgentPath(), CmdType.DELETE_SESSION, null);
             deleteSession.setWebhook(callbackUrl);
             deleteSession.setSessionId(cmd.getSessionId());
-            cmdService.sendCmd(deleteSession, false, 0);
+//            cmdService.sendCmd(deleteSession, false, 0);
         }
     }
 
@@ -309,7 +303,7 @@ public class SyncServiceImpl implements SyncService {
         try {
             CmdInfo cmdInfo = new CmdInfo(agentPath, CmdType.CREATE_SESSION, null);
             cmdInfo.setWebhook(callbackUrl);
-            cmdService.sendCmd(cmdInfo, true, DEFAULT_CMD_PRIORITY);
+//            cmdService.sendCmd(cmdInfo, true, DEFAULT_CMD_PRIORITY);
             log.trace("Start sync '{}' git repo to agent '{}'", task.getTotal(), agentPath);
         } catch (Throwable e) {
             syncTasks.remove(agentPath);

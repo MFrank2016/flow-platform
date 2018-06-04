@@ -17,13 +17,13 @@
 package com.flow.platform.api.controller;
 
 import com.flow.platform.api.domain.Artifact;
-import com.flow.platform.api.domain.v1.Flow;
 import com.flow.platform.api.domain.SearchCondition;
 import com.flow.platform.api.domain.job.Job;
 import com.flow.platform.api.domain.job.JobCategory;
 import com.flow.platform.api.domain.job.NodeResult;
 import com.flow.platform.api.domain.permission.Actions;
 import com.flow.platform.api.domain.user.User;
+import com.flow.platform.api.domain.v1.Flow;
 import com.flow.platform.api.domain.v1.JobKey;
 import com.flow.platform.api.domain.v1.JobV1;
 import com.flow.platform.api.security.WebSecurity;
@@ -143,15 +143,9 @@ public class JobController extends NodeController {
      */
     @GetMapping(path = "/{root}")
     @WebSecurity(action = Actions.JOB_SHOW)
-    public List<Job> index(@RequestParam Map<String, String> allParams, SearchCondition condition) {
+    public List<JobV1> index(@RequestParam Map<String, String> allParams, SearchCondition condition) {
         String path = flowName.get();
-
-        List<String> paths = null;
-        if (path != null) {
-            paths = Lists.newArrayList(path);
-        }
-
-        return searchService.search(condition, paths);
+        return jobServiceV1.list(Lists.newArrayList(path), Pageable.DEFAULT).getContent();
     }
 
     /**

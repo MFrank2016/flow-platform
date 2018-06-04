@@ -42,7 +42,6 @@ import com.flow.platform.api.dao.user.UserRoleDao;
 import com.flow.platform.api.dao.v1.AgentDao;
 import com.flow.platform.api.dao.v1.JobDao;
 import com.flow.platform.api.dao.v1.JobTreeDao;
-import com.flow.platform.api.domain.v1.Flow;
 import com.flow.platform.api.domain.job.Job;
 import com.flow.platform.api.domain.job.JobCategory;
 import com.flow.platform.api.domain.job.JobStatus;
@@ -51,6 +50,7 @@ import com.flow.platform.api.domain.job.NodeStatus;
 import com.flow.platform.api.domain.job.NodeTag;
 import com.flow.platform.api.domain.node.NodeTree;
 import com.flow.platform.api.domain.user.User;
+import com.flow.platform.api.domain.v1.Flow;
 import com.flow.platform.api.envs.GitEnvs;
 import com.flow.platform.api.envs.JobEnvs;
 import com.flow.platform.api.initializers.Initializer;
@@ -58,7 +58,6 @@ import com.flow.platform.api.service.job.JobNodeService;
 import com.flow.platform.api.service.job.JobSearchService;
 import com.flow.platform.api.service.job.JobService;
 import com.flow.platform.api.service.job.NodeResultService;
-import com.flow.platform.api.service.node.EnvService;
 import com.flow.platform.api.service.node.NodeService;
 import com.flow.platform.api.service.v1.FlowService;
 import com.flow.platform.domain.Cmd;
@@ -157,9 +156,6 @@ public abstract class TestBase {
 
     @Autowired
     protected FlowService flowService;
-
-    @Autowired
-    protected EnvService envService;
 
     @Autowired
     protected JobService jobService;
@@ -264,7 +260,7 @@ public abstract class TestBase {
         envs.put(GitEnvs.FLOW_GIT_URL.name(), TestBase.GITHUB_TEST_REPO_SSH);
         envs.put(GitEnvs.FLOW_GIT_SOURCE.name(), GitSource.SSH.name());
         envs.put(GitEnvs.FLOW_GIT_SSH_PRIVATE_KEY.name(), getResourceContent("ssh_private_key"));
-        envService.save(flow, envs, false);
+//        envService.save(flow, envs, false);
     }
 
     public void stubDemo() {

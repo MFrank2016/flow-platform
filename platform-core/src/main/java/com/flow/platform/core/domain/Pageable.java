@@ -28,7 +28,7 @@ import lombok.Setter;
 @NoArgsConstructor
 public class Pageable {
 
-    public final static Pageable DEFAULT = new Pageable(1, 20);
+    public final static Pageable DEFAULT = new Pageable(1, 100);
 
     @Getter
     @Setter

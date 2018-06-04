@@ -85,7 +85,7 @@ public class GitWebhookTest extends TestBase {
 
         TriggerParam trigger = new TriggerParam();
         trigger.setPushEnable(false);
-        envService.save(flow, trigger.toEnv(), false);
+//        envService.save(flow, trigger.toEnv(), false);
 
         // when: mock trigger from GitHub
         mockMvc.perform(createGitHubPushRequest(flowName, "github/push_payload.json"))
@@ -102,7 +102,7 @@ public class GitWebhookTest extends TestBase {
 
         TriggerParam trigger = new TriggerParam();
         trigger.setBranchFilter(ImmutableList.of(".*"));
-        envService.save(flow, trigger.toEnv(), false);
+//        envService.save(flow, trigger.toEnv(), false);
         Assert.assertNotNull(flow.getEnv(GitToggleEnvs.FLOW_GIT_PUSH_FILTER));
 
         // when: mock trigger from GitHub
@@ -298,7 +298,7 @@ public class GitWebhookTest extends TestBase {
         env.put(GitEnvs.FLOW_GIT_URL.name(), gitUrl);
         env.put(GitEnvs.FLOW_GIT_BRANCH.name(), "develop");
         env.put(GitEnvs.FLOW_GIT_SSH_PRIVATE_KEY.name(), getResourceContent("ssh_private_key"));
-        envService.save(flow, env, false);
+//        envService.save(flow, env, false);
 
         Flow loaded = flowService.find(flowPath);
 

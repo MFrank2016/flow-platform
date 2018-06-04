@@ -16,7 +16,6 @@
 
 package com.flow.platform.api.controller;
 
-import com.flow.platform.api.service.node.EnvService;
 import com.flow.platform.api.service.node.NodeService;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -30,9 +29,6 @@ public abstract class NodeController {
 
     @Autowired
     protected NodeService nodeService;
-
-    @Autowired
-    protected EnvService envService;
 
     /**
      * The current node path from {@see NodeControllerAdvice}

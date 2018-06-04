@@ -53,7 +53,7 @@ public class NodeCrontabServiceTest extends TestBase {
         Map<String, String> envs = new HashMap<>();
         envs.put(FlowEnvs.FLOW_TASK_CRONTAB_BRANCH.name(), "master");
         envs.put(FlowEnvs.FLOW_TASK_CRONTAB_CONTENT.name(), "0/1 * * * ?");
-        envService.save(flow, envs, true);
+//        envService.save(flow, envs, true);
 
         Assert.assertNotNull(flow.getEnv(FlowEnvs.FLOW_TASK_CRONTAB_BRANCH));
         Assert.assertNotNull(flow.getEnv(FlowEnvs.FLOW_TASK_CRONTAB_CONTENT));
@@ -73,7 +73,7 @@ public class NodeCrontabServiceTest extends TestBase {
             FlowEnvs.FLOW_TASK_CRONTAB_CONTENT.name(),
             FlowEnvs.FLOW_TASK_CRONTAB_BRANCH.name()
         );
-        envService.delete(flow, varToDel, true);
+//        envService.delete(flow, varToDel, true);
 
         // then: check num of trigger
         Assert.assertEquals(0, flowCrontabService.triggers().size());

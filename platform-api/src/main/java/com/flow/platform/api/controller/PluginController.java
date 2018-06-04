@@ -22,7 +22,6 @@ import com.flow.platform.api.domain.sync.Sync;
 import com.flow.platform.api.domain.sync.SyncRepo;
 import com.flow.platform.api.domain.sync.SyncTask;
 import com.flow.platform.api.security.WebSecurity;
-import com.flow.platform.api.service.AgentService;
 import com.flow.platform.api.service.SyncService;
 import com.flow.platform.core.exception.IllegalParameterException;
 import com.flow.platform.domain.Agent;
@@ -34,7 +33,6 @@ import com.flow.platform.plugin.service.PluginService;
 import com.google.common.collect.ImmutableMap;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -64,9 +62,6 @@ public class PluginController {
 
     @Autowired
     private SyncService syncService;
-
-    @Autowired
-    private AgentService agentService;
 
     /**
      * @api {Get} /plugins List
@@ -292,9 +287,9 @@ public class PluginController {
         }
 
         // sync plugin for all online agents
-        forEachOnlineAgent(agentService.list(), agent -> {
-            syncService.sync(agent.getPath());
-        });
+//        forEachOnlineAgent(agentService.list(), agent -> {
+//            syncService.sync(agent.getPath());
+//        });
     }
 
     /**
@@ -346,21 +341,22 @@ public class PluginController {
             return ImmutableMap.<String, SyncTask>of(syncTask.getPath().toString(), syncTask);
         }
 
-        List<Agent> list = agentService.list();
-        Map<String, SyncTask> tasks = new HashMap<>(list.size());
+//        List<Agent> list = agentService.list();
+//        Map<String, SyncTask> tasks = new HashMap<>(list.size());
+//
+//        forEachOnlineAgent(list, agent -> {
+//            SyncTask syncTask = syncService.getSyncTask(agent.getPath());
+//
+//            if (Objects.isNull(syncTask)) {
+//                tasks.put(agent.getPath().toString(), SyncTask.EMPTY);
+//                return;
+//            }
+//
+//            tasks.put(agent.getPath().toString(), syncTask);
+//        });
 
-        forEachOnlineAgent(list, agent -> {
-            SyncTask syncTask = syncService.getSyncTask(agent.getPath());
-
-            if (Objects.isNull(syncTask)) {
-                tasks.put(agent.getPath().toString(), SyncTask.EMPTY);
-                return;
-            }
-
-            tasks.put(agent.getPath().toString(), syncTask);
-        });
-
-        return tasks;
+//        return tasks;
+        return null;
     }
 
     /**
@@ -403,15 +399,16 @@ public class PluginController {
             return ImmutableMap.<String, Set<SyncRepo>>of(sync.getPath().toString(), sync.getRepos());
         }
 
-        List<Agent> list = agentService.list();
-        Map<String, Set<SyncRepo>> installed = new HashMap<>(list.size());
-
-        forEachOnlineAgent(list, agent -> {
-            Sync sync = syncService.get(agent.getPath());
-            installed.put(agent.getPath().toString(), sync.getRepos());
-        });
-
-        return installed;
+//        List<Agent> list = agentService.list();
+//        Map<String, Set<SyncRepo>> installed = new HashMap<>(list.size());
+//
+//        forEachOnlineAgent(list, agent -> {
+//            Sync sync = syncService.get(agent.getPath());
+//            installed.put(agent.getPath().toString(), sync.getRepos());
+//        });
+//
+//        return installed;
+        return null;
     }
 
     private void forEachOnlineAgent(List<Agent> list, Consumer<Agent> consumer) {
