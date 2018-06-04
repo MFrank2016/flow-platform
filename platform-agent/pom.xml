@@ -24,6 +24,12 @@
 
     <dependency>
       <groupId>com.flow.platform</groupId>
+      <artifactId>platform-tree</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>com.flow.platform</groupId>
       <artifactId>platform-util-zk</artifactId>
       <version>${project.version}</version>
     </dependency>
@@ -43,12 +49,6 @@
     <dependency>
       <groupId>com.flow.platform</groupId>
       <artifactId>platform-util-http</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-
-    <dependency>
-      <groupId>com.flow.platform</groupId>
-      <artifactId>platform-queue</artifactId>
       <version>${project.version}</version>
     </dependency>
 
@@ -102,21 +102,9 @@
     </dependency>
 
     <dependency>
-      <groupId>com.flow.platform</groupId>
-      <artifactId>platform-queue</artifactId>
-      <version>1.0-SNAPSHOT</version>
-    </dependency>
-
-    <dependency>
       <groupId>com.rabbitmq</groupId>
       <artifactId>amqp-client</artifactId>
       <version>5.2.0</version>
-    </dependency>
-
-    <dependency>
-      <groupId>com.flow.platform</groupId>
-      <artifactId>platform-tree</artifactId>
-      <version>1.0-SNAPSHOT</version>
     </dependency>
 
   </dependencies>

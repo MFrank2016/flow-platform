@@ -16,9 +16,7 @@
 
 package com.flow.platform.api.domain.sync;
 
-import com.flow.platform.core.queue.PriorityMessage;
 import com.flow.platform.domain.AgentPath;
-import com.flow.platform.queue.PlatformQueue;
 import com.google.gson.annotations.Expose;
 import java.time.ZonedDateTime;
 import java.util.LinkedHashSet;
@@ -50,36 +48,10 @@ public class Sync {
     private Set<SyncRepo> repos = new LinkedHashSet<>();
 
     /**
-     * Agent sync event queue
-     */
-    private final PlatformQueue<PriorityMessage> queue;
-
-    /**
      * Latest sync time
      */
     @Expose
     @Setter
     @Getter
     private ZonedDateTime syncTime = ZonedDateTime.now();
-
-    public void enqueue(SyncEvent event, Integer priority) {
-        this.queue.enqueue(PriorityMessage.create(event.toBytes(), priority));
-    }
-
-    public SyncEvent dequeue() {
-        PriorityMessage message = this.queue.dequeue();
-        if (message == null) {
-            return null;
-        }
-
-        return SyncEvent.parse(message.getBody(), SyncEvent.class);
-    }
-
-    public void cleanQueue() {
-        this.queue.clean();
-    }
-
-    public int queueSize() {
-        return this.queue.size();
-    }
 }

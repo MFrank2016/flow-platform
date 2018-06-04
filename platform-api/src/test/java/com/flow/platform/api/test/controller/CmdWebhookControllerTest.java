@@ -22,7 +22,6 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 
 import com.flow.platform.api.consumer.JobStatusEventConsumer;
 import com.flow.platform.api.domain.CmdCallbackQueueItem;
-import com.flow.platform.api.domain.v1.Flow;
 import com.flow.platform.api.domain.job.Job;
 import com.flow.platform.api.domain.job.JobCategory;
 import com.flow.platform.api.domain.job.JobStatus;
@@ -30,16 +29,15 @@ import com.flow.platform.api.domain.job.NodeResult;
 import com.flow.platform.api.domain.job.NodeStatus;
 import com.flow.platform.api.domain.node.Node;
 import com.flow.platform.api.domain.node.NodeTree;
+import com.flow.platform.api.domain.v1.Flow;
 import com.flow.platform.api.envs.EnvUtil;
 import com.flow.platform.api.events.JobStatusChangeEvent;
 import com.flow.platform.api.test.TestBase;
 import com.flow.platform.core.context.SpringContext;
-import com.flow.platform.core.queue.PriorityMessage;
 import com.flow.platform.domain.Cmd;
 import com.flow.platform.domain.CmdResult;
 import com.flow.platform.domain.CmdStatus;
 import com.flow.platform.domain.CmdType;
-import com.flow.platform.queue.PlatformQueue;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
@@ -60,9 +58,6 @@ public class CmdWebhookControllerTest extends TestBase {
     private final static String sessionId = "1111111";
 
     @Autowired
-    private PlatformQueue<PriorityMessage> cmdCallbackQueue;
-
-    @Autowired
     private SpringContext springContext;
 
     @Before
@@ -70,7 +65,6 @@ public class CmdWebhookControllerTest extends TestBase {
         stubSendCmdToQueue(sessionId);
         stubSendCmd(sessionId);
 
-        cmdCallbackQueue.clean();
         springContext.cleanApplicationListener();
     }
 

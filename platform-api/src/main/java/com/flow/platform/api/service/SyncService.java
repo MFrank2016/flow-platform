@@ -20,10 +20,8 @@ import com.flow.platform.api.domain.sync.Sync;
 import com.flow.platform.api.domain.sync.SyncEvent;
 import com.flow.platform.api.domain.sync.SyncTask;
 import com.flow.platform.api.domain.sync.SyncType;
-import com.flow.platform.core.queue.PriorityMessage;
 import com.flow.platform.domain.AgentPath;
 import com.flow.platform.domain.Cmd;
-import com.flow.platform.queue.PlatformQueue;
 
 /**
  * @author yang
@@ -34,11 +32,6 @@ public interface SyncService {
     int DEFAULT_SYNC_QUEUE_PRIORITY = 1;
 
     int DEFAULT_CMD_PRIORITY = 10;
-
-    interface QueueCreator {
-
-        PlatformQueue<PriorityMessage> create(String name);
-    }
 
     /**
      * Load and init repos from file system

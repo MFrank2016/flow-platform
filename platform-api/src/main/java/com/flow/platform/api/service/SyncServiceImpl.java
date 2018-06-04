@@ -72,9 +72,6 @@ public class SyncServiceImpl implements SyncService {
     private final Map<AgentPath, SyncTask> syncTasks = new ConcurrentHashMap<>();
 
     @Autowired
-    private QueueCreator syncQueueCreator;
-
-    @Autowired
     private GitService gitService;
 
     @Autowired
@@ -144,7 +141,7 @@ public class SyncServiceImpl implements SyncService {
     @Override
     public void put(SyncEvent event) {
         for (Sync syncForAgent : syncs.values()) {
-            syncForAgent.enqueue(event, DEFAULT_SYNC_QUEUE_PRIORITY);
+//            syncForAgent.enqueue(event, DEFAULT_SYNC_QUEUE_PRIORITY);
         }
     }
 
@@ -157,13 +154,13 @@ public class SyncServiceImpl implements SyncService {
 
         for (Sync syncForAgent : syncs.values()) {
             if (!cleanSet.contains(syncForAgent)) {
-                syncForAgent.cleanQueue();
+//                syncForAgent.cleanQueue();
                 cleanSet.add(syncForAgent);
             }
 
             for (SyncEvent event : events) {
                 event.setGitUrl(createGitUrl(event.getRepo().getName())); // ensure git url is correct
-                syncForAgent.enqueue(event, DEFAULT_SYNC_QUEUE_PRIORITY);
+//                syncForAgent.enqueue(event, DEFAULT_SYNC_QUEUE_PRIORITY);
             }
         }
     }
@@ -190,13 +187,13 @@ public class SyncServiceImpl implements SyncService {
             return;
         }
 
-        Sync sync = new Sync(agent, syncQueueCreator.create(agent.toString() + "-sync"));
-        syncs.put(agent, sync);
-
-        // init sync event from git
-        for (SyncEvent event : toEvents(repos, SyncType.CREATE)) {
-            sync.enqueue(event, DEFAULT_SYNC_QUEUE_PRIORITY);
-        }
+//        Sync sync = new Sync(agent, syncQueueCreator.create(agent.toString() + "-sync"));
+//        syncs.put(agent, sync);
+//
+//         init sync event from git
+//        for (SyncEvent event : toEvents(repos, SyncType.CREATE)) {
+//            sync.enqueue(event, DEFAULT_SYNC_QUEUE_PRIORITY);
+//        }
     }
 
     @Override
@@ -262,7 +259,7 @@ public class SyncServiceImpl implements SyncService {
                 Sync sync = syncs.get(cmd.getAgentPath());
                 if (sync != null) {
                     if (shouldSendBack) {
-                        sync.enqueue(current, DEFAULT_SYNC_QUEUE_PRIORITY);
+//                        sync.enqueue(current, DEFAULT_SYNC_QUEUE_PRIORITY);
                     }
 
                     // update agent repo list from env FLOW_SYNC_LIST
@@ -358,9 +355,9 @@ public class SyncServiceImpl implements SyncService {
         Queue<SyncEvent> syncEventQueue = new ConcurrentLinkedQueue<>();
 
         SyncEvent event = null;
-        while ((event = sync.dequeue()) != null) {
-            syncEventQueue.add(event);
-        }
+//        while ((event = sync.dequeue()) != null) {
+//            syncEventQueue.add(event);
+//        }
 
         // list agent exist repos finally
         syncEventQueue.add(SyncEvent.LIST);

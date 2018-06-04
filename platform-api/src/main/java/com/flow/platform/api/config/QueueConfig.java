@@ -16,10 +16,6 @@
 
 package com.flow.platform.api.config;
 
-import com.flow.platform.api.service.SyncService;
-import com.flow.platform.core.queue.MemoryQueue;
-import com.flow.platform.core.queue.PriorityMessage;
-import com.flow.platform.queue.PlatformQueue;
 import java.util.HashMap;
 import java.util.Map;
 import org.springframework.amqp.core.AmqpAdmin;
@@ -69,18 +65,10 @@ public class QueueConfig {
     @Autowired
     private ThreadPoolTaskExecutor taskExecutor;
 
-    /**
-     * Queue to process cmd callback task
-     */
-    @Bean
-    public PlatformQueue<PriorityMessage> cmdCallbackQueue() {
-        return new MemoryQueue(taskExecutor, 50, "CmdCallbackQueue");
-    }
-
-    @Bean
-    public SyncService.QueueCreator syncQueueCreator() {
-        return name -> new MemoryQueue(taskExecutor, 50, name);
-    }
+//    @Bean
+//    public SyncService.QueueCreator syncQueueCreator() {
+//        return name -> new MemoryQueue(taskExecutor, 50, name);
+//    }
     
     @Bean
     public RabbitTemplate jobCmdTemplate() {

@@ -13,7 +13,6 @@
     <module>platform-domain</module>
     <module>platform-agent</module>
     <module>platform-cmd-runner</module>
-    <module>platform-control-center</module>
     <module>platform-cloud</module>
     <module>platform-api</module>
     <module>platform-util</module>
@@ -24,7 +23,6 @@
     <module>platform-yml-parser</module>
     <module>platform-util-http</module>
     <module>platform-plugin</module>
-    <module>platform-queue</module>
     <module>platform-tree</module>
   </modules>
 

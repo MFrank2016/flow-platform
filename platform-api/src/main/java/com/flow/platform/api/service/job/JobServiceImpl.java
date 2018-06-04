@@ -52,13 +52,11 @@ import com.flow.platform.core.exception.IllegalParameterException;
 import com.flow.platform.core.exception.IllegalStatusException;
 import com.flow.platform.core.exception.NotFoundException;
 import com.flow.platform.core.exception.UnsupportedException;
-import com.flow.platform.core.queue.PriorityMessage;
 import com.flow.platform.core.service.ApplicationEventService;
 import com.flow.platform.domain.Cmd;
 import com.flow.platform.domain.CmdInfo;
 import com.flow.platform.domain.CmdStatus;
 import com.flow.platform.domain.CmdType;
-import com.flow.platform.queue.PlatformQueue;
 import com.flow.platform.util.DateUtil;
 import com.flow.platform.util.ExceptionUtil;
 import com.flow.platform.util.http.HttpURL;
@@ -126,8 +124,6 @@ public class JobServiceImpl extends ApplicationEventService implements JobServic
     @Autowired
     private CmdService cmdService;
 
-    @Autowired
-    private PlatformQueue<PriorityMessage> cmdCallbackQueue;
 
     @Autowired
     private ThreadPoolTaskExecutor taskExecutor;
@@ -514,7 +510,7 @@ public class JobServiceImpl extends ApplicationEventService implements JobServic
 
     @Override
     public void enqueue(CmdCallbackQueueItem cmdQueueItem, long priority) {
-        cmdCallbackQueue.enqueue(PriorityMessage.create(cmdQueueItem.toBytes(), priority));
+//        cmdCallbackQueue.enqueue(PriorityMessage.create(cmdQueueItem.toBytes(), priority));
     }
 
     @Override
