@@ -23,7 +23,6 @@ CREATE TABLE `flow_yml_v1` (
 CREATE TABLE `job_v1` (
   `flow_id` bigint(20) NOT NULL,
   `build_number` bigint(20) NOT NULL,
-  `envs` longtext,
   `job_category` varchar(20) NOT NULL,
   `job_status` varchar(20) NOT NULL,
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,

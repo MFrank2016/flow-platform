@@ -93,12 +93,12 @@ public class AgentManagerServiceTest extends TestBase {
 
         Agent first = agents.get(0);
         Assert.assertEquals("default===first", first.getPath().toString());
-        Assert.assertEquals("default===first", agentManagerService.getQueueName(first));
+        Assert.assertEquals("default===first", first.queueName());
         Assert.assertEquals(AgentStatus.IDLE, first.getStatus());
 
         Agent second = agents.get(1);
         Assert.assertEquals("default===second", second.getPath().toString());
-        Assert.assertEquals("default===second", agentManagerService.getQueueName(second));
+        Assert.assertEquals("default===second", second.queueName());
         Assert.assertEquals(AgentStatus.BUSY, second.getStatus());
     }
 

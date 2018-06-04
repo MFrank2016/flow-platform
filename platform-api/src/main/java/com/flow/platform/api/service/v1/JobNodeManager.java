@@ -17,6 +17,7 @@
 package com.flow.platform.api.service.v1;
 
 import com.flow.platform.api.domain.v1.JobKey;
+import com.flow.platform.domain.Agent;
 import com.flow.platform.tree.Node;
 import com.flow.platform.tree.NodePath;
 import com.flow.platform.tree.Result;
@@ -46,7 +47,10 @@ public interface JobNodeManager {
     /**
      * Execute node for job, update node status on tree
      */
-    void execute(JobKey key, NodePath path);
+    void execute(JobKey key, NodePath path, Agent agent);
 
-    void finish(JobKey key, NodePath path, Result result);
+    /**
+     * Finish node for job and return next Node
+     */
+    Node finish(JobKey key, NodePath path, Result result);
 }

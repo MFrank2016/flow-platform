@@ -16,7 +16,6 @@
 
 package com.flow.platform.api.test.service;
 
-import com.flow.platform.api.consumer.v1.CmdCallbackConsumer;
 import com.flow.platform.api.domain.job.JobCategory;
 import com.flow.platform.api.domain.job.JobStatus;
 import com.flow.platform.api.domain.v1.Flow;
@@ -56,9 +55,6 @@ public class JobServiceV1Test extends TestBase {
 
     @Autowired
     private JobNodeManager jobNodeManager;
-
-    @Autowired
-    private CmdCallbackConsumer cmdCallbackQueueConsumer;
 
     @Autowired
     private SpringContext springContext;

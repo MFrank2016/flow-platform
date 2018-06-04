@@ -143,21 +143,16 @@ public class AgentManagerServiceImpl extends ApplicationEventService implements 
         agentSettings.setMqUri("amqp://127.0.0.1:5672");
         agentSettings.setZookeeperUrl("127.0.0.1:2181");
         agentSettings.setCallbackQueueName(QueueConfig.CMD_CALLBACK_QUEUE_NAME);
-        agentSettings.setListeningQueueName(getQueueName(agent));
+        agentSettings.setListeningQueueName(agent.queueName());
 
         return agentSettings;
-    }
-
-    @Override
-    public String getQueueName(Agent agent) {
-        return "agent." + agent.getPath().toString();
     }
 
     /**
      * Declare queue with agent name
      */
     private Queue declareQueue(Agent agent) {
-        Queue queue = new Queue(getQueueName(agent), true, false, false, QueueConfig.DEFAULT_QUEUE_ARGS);
+        Queue queue = new Queue(agent.queueName(), true, false, false, QueueConfig.DEFAULT_QUEUE_ARGS);
         amqpAdmin.declareQueue(queue);
         return queue;
     }

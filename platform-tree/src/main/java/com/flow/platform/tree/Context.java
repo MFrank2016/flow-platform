@@ -44,6 +44,11 @@ public class Context extends Jsonable implements Serializable {
         return this;
     }
 
+    public Context putAll(Context context) {
+        this.context.putAll(context.getContext());
+        return this;
+    }
+
     public String get(String key) {
         return context.get(key);
     }

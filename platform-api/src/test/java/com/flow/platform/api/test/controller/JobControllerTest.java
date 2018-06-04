@@ -29,7 +29,8 @@ import com.flow.platform.api.service.v1.JobNodeManager;
 import com.flow.platform.api.service.v1.JobService;
 import com.flow.platform.api.test.FlowHelper;
 import com.flow.platform.tree.NodeStatus;
-import java.nio.file.Path;
+import java.util.HashMap;
+import java.util.Map;
 import org.junit.Assert;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,6 +41,12 @@ import org.springframework.test.web.servlet.MvcResult;
  * @author yh@firim
  */
 public class JobControllerTest extends ControllerTestWithoutAuth {
+
+    private final static Map<String, String> ENVS = new HashMap<>();
+
+    static {
+        ENVS.put(GitEnvs.FLOW_GIT_BRANCH.name(), "master");
+    }
 
     @Autowired
     private FlowHelper flowHelper;
@@ -54,10 +61,7 @@ public class JobControllerTest extends ControllerTestWithoutAuth {
     public void should_show_job_success() throws Exception {
         stubDemo();
         Flow rootForFlow = flowHelper.createFlowWithYml("flow1", "yml/flow.yaml");
-        JobV1 job = jobServiceV1.create(rootForFlow, JobCategory.MANUAL, null);
-
-        job.putEnv(GitEnvs.FLOW_GIT_BRANCH, "master");
-        jobDaoV1.update(job);
+        JobV1 job = jobServiceV1.create(rootForFlow, JobCategory.MANUAL, ENVS);
 
         JobV1 returnedJob = requestToShowJob(rootForFlow.getName(), job.buildNumber());
         Assert.assertEquals(job, returnedJob);
@@ -72,9 +76,7 @@ public class JobControllerTest extends ControllerTestWithoutAuth {
     public void should_stop_job_success() throws Exception {
         stubDemo();
         Flow rootForFlow = flowHelper.createFlowWithYml("flow1", "yml/flow.yaml");
-        JobV1 job = jobServiceV1.create(rootForFlow, JobCategory.TAG, null);
-        job.putEnv(GitEnvs.FLOW_GIT_BRANCH, "master");
-        jobDaoV1.update(job);
+        JobV1 job = jobServiceV1.create(rootForFlow, JobCategory.TAG, ENVS);
 
         this.mockMvc.perform(post(String.format("/jobs/%s/%s/stop", rootForFlow.getName(), job.buildNumber()))
             .contentType(MediaType.APPLICATION_JSON))
@@ -88,9 +90,7 @@ public class JobControllerTest extends ControllerTestWithoutAuth {
     public void should_get_step_log_success() throws Exception {
         stubDemo();
         Flow rootForFlow = flowHelper.createFlowWithYml("flow1", "yml/flow.yaml");
-        JobV1 job = jobServiceV1.create(rootForFlow, JobCategory.TAG, null);
-        job.putEnv(GitEnvs.FLOW_GIT_BRANCH, "master");
-        jobDaoV1.update(job);
+        JobV1 job = jobServiceV1.create(rootForFlow, JobCategory.TAG, ENVS);
 
         String response = performRequestWith200Status(
             get(String.format("/jobs/%s/%s/1/log", rootForFlow.getName(), job.buildNumber())));

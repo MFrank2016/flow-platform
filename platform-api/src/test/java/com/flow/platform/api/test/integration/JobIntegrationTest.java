@@ -24,7 +24,6 @@ import com.flow.platform.api.domain.v1.JobV1;
 import com.flow.platform.api.events.CmdSentEvent;
 import com.flow.platform.api.events.JobStatusEvent;
 import com.flow.platform.api.service.v1.AgentManagerService;
-import com.flow.platform.api.service.v1.CmdManager;
 import com.flow.platform.api.service.v1.JobNodeManager;
 import com.flow.platform.api.service.v1.JobService;
 import com.flow.platform.api.test.FlowHelper;
@@ -34,6 +33,7 @@ import com.flow.platform.core.context.SpringContext;
 import com.flow.platform.domain.Agent;
 import com.flow.platform.domain.AgentStatus;
 import com.flow.platform.domain.CmdStatus;
+import com.flow.platform.domain.v1.CmdMeta;
 import com.flow.platform.domain.v1.ExecutedCmd;
 import com.flow.platform.tree.Node;
 import com.flow.platform.tree.NodePath;
@@ -155,16 +155,16 @@ public class JobIntegrationTest extends TestBase {
         executed.setCode(code);
         executed.setDuration(10L);
         executed.setStatus(status);
-        executed.getMeta().put(CmdManager.META_JOB_KEY, job.getKey().getId());
-        executed.getMeta().put(CmdManager.META_JOB_NODE_PATH, nodePath.toString());
-        executed.getMeta().put(CmdManager.META_AGENT_TOKEN, agent.getToken());
+        executed.getMeta().put(CmdMeta.META_JOB_KEY, job.getKey().getId());
+        executed.getMeta().put(CmdMeta.META_JOB_NODE_PATH, nodePath.toString());
+        executed.getMeta().put(CmdMeta.META_AGENT_TOKEN, agent.getToken());
         return executed;
     }
 
     private CountDownLatch createCountDownForCmdEvent(NodePath targetPath) {
         CountDownLatch cmdCountDown = new CountDownLatch(1);
         springContext.registerApplicationListener((ApplicationListener<CmdSentEvent>) event -> {
-            NodePath nodePath = NodePath.create(event.getCmd().getMeta().get(CmdManager.META_JOB_NODE_PATH));
+            NodePath nodePath = NodePath.create(event.getCmd().getMeta().get(CmdMeta.META_JOB_NODE_PATH));
             if (nodePath.equals(targetPath)) {
                 cmdCountDown.countDown();
             }

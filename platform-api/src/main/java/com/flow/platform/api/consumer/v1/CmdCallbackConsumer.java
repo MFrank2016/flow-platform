@@ -21,16 +21,14 @@ import com.flow.platform.api.domain.job.JobStatus;
 import com.flow.platform.api.domain.v1.JobKey;
 import com.flow.platform.api.domain.v1.JobV1;
 import com.flow.platform.api.envs.EnvUtil;
-import com.flow.platform.api.events.CmdSentEvent;
 import com.flow.platform.api.events.JobStatusEvent;
 import com.flow.platform.api.service.v1.AgentManagerService;
-import com.flow.platform.api.service.v1.CmdManager;
 import com.flow.platform.api.service.v1.JobNodeManager;
 import com.flow.platform.api.service.v1.JobService;
 import com.flow.platform.core.exception.IllegalStatusException;
 import com.flow.platform.core.service.ApplicationEventService;
 import com.flow.platform.domain.Agent;
-import com.flow.platform.domain.v1.Cmd;
+import com.flow.platform.domain.v1.CmdMeta;
 import com.flow.platform.domain.v1.ExecutedCmd;
 import com.flow.platform.tree.Node;
 import com.flow.platform.tree.NodePath;
@@ -41,9 +39,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import lombok.extern.log4j.Log4j2;
-import org.springframework.amqp.core.AmqpTemplate;
-import org.springframework.amqp.core.Message;
-import org.springframework.amqp.core.MessageProperties;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -76,12 +71,6 @@ public class CmdCallbackConsumer extends ApplicationEventService {
     @Autowired
     private AgentManagerService agentManagerService;
 
-    @Autowired
-    private CmdManager cmdManager;
-
-    @Autowired
-    private AmqpTemplate jobCmdTemplate;
-
     @RabbitListener(queues = QueueConfig.CMD_CALLBACK_QUEUE_NAME)
     public void handleMessage(byte[] data) {
         ExecutedCmd cmd = (ExecutedCmd) ObjectUtil.fromBytes(data);
@@ -96,20 +85,17 @@ public class CmdCallbackConsumer extends ApplicationEventService {
             return;
         }
 
-        JobKey jobKey = JobKey.create(cmd.getMeta().get(CmdManager.META_JOB_KEY));
-        NodePath nodePath = NodePath.create(cmd.getMeta().get(CmdManager.META_JOB_NODE_PATH));
-        String token = cmd.getMeta().get(CmdManager.META_AGENT_TOKEN);
+        JobKey jobKey = JobKey.create(cmd.getMeta().get(CmdMeta.META_JOB_KEY));
+        NodePath nodePath = NodePath.create(cmd.getMeta().get(CmdMeta.META_JOB_NODE_PATH));
+        String token = cmd.getMeta().get(CmdMeta.META_AGENT_TOKEN);
 
         try {
             JobV1 job = jobServiceV1.find(jobKey);
             Agent agent = agentManagerService.find(token);
             log.info("Cmd is " + nodePath + ", Cmd status is " + cmd.getStatus());
 
-            // update nodes and parent for finish
-            jobNodeManager.finish(jobKey, nodePath, toResult(cmd, nodePath));
-
-            // find next available node
-            Node next = jobNodeManager.next(jobKey, nodePath);
+            // update nodes and parent for finish and get next node
+            Node next = jobNodeManager.finish(jobKey, nodePath, toResult(cmd, nodePath));
 
             // No more available node
             if (Objects.isNull(next)) {
@@ -122,12 +108,7 @@ public class CmdCallbackConsumer extends ApplicationEventService {
             }
 
             // has node to execute
-            Cmd nextCmd = cmdManager.create(jobKey, next, agent.getToken());
-            String agentQueueName = agentManagerService.getQueueName(agent);
-            jobNodeManager.execute(jobKey, next.getPath());
-            jobCmdTemplate.send(agentQueueName, new Message(ObjectUtil.toBytes(nextCmd), new MessageProperties()));
-
-            this.dispatchEvent(new CmdSentEvent(this, nextCmd));
+            jobNodeManager.execute(jobKey, next.getPath(), agent);
             log.trace("Handle message finish!");
 
         } catch (Throwable throwable) {

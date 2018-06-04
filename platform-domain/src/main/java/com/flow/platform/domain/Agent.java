@@ -119,4 +119,8 @@ public class Agent extends Webhookable {
     public String fullPath() {
         return this.path.fullPath();
     }
+
+    public String queueName() {
+        return "agent." + path.toString();
+    }
 }

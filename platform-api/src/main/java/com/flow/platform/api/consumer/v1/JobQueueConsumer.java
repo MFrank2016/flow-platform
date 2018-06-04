@@ -18,27 +18,20 @@ package com.flow.platform.api.consumer.v1;
 
 import com.flow.platform.api.config.QueueConfig;
 import com.flow.platform.api.domain.job.JobStatus;
+import com.flow.platform.api.domain.v1.JobKey;
 import com.flow.platform.api.domain.v1.JobV1;
-import com.flow.platform.api.events.CmdSentEvent;
 import com.flow.platform.api.events.JobStatusEvent;
 import com.flow.platform.api.exception.AgentNotAvailableException;
 import com.flow.platform.api.service.v1.AgentManagerService;
-import com.flow.platform.api.service.v1.CmdManager;
 import com.flow.platform.api.service.v1.JobNodeManager;
 import com.flow.platform.api.service.v1.JobService;
 import com.flow.platform.core.exception.IllegalStatusException;
 import com.flow.platform.core.exception.NotFoundException;
 import com.flow.platform.core.service.ApplicationEventService;
 import com.flow.platform.domain.Agent;
-import com.flow.platform.api.domain.v1.JobKey;
-import com.flow.platform.domain.v1.Cmd;
 import com.flow.platform.tree.Node;
-import com.flow.platform.util.ObjectUtil;
 import lombok.extern.log4j.Log4j2;
-import org.springframework.amqp.core.Message;
-import org.springframework.amqp.core.MessageProperties;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -58,12 +51,6 @@ public class JobQueueConsumer extends ApplicationEventService {
     private JobNodeManager jobNodeManager;
 
     @Autowired
-    private CmdManager cmdManager;
-
-    @Autowired
-    private RabbitTemplate jobCmdTemplate;
-
-    @Autowired
     private AgentManagerService agentManagerService;
 
     /**
@@ -81,11 +68,7 @@ public class JobQueueConsumer extends ApplicationEventService {
             Node next = jobNodeManager.next(key, root.getPath());
 
             // send cmd to agent queue
-            Cmd cmd = cmdManager.create(job.getKey(), next, agent.getToken());
-            String queueName = agentManagerService.getQueueName(agent);
-            jobCmdTemplate.send(queueName, new Message(ObjectUtil.toBytes(cmd), new MessageProperties()));
-            jobNodeManager.execute(key, next.getPath());
-            this.dispatchEvent(new CmdSentEvent(this, cmd));
+            jobNodeManager.execute(key, next.getPath(), agent);
 
             // set job status to running
             jobServiceV1.setStatus(key, JobStatus.RUNNING);

@@ -63,9 +63,4 @@ public interface AgentManagerService {
      * Get agent settings by token
      */
     AgentSettings settings(String token);
-
-    /**
-     * Get queue name for agent
-     */
-    String getQueueName(Agent agent);
 }
