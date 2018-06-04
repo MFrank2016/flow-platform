@@ -70,15 +70,21 @@ public class JobNodeManagerImpl extends ApplicationEventService implements JobNo
     @Override
     public void execute(JobKey key, NodePath path, Agent agent) {
         JobTree jobTree = jobTreeDao.get(key);
+        NodeTree tree = jobTree.getTree();
 
         // TODO: should be cached
-        TreeManager treeManager = new TreeManager(jobTree.getTree());
+        TreeManager treeManager = new TreeManager(tree);
         treeManager.execute(path, null);
 
-        Node node = jobTree.getTree().get(path);
+        Node node = tree.get(path);
+
+        // create cmd context
+        Context context = new Context();
+        context.putAll(tree.getSharedContext());
+        context.putAll(tree.getRoot().getContext());
 
         // create cmd and send it to agent cmd queue
-        Cmd nextCmd = createCmd(key, node, jobTree.getTree().getSharedContext(), agent.getToken());
+        Cmd nextCmd = createCmd(key, node, context, agent.getToken());
         jobCmdTemplate.send(agent.queueName(), new Message(ObjectUtil.toBytes(nextCmd), new MessageProperties()));
         this.dispatchEvent(new CmdSentEvent(this, nextCmd));
 
@@ -102,7 +108,7 @@ public class JobNodeManagerImpl extends ApplicationEventService implements JobNo
         return jobTreeDao.get(key).getTree();
     }
 
-    private Cmd createCmd(JobKey key, Node node, Context sharedContext, String token) {
+    private Cmd createCmd(JobKey key, Node node, Context context, String token) {
         // trans node to cmd
         Cmd cmd = new Cmd();
         cmd.setId(getId(key, node));
@@ -116,7 +122,7 @@ public class JobNodeManagerImpl extends ApplicationEventService implements JobNo
         cmd.getMeta().put(CmdMeta.META_AGENT_TOKEN, token);
 
         // set cmd context from shared context and node private context
-        cmd.getContext().putAll(sharedContext.getContext());
+        cmd.getContext().putAll(context.getContext());
         cmd.getContext().putAll(node.getContext());
 
         return cmd;
