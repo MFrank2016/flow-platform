@@ -17,13 +17,14 @@ package com.flow.platform.api.service;
 
 import com.flow.platform.api.domain.user.User;
 import com.flow.platform.core.exception.NotFoundException;
+import com.flow.platform.core.service.ApplicationEventService;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * @author lhl
  */
 
-public abstract class CurrentUser {
+public abstract class CurrentUser extends ApplicationEventService {
 
     @Autowired
     private ThreadLocal<User> currentUser;

@@ -20,16 +20,14 @@ import com.flow.platform.api.config.QueueConfig;
 import com.flow.platform.api.domain.job.JobStatus;
 import com.flow.platform.api.domain.v1.JobKey;
 import com.flow.platform.api.domain.v1.JobV1;
-import com.flow.platform.api.events.JobStatusEvent;
 import com.flow.platform.api.exception.AgentNotAvailableException;
 import com.flow.platform.api.service.v1.AgentManagerService;
 import com.flow.platform.api.service.v1.JobNodeManager;
 import com.flow.platform.api.service.v1.JobService;
-import com.flow.platform.core.exception.IllegalStatusException;
 import com.flow.platform.core.exception.NotFoundException;
-import com.flow.platform.core.service.ApplicationEventService;
 import com.flow.platform.domain.Agent;
 import com.flow.platform.tree.Node;
+import java.util.Objects;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,7 +40,7 @@ import org.springframework.stereotype.Component;
  */
 @Component
 @Log4j2
-public class JobQueueConsumer extends ApplicationEventService {
+public final class JobQueueConsumer {
 
     @Autowired
     private JobService jobServiceV1;
@@ -60,10 +58,16 @@ public class JobQueueConsumer extends ApplicationEventService {
     public void handleMessage(JobKey key) {
         log.debug("Job received: {}", key);
 
-        try {
-            JobV1 job = getJob(key);
-            Agent agent = getAgent();
+        JobV1 job = null;
+        Agent agent = null;
 
+        try {
+            job = getJob(key);
+            if (job.isFinishStatus()) {
+                return;
+            }
+
+            agent = getAgent();
             Node root = jobNodeManager.root(job.getKey());
             Node next = jobNodeManager.next(key, root.getPath());
 
@@ -72,7 +76,9 @@ public class JobQueueConsumer extends ApplicationEventService {
 
             // set job status to running
             jobServiceV1.setStatus(key, JobStatus.RUNNING);
-            this.dispatchEvent(new JobStatusEvent(this, JobStatus.RUNNING));
+
+        } catch (NotFoundException e) {
+            log.warn(e.getMessage());
 
         } catch (AgentNotAvailableException e) {
             log.warn("Cannot find available agent for job: " + key);
@@ -80,15 +86,15 @@ public class JobQueueConsumer extends ApplicationEventService {
         } catch (Throwable e) {
             log.error(e.getMessage());
             jobServiceV1.setStatus(key, JobStatus.FAILURE);
+
+            if (!Objects.isNull(agent)) {
+                agentManagerService.release(agent);
+            }
         }
     }
 
     private JobV1 getJob(JobKey key) throws NotFoundException {
-        JobV1 job = jobServiceV1.find(key);
-        if (job.isFinishStatus()) {
-            throw new IllegalStatusException("The job " + key + " cannot start since its already on finish status");
-        }
-        return job;
+        return jobServiceV1.find(key);
     }
 
     private Agent getAgent() throws AgentNotAvailableException {

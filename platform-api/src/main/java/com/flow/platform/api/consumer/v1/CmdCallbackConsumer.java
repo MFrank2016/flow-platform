@@ -21,7 +21,6 @@ import com.flow.platform.api.domain.job.JobStatus;
 import com.flow.platform.api.domain.v1.JobKey;
 import com.flow.platform.api.domain.v1.JobV1;
 import com.flow.platform.api.envs.EnvUtil;
-import com.flow.platform.api.events.JobStatusEvent;
 import com.flow.platform.api.service.v1.AgentManagerService;
 import com.flow.platform.api.service.v1.JobNodeManager;
 import com.flow.platform.api.service.v1.JobService;
@@ -103,7 +102,6 @@ public class CmdCallbackConsumer extends ApplicationEventService {
                 Node root = jobNodeManager.root(jobKey);
                 JobStatus jobStatus = toJobStatus(root);
                 jobServiceV1.setStatus(job.getKey(), jobStatus);
-                this.dispatchEvent(new JobStatusEvent(this, jobStatus));
                 return;
             }
 
@@ -114,7 +112,6 @@ public class CmdCallbackConsumer extends ApplicationEventService {
         } catch (Throwable throwable) {
             log.error("Handle message exception: " + throwable.getMessage());
             jobServiceV1.setStatus(jobKey, JobStatus.FAILURE);
-            this.dispatchEvent(new JobStatusEvent(this, JobStatus.FAILURE));
         }
     }
 

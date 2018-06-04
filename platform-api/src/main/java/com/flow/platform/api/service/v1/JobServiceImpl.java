@@ -25,17 +25,18 @@ import com.flow.platform.api.domain.job.JobStatus;
 import com.flow.platform.api.domain.v1.Flow;
 import com.flow.platform.api.domain.v1.FlowStatus;
 import com.flow.platform.api.domain.v1.FlowYml;
+import com.flow.platform.api.domain.v1.JobKey;
 import com.flow.platform.api.domain.v1.JobTree;
 import com.flow.platform.api.domain.v1.JobV1;
 import com.flow.platform.api.envs.EnvUtil;
 import com.flow.platform.api.envs.FlowEnvs;
 import com.flow.platform.api.envs.JobEnvs;
+import com.flow.platform.api.events.JobStatusEvent;
 import com.flow.platform.api.service.CurrentUser;
 import com.flow.platform.core.domain.Page;
 import com.flow.platform.core.domain.Pageable;
 import com.flow.platform.core.exception.IllegalStatusException;
 import com.flow.platform.core.exception.NotFoundException;
-import com.flow.platform.api.domain.v1.JobKey;
 import com.flow.platform.tree.Context;
 import com.flow.platform.tree.NodeTree;
 import java.time.ZonedDateTime;
@@ -153,6 +154,7 @@ public class JobServiceImpl extends CurrentUser implements JobService {
     @Override
     public void setStatus(JobKey key, JobStatus status) {
         jobDaoV1.setStatus(key, status);
+        this.dispatchEvent(new JobStatusEvent(this, status));
     }
 
     @Override
