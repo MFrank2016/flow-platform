@@ -55,7 +55,7 @@ public class JobDaoImpl extends AbstractBaseDao<JobKey, JobV1> implements JobDao
     @Override
     public Page<JobV1> listByFlow(Collection<Long> flowIds, Pageable pageable) {
         List<JobV1> jobs = execute(session -> session
-            .createQuery("from JobV1 where key.flowId in :flows", JobV1.class)
+            .createQuery("from JobV1 where key.flowId in :flows order by createdAt desc", JobV1.class)
             .setParameter("flows", flowIds)
             .setFirstResult(pageable.getOffset())
             .setMaxResults(pageable.getSize())
