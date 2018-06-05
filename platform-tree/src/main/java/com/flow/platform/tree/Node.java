@@ -87,6 +87,9 @@ public final class Node extends Context {
     @Setter
     private Node parent;
 
+    /**
+     * Executed result
+     */
     @Getter
     @Setter
     private Result result;

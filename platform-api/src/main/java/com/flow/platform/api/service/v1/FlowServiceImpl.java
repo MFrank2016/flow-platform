@@ -136,7 +136,7 @@ public class FlowServiceImpl extends CurrentUser implements FlowService {
 
         ymlDao.delete(new FlowYml(flow));
         flowDao.delete(flow);
-        jobNumberDao.delete(new JobNumber(flow));
+        jobNumberDao.deleteByFlow(flow.getId());
 
         userFlowService.unAssign(flow);
         jobServiceV1.delete(flow);

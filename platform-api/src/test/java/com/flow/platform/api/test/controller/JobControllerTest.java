@@ -83,7 +83,7 @@ public class JobControllerTest extends ControllerTestWithoutAuth {
             .andExpect(status().isOk()).andReturn();
 
         JobV1 loadedJob = requestToShowJob(rootForFlow.getName(), job.buildNumber());
-        Assert.assertEquals(NodeStatus.KILLED, jobNodeManager.root(loadedJob.getKey()).getStatus());
+        Assert.assertEquals(NodeStatus.KILLED, jobNodeManager.root(loadedJob).getStatus());
     }
 
     @Test

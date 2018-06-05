@@ -16,6 +16,7 @@
 
 package com.flow.platform.api.domain.v1;
 
+import com.flow.platform.api.domain.EnvObject;
 import com.flow.platform.api.domain.job.JobCategory;
 import com.flow.platform.api.domain.job.JobStatus;
 import com.flow.platform.domain.Jsonable;
@@ -34,7 +35,7 @@ import lombok.ToString;
 @NoArgsConstructor
 @ToString(of = {"key"})
 @EqualsAndHashCode(of = {"key"}, callSuper = false)
-public final class JobV1 extends Jsonable {
+public final class JobV1 extends EnvObject {
 
     public final static EnumSet<JobStatus> FINISH_STATUS =
         EnumSet.of(JobStatus.SUCCESS, JobStatus.FAILURE, JobStatus.STOPPED, JobStatus.TIMEOUT);
@@ -43,6 +44,14 @@ public final class JobV1 extends Jsonable {
     @Getter
     @Setter
     private JobKey key;
+
+    /**
+     * Flow name
+     */
+    @Expose
+    @Getter
+    @Setter
+    private String name;
 
     @Expose
     @Getter

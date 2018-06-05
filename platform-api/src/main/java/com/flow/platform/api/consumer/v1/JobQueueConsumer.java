@@ -68,11 +68,11 @@ public final class JobQueueConsumer {
             }
 
             agent = getAgent();
-            Node root = jobNodeManager.root(job.getKey());
-            Node next = jobNodeManager.next(key, root.getPath());
+            Node root = jobNodeManager.root(job);
+            Node next = jobNodeManager.next(job, root.getPath());
 
             // send cmd to agent queue
-            jobNodeManager.execute(key, next.getPath(), agent);
+            jobNodeManager.execute(job, next.getPath(), agent);
 
             // set job status to running
             jobServiceV1.setStatus(key, JobStatus.RUNNING);

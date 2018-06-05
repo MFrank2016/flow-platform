@@ -94,19 +94,19 @@ public class CmdCallbackConsumer extends ApplicationEventService {
             log.info("Cmd is " + nodePath + ", Cmd status is " + cmd.getStatus());
 
             // update nodes and parent for finish and get next node
-            Node next = jobNodeManager.finish(jobKey, nodePath, toResult(cmd, nodePath));
+            Node next = jobNodeManager.finish(job, nodePath, toResult(cmd, nodePath));
 
             // No more available node
             if (Objects.isNull(next)) {
                 agentManagerService.release(agent);
-                Node root = jobNodeManager.root(jobKey);
+                Node root = jobNodeManager.root(job);
                 JobStatus jobStatus = toJobStatus(root);
                 jobServiceV1.setStatus(job.getKey(), jobStatus);
                 return;
             }
 
             // has node to execute
-            jobNodeManager.execute(jobKey, next.getPath(), agent);
+            jobNodeManager.execute(job, next.getPath(), agent);
             log.trace("Handle message finish!");
 
         } catch (Throwable throwable) {

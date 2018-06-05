@@ -86,10 +86,10 @@ public class JobServiceV1Test extends TestBase {
         eventCountDown.await(10, TimeUnit.SECONDS);
 
         // then: job node tree root and first node status should be running
-        Node root = jobNodeManager.root(job.getKey());
+        Node root = jobNodeManager.root(job);
         Assert.assertEquals(NodeStatus.RUNNING, root.getStatus());
 
-        Node firstExecNode = jobNodeManager.next(job.getKey(), root.getPath());
+        Node firstExecNode = jobNodeManager.next(job, root.getPath());
         Assert.assertEquals(NodeStatus.RUNNING, firstExecNode.getStatus());
 
         // then: job status should be running

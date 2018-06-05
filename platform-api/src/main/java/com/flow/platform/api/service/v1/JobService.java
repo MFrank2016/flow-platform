@@ -19,6 +19,7 @@ package com.flow.platform.api.service.v1;
 import com.flow.platform.api.domain.job.JobCategory;
 import com.flow.platform.api.domain.job.JobStatus;
 import com.flow.platform.api.domain.v1.Flow;
+import com.flow.platform.api.domain.v1.JobNodeResult;
 import com.flow.platform.api.domain.v1.JobV1;
 import com.flow.platform.core.domain.Page;
 import com.flow.platform.core.domain.Pageable;
@@ -35,6 +36,11 @@ public interface JobService {
      * Find job by job key
      */
     JobV1 find(JobKey key);
+
+    /**
+     * Find result for each job node
+     */
+    List<JobNodeResult> findDetail(JobKey key);
 
     /**
      * Get yml content for current job

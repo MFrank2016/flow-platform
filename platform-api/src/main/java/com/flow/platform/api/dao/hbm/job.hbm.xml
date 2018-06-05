@@ -12,6 +12,8 @@
       <key-property name="number" type="long" column="build_number"/>
     </composite-id>
 
+    <property name="name" length="100" column="name" not-null="true"/>
+
     <property name="category" column="job_category" length="20" not-null="true">
       <type name="org.hibernate.type.EnumType">
         <param name="enumClass">com.flow.platform.api.domain.job.JobCategory</param>

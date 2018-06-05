@@ -26,6 +26,7 @@ import com.flow.platform.api.domain.v1.Flow;
 import com.flow.platform.api.domain.v1.FlowStatus;
 import com.flow.platform.api.domain.v1.FlowYml;
 import com.flow.platform.api.domain.v1.JobKey;
+import com.flow.platform.api.domain.v1.JobNodeResult;
 import com.flow.platform.api.domain.v1.JobTree;
 import com.flow.platform.api.domain.v1.JobV1;
 import com.flow.platform.api.envs.EnvUtil;
@@ -37,7 +38,6 @@ import com.flow.platform.core.domain.Page;
 import com.flow.platform.core.domain.Pageable;
 import com.flow.platform.core.exception.IllegalStatusException;
 import com.flow.platform.core.exception.NotFoundException;
-import com.flow.platform.tree.Context;
 import com.flow.platform.tree.NodeTree;
 import java.time.ZonedDateTime;
 import java.util.List;
@@ -69,6 +69,9 @@ public class JobServiceImpl extends CurrentUser implements JobService {
     private JobNumberDao jobNumberDao;
 
     @Autowired
+    private JobNodeManager jobNodeManager;
+
+    @Autowired
     private FlowService flowService;
 
     @Autowired
@@ -84,6 +87,12 @@ public class JobServiceImpl extends CurrentUser implements JobService {
         }
 
         return job;
+    }
+
+    @Override
+    public List<JobNodeResult> findDetail(JobKey key) {
+        JobV1 job = find(key);
+        return jobNodeManager.resultList(job);
     }
 
     @Override
@@ -122,21 +131,21 @@ public class JobServiceImpl extends CurrentUser implements JobService {
         // create job with job number
         JobNumber jobNumber = jobNumberDao.increase(flow.getId());
         JobV1 job = new JobV1(flow.getId(), jobNumber.getNumber());
+        job.setName(flow.getName());
         job.setCategory(eventType);
         job.setCreatedBy(currentUser().getEmail());
         job.setCreatedAt(ZonedDateTime.now());
         job.setUpdatedAt(ZonedDateTime.now());
 
         // init default environment variables
-        Context sharedContext = tree.getSharedContext();
-        sharedContext.put(FlowEnvs.FLOW_NAME.name(), flow.getName());
-        sharedContext.put(JobEnvs.FLOW_JOB_BUILD_CATEGORY.name(), eventType.name());
-        sharedContext.put(JobEnvs.FLOW_JOB_BUILD_NUMBER.name(), job.getKey().getNumber().toString());
-        sharedContext.put(JobEnvs.FLOW_API_DOMAIN.name(), apiDomain);
+        job.putEnv(FlowEnvs.FLOW_NAME.name(), flow.getName());
+        job.putEnv(JobEnvs.FLOW_JOB_BUILD_CATEGORY.name(), eventType.name());
+        job.putEnv(JobEnvs.FLOW_JOB_BUILD_NUMBER.name(), job.getKey().getNumber().toString());
+        job.putEnv(JobEnvs.FLOW_API_DOMAIN.name(), apiDomain);
 
         // merge flow and customized env variables to job env variable
-        EnvUtil.merge(flow.getEnvs(), sharedContext.getContext(), true);
-        EnvUtil.merge(envs, sharedContext.getContext(), true);
+        EnvUtil.merge(flow.getEnvs(), job.getEnvs(), true);
+        EnvUtil.merge(envs, job.getEnvs(), true);
 
         // persistent job and job tree
         jobDaoV1.save(job);

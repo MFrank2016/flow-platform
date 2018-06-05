@@ -47,4 +47,13 @@ public class JobNumberDaoImpl extends AbstractBaseDao<Long, JobNumber> implement
             return number;
         });
     }
+
+    @Override
+    public void deleteByFlow(Long flowId) {
+        execute(session -> {
+            return session.createQuery("delete JobNumber where flowId = :flowId")
+                .setParameter("flowId", flowId)
+                .executeUpdate();
+        });
+    }
 }

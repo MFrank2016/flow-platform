@@ -25,6 +25,7 @@ import com.flow.platform.api.domain.permission.Actions;
 import com.flow.platform.api.domain.user.User;
 import com.flow.platform.api.domain.v1.Flow;
 import com.flow.platform.api.domain.v1.JobKey;
+import com.flow.platform.api.domain.v1.JobNodeResult;
 import com.flow.platform.api.domain.v1.JobV1;
 import com.flow.platform.api.security.WebSecurity;
 import com.flow.platform.api.service.ArtifactService;
@@ -212,6 +213,13 @@ public class JobController extends NodeController {
     public JobV1 show(@PathVariable Long buildNumber) {
         Flow flow = flowService.find(flowName.get());
         return jobServiceV1.find(new JobKey(flow.getId(), buildNumber));
+    }
+
+    @GetMapping(path = "/{root}/{buildNumber}/detail")
+    @WebSecurity(action = Actions.JOB_SHOW)
+    public List<JobNodeResult> detail(@PathVariable Long buildNumber) {
+        Flow flow = flowService.find(flowName.get());
+        return jobServiceV1.findDetail(new JobKey(flow.getId(), buildNumber));
     }
 
     /**

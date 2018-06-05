@@ -18,7 +18,9 @@ package com.flow.platform.api.service.v1;
 
 import com.flow.platform.api.dao.v1.JobTreeDao;
 import com.flow.platform.api.domain.v1.JobKey;
+import com.flow.platform.api.domain.v1.JobNodeResult;
 import com.flow.platform.api.domain.v1.JobTree;
+import com.flow.platform.api.domain.v1.JobV1;
 import com.flow.platform.api.events.CmdSentEvent;
 import com.flow.platform.core.service.ApplicationEventService;
 import com.flow.platform.domain.Agent;
@@ -31,7 +33,9 @@ import com.flow.platform.tree.NodeTree;
 import com.flow.platform.tree.Result;
 import com.flow.platform.tree.TreeManager;
 import com.flow.platform.util.ObjectUtil;
+import java.util.ArrayList;
 import java.util.Base64;
+import java.util.List;
 import org.springframework.amqp.core.AmqpTemplate;
 import org.springframework.amqp.core.Message;
 import org.springframework.amqp.core.MessageProperties;
@@ -53,23 +57,23 @@ public class JobNodeManagerImpl extends ApplicationEventService implements JobNo
     private AmqpTemplate jobCmdTemplate;
 
     @Override
-    public Node root(JobKey key) {
-        return getTree(key).getRoot();
+    public Node root(JobV1 job) {
+        return getTree(job.getKey()).getRoot();
     }
 
     @Override
-    public Node get(JobKey key, NodePath path) {
-        return getTree(key).get(path);
+    public Node get(JobV1 job, NodePath path) {
+        return getTree(job.getKey()).get(path);
     }
 
     @Override
-    public Node next(JobKey key, NodePath path) {
-        return getTree(key).next(path);
+    public Node next(JobV1 job, NodePath path) {
+        return getTree(job.getKey()).next(path);
     }
 
     @Override
-    public void execute(JobKey key, NodePath path, Agent agent) {
-        JobTree jobTree = jobTreeDao.get(key);
+    public void execute(JobV1 job, NodePath path, Agent agent) {
+        JobTree jobTree = jobTreeDao.get(job.getKey());
         NodeTree tree = jobTree.getTree();
 
         // TODO: should be cached
@@ -80,11 +84,12 @@ public class JobNodeManagerImpl extends ApplicationEventService implements JobNo
 
         // create cmd context
         Context context = new Context();
+        context.putAll(job.getEnvs());
         context.putAll(tree.getSharedContext());
         context.putAll(tree.getRoot().getContext());
 
         // create cmd and send it to agent cmd queue
-        Cmd nextCmd = createCmd(key, node, context, agent.getToken());
+        Cmd nextCmd = createCmd(job.getKey(), node, context, agent.getToken());
         jobCmdTemplate.send(agent.queueName(), new Message(ObjectUtil.toBytes(nextCmd), new MessageProperties()));
         this.dispatchEvent(new CmdSentEvent(this, nextCmd));
 
@@ -92,16 +97,29 @@ public class JobNodeManagerImpl extends ApplicationEventService implements JobNo
     }
 
     @Override
-    public Node finish(JobKey key, NodePath path, Result result) {
-        JobTree jobTree = jobTreeDao.get(key);
+    public Node finish(JobV1 job, NodePath path, Result result) {
+        JobTree jobTree = jobTreeDao.get(job.getKey());
 
         // TODO: should be cached
         TreeManager treeManager = new TreeManager(jobTree.getTree());
         treeManager.onFinish(result);
 
         jobTreeDao.update(jobTree);
+        return next(job, path);
+    }
 
-        return next(key, path);
+    @Override
+    public List<JobNodeResult> resultList(JobV1 job) {
+        JobTree jobTree = jobTreeDao.get(job.getKey());
+
+        List<Node> ordered = jobTree.getTree().getOrdered();
+        List<JobNodeResult> results = new ArrayList<>(ordered.size());
+
+        for (Node node : ordered) {
+            results.add(new JobNodeResult(node.getResult(), node.getStatus()));
+        }
+
+        return results;
     }
 
     private NodeTree getTree(JobKey key) {

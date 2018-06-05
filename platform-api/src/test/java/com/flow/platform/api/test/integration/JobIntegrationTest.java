@@ -106,10 +106,10 @@ public class JobIntegrationTest extends TestBase {
         JobV1 loadedJob  = jobServiceV1.find(job.getKey());
         Assert.assertEquals(JobStatus.RUNNING, loadedJob.getStatus());
 
-        Node root = jobNodeManager.root(job.getKey());
+        Node root = jobNodeManager.root(job);
         Assert.assertEquals(NodeStatus.RUNNING, root.getStatus());
 
-        Node node = jobNodeManager.get(job.getKey(), NodePath.create("root", "step1"));
+        Node node = jobNodeManager.get(job, NodePath.create("root", "step1"));
         Assert.assertEquals(NodeStatus.SUCCESS, node.getStatus());
 
         cmdCountDown.await(10, TimeUnit.SECONDS);
@@ -124,10 +124,10 @@ public class JobIntegrationTest extends TestBase {
         loadedJob  = jobServiceV1.find(job.getKey());
         Assert.assertEquals(JobStatus.RUNNING, loadedJob.getStatus());
 
-        root = jobNodeManager.root(job.getKey());
+        root = jobNodeManager.root(loadedJob);
         Assert.assertEquals(NodeStatus.RUNNING, root.getStatus());
 
-        node = jobNodeManager.get(job.getKey(), NodePath.create("root", "step2"));
+        node = jobNodeManager.get(loadedJob, NodePath.create("root", "step2"));
         Assert.assertTrue(node.isAllowFailure());
         Assert.assertEquals(NodeStatus.SUCCESS, node.getStatus());
 
@@ -146,7 +146,7 @@ public class JobIntegrationTest extends TestBase {
         // then:
         jobFinishCountDown.await(10, TimeUnit.SECONDS);
         Assert.assertEquals(AgentStatus.IDLE, agentManagerService.find(agent.getToken()).getStatus());
-        Assert.assertEquals(NodeStatus.SUCCESS, jobNodeManager.root(job.getKey()).getStatus());
+        Assert.assertEquals(NodeStatus.SUCCESS, jobNodeManager.root(job).getStatus());
         Assert.assertEquals(JobStatus.SUCCESS, jobServiceV1.find(job.getKey()).getStatus());
     }
 

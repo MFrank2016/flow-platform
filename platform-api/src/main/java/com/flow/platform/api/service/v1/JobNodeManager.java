@@ -16,11 +16,13 @@
 
 package com.flow.platform.api.service.v1;
 
-import com.flow.platform.api.domain.v1.JobKey;
+import com.flow.platform.api.domain.v1.JobNodeResult;
+import com.flow.platform.api.domain.v1.JobV1;
 import com.flow.platform.domain.Agent;
 import com.flow.platform.tree.Node;
 import com.flow.platform.tree.NodePath;
 import com.flow.platform.tree.Result;
+import java.util.List;
 
 /**
  * To handle method of node tree for job
@@ -32,25 +34,30 @@ public interface JobNodeManager {
     /**
      * Get root job node
      */
-    Node root(JobKey key);
+    Node root(JobV1 job);
 
     /**
      * Get job node by path
      */
-    Node get(JobKey key, NodePath path);
+    Node get(JobV1 job, NodePath path);
 
     /**
      * Get next node by path
      */
-    Node next(JobKey key, NodePath path);
+    Node next(JobV1 job, NodePath path);
 
     /**
      * Execute node for job, update node status on tree
      */
-    void execute(JobKey key, NodePath path, Agent agent);
+    void execute(JobV1 job, NodePath path, Agent agent);
 
     /**
      * Finish node for job and return next Node
      */
-    Node finish(JobKey key, NodePath path, Result result);
+    Node finish(JobV1 job, NodePath path, Result result);
+
+    /**
+     * Get result list by job
+     */
+    List<JobNodeResult> resultList(JobV1 job);
 }
