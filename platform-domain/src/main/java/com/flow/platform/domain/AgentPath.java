@@ -83,6 +83,10 @@ public class AgentPath extends Jsonable {
         return !hasZone() || !hasName();
     }
 
+    public boolean isSame() {
+        return zone.equals(name);
+    }
+
     public boolean hasZone() {
         return !Strings.isNullOrEmpty(zone);
     }

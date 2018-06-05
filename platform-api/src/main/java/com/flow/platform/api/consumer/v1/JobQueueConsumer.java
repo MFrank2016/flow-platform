@@ -85,7 +85,7 @@ public final class JobQueueConsumer {
             jobServiceV1.enqueue(key);
 
             // hold job cmd queue, and wait notify from node release
-
+            agentService.hold();
 
         } catch (Throwable e) {
             log.error(e.getMessage());

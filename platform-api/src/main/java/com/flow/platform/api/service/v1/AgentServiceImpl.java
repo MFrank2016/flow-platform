@@ -37,7 +37,6 @@ import org.apache.curator.framework.recipes.cache.PathChildrenCacheEvent;
 import org.apache.curator.framework.recipes.cache.PathChildrenCacheEvent.Type;
 import org.apache.curator.framework.recipes.cache.PathChildrenCacheListener;
 import org.apache.curator.utils.ZKPaths;
-import org.apache.zookeeper.data.Stat;
 import org.springframework.amqp.core.AmqpAdmin;
 import org.springframework.amqp.core.Queue;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -54,6 +53,8 @@ public class AgentServiceImpl extends ApplicationEventService implements AgentSe
      * Zookeeper node path which used for lock of acquire agent
      */
     private final static String LOCKER_PATH = ZKPaths.makePath(AgentPath.ROOT, "locker");
+
+    private final static Object HOLDER = new Object();
 
     @Autowired
     private AgentDao agentDao;
@@ -85,7 +86,9 @@ public class AgentServiceImpl extends ApplicationEventService implements AgentSe
 
     @Override
     public Agent find(AgentPath agentPath) {
-        return appendAgentStatus(agentDao.get(agentPath));
+        Agent agent = agentDao.get(agentPath);
+        agent.setStatus(getAgentStatus(agent.getPath()));
+        return agent;
     }
 
     @Override
@@ -96,7 +99,7 @@ public class AgentServiceImpl extends ApplicationEventService implements AgentSe
             throw new NotFoundException("Agent not found for token: " + token);
         }
 
-        appendAgentStatus(agent);
+        agent.setStatus(getAgentStatus(agent.getPath()));
         return agent;
     }
 
@@ -104,13 +107,6 @@ public class AgentServiceImpl extends ApplicationEventService implements AgentSe
     public List<Agent> list() {
         List<Agent> agents = agentDao.list();
         return appendAgentsStatus(agents);
-    }
-
-    @Override
-    public void release(Agent agent) {
-        zkClient.setData(agent.fullPath(), AgentStatus.IDLE.getBytes());
-        agent.setStatus(AgentStatus.IDLE);
-        this.dispatchEvent(new AgentStatusChangeEvent(this, agent));
     }
 
     @Override
@@ -136,6 +132,25 @@ public class AgentServiceImpl extends ApplicationEventService implements AgentSe
         }
 
         return selectedAgent;
+    }
+
+    @Override
+    public void hold() {
+        synchronized (HOLDER) {
+            try {
+                // wait 60 seconds
+                HOLDER.wait(1000 * 60);
+            } catch (InterruptedException e) {
+                log.warn("Unable to hold current thread: " + e.getMessage());
+            }
+        }
+    }
+
+    @Override
+    public void release(Agent agent) {
+        zkClient.setData(agent.fullPath(), AgentStatus.IDLE.getBytes());
+        agent.setStatus(AgentStatus.IDLE);
+        this.dispatchEvent(new AgentStatusChangeEvent(this, agent));
     }
 
     @Override
@@ -167,23 +182,26 @@ public class AgentServiceImpl extends ApplicationEventService implements AgentSe
         return agents;
     }
 
-    private Agent appendAgentStatus(Agent agent) {
-        Objects.requireNonNull(agent, "Agent cannot be null");
-
+    private AgentStatus getAgentStatus(AgentPath path) {
         try {
-            Stat stat = new Stat();
-            agent.setStatus(AgentStatus.valueOf(new String(zkClient.getData(agent.fullPath(), stat))));
-        } catch (Throwable throwable) {
-            agent.setStatus(AgentStatus.OFFLINE);
+            byte[] data = zkClient.getData(path.fullPath());
+            return AgentStatus.valueOf(new String(data));
+        } catch (Throwable e) {
+            return AgentStatus.OFFLINE;
         }
-        return agent;
     }
 
     private List<Agent> appendAgentsStatus(List<Agent> agents) {
         for (Agent agent : agents) {
-            appendAgentStatus(agent);
+            agent.setStatus(getAgentStatus(agent.getPath()));
         }
         return agents;
+    }
+
+    private void releaseHold() {
+        synchronized (HOLDER) {
+            HOLDER.notifyAll();
+        }
     }
 
     /**
@@ -201,6 +219,7 @@ public class AgentServiceImpl extends ApplicationEventService implements AgentSe
             log.debug("Receive zookeeper event: {} {} {}", eventType, agentPath);
 
             if (eventType == Type.CHILD_ADDED) {
+                releaseHold();
                 return;
             }
 
@@ -209,7 +228,11 @@ public class AgentServiceImpl extends ApplicationEventService implements AgentSe
             }
 
             if (eventType == Type.CHILD_UPDATED) {
-                return;
+
+                // release hold when zookeeper path is agent, and status is idle
+                if (!agentPath.isSame() && getAgentStatus(agentPath) == AgentStatus.IDLE) {
+                    releaseHold();
+                }
             }
         }
     }

@@ -55,6 +55,11 @@ public interface AgentService {
     Agent acquire() throws AgentNotAvailableException;
 
     /**
+     * Hold current thread and wait unit has available agent
+     */
+    void hold();
+
+    /**
      * Release agent, set status to idle
      */
     void release(Agent agent);
