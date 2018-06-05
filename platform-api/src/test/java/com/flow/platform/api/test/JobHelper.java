@@ -16,7 +16,7 @@
 
 package com.flow.platform.api.test;
 
-import com.flow.platform.api.service.v1.AgentManagerService;
+import com.flow.platform.api.service.v1.AgentService;
 import com.flow.platform.domain.Agent;
 import com.flow.platform.domain.AgentPath;
 import com.flow.platform.domain.AgentStatus;
@@ -32,10 +32,10 @@ public class JobHelper {
     private ZKClient zkClient;
 
     @Autowired
-    private AgentManagerService agentManagerService;
+    private AgentService agentService;
 
     public Agent createAgent(String zone, String name, AgentStatus defaultStatus) {
-        Agent agent = agentManagerService.create(new AgentPath(zone, name));
+        Agent agent = agentService.create(new AgentPath(zone, name));
         zkClient.createEphemeral(agent.fullPath(), defaultStatus.getBytes());
         return agent;
     }

@@ -25,7 +25,7 @@ import java.util.List;
 /**
  * @author yh@fir.im
  */
-public interface AgentManagerService {
+public interface AgentService {
 
     /**
      * Create agent into database and create unique token

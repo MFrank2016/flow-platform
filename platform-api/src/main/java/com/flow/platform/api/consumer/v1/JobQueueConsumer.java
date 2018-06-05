@@ -21,7 +21,7 @@ import com.flow.platform.api.domain.job.JobStatus;
 import com.flow.platform.api.domain.v1.JobKey;
 import com.flow.platform.api.domain.v1.JobV1;
 import com.flow.platform.api.exception.AgentNotAvailableException;
-import com.flow.platform.api.service.v1.AgentManagerService;
+import com.flow.platform.api.service.v1.AgentService;
 import com.flow.platform.api.service.v1.JobNodeManager;
 import com.flow.platform.api.service.v1.JobService;
 import com.flow.platform.core.exception.NotFoundException;
@@ -49,7 +49,7 @@ public final class JobQueueConsumer {
     private JobNodeManager jobNodeManager;
 
     @Autowired
-    private AgentManagerService agentManagerService;
+    private AgentService agentService;
 
     /**
      * Receive message from job queue and send related cmd to agent
@@ -83,12 +83,16 @@ public final class JobQueueConsumer {
         } catch (AgentNotAvailableException e) {
             log.warn("Cannot find available agent for job: " + key);
             jobServiceV1.enqueue(key);
+
+            // hold job cmd queue, and wait notify from node release
+
+
         } catch (Throwable e) {
             log.error(e.getMessage());
             jobServiceV1.setStatus(key, JobStatus.FAILURE);
 
             if (!Objects.isNull(agent)) {
-                agentManagerService.release(agent);
+                agentService.release(agent);
             }
         }
     }
@@ -98,6 +102,6 @@ public final class JobQueueConsumer {
     }
 
     private Agent getAgent() throws AgentNotAvailableException {
-        return agentManagerService.acquire();
+        return agentService.acquire();
     }
 }

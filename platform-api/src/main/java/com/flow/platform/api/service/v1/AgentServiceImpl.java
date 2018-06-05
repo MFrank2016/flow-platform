@@ -20,7 +20,6 @@ import com.flow.platform.api.config.QueueConfig;
 import com.flow.platform.api.dao.v1.AgentDao;
 import com.flow.platform.api.events.AgentStatusChangeEvent;
 import com.flow.platform.api.exception.AgentNotAvailableException;
-import com.flow.platform.api.util.ZKHelper;
 import com.flow.platform.core.exception.NotFoundException;
 import com.flow.platform.core.service.ApplicationEventService;
 import com.flow.platform.domain.Agent;
@@ -49,7 +48,7 @@ import org.springframework.stereotype.Service;
  */
 @Service
 @Log4j2
-public class AgentManagerServiceImpl extends ApplicationEventService implements AgentManagerService {
+public class AgentServiceImpl extends ApplicationEventService implements AgentService {
 
     /**
      * Zookeeper node path which used for lock of acquire agent

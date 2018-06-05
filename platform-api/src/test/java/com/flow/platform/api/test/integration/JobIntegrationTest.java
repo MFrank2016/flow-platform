@@ -23,7 +23,7 @@ import com.flow.platform.api.domain.v1.Flow;
 import com.flow.platform.api.domain.v1.JobV1;
 import com.flow.platform.api.events.CmdSentEvent;
 import com.flow.platform.api.events.JobStatusEvent;
-import com.flow.platform.api.service.v1.AgentManagerService;
+import com.flow.platform.api.service.v1.AgentService;
 import com.flow.platform.api.service.v1.JobNodeManager;
 import com.flow.platform.api.service.v1.JobService;
 import com.flow.platform.api.test.FlowHelper;
@@ -64,7 +64,7 @@ public class JobIntegrationTest extends TestBase {
     private CmdCallbackConsumer cmdCallbackConsumer;
 
     @Autowired
-    private AgentManagerService agentManagerService;
+    private AgentService agentService;
 
     @Autowired
     private SpringContext springContext;
@@ -145,7 +145,7 @@ public class JobIntegrationTest extends TestBase {
 
         // then:
         jobFinishCountDown.await(10, TimeUnit.SECONDS);
-        Assert.assertEquals(AgentStatus.IDLE, agentManagerService.find(agent.getToken()).getStatus());
+        Assert.assertEquals(AgentStatus.IDLE, agentService.find(agent.getToken()).getStatus());
         Assert.assertEquals(NodeStatus.SUCCESS, jobNodeManager.root(job).getStatus());
         Assert.assertEquals(JobStatus.SUCCESS, jobServiceV1.find(job.getKey()).getStatus());
     }

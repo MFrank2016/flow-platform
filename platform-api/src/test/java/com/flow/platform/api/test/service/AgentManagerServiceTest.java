@@ -17,7 +17,7 @@
 package com.flow.platform.api.test.service;
 
 import com.flow.platform.api.exception.AgentNotAvailableException;
-import com.flow.platform.api.service.v1.AgentManagerService;
+import com.flow.platform.api.service.v1.AgentService;
 import com.flow.platform.api.test.JobHelper;
 import com.flow.platform.api.test.TestBase;
 import com.flow.platform.domain.Agent;
@@ -44,7 +44,7 @@ public class AgentManagerServiceTest extends TestBase {
     private JobHelper jobHelper;
 
     @Autowired
-    private AgentManagerService agentManagerService;
+    private AgentService agentService;
 
     @Before
     public void init() {
@@ -66,7 +66,7 @@ public class AgentManagerServiceTest extends TestBase {
         for (int i = 0; i < numOfRequest; i++) {
             pool.execute(() -> {
                 try {
-                    Agent agent = agentManagerService.acquire();
+                    Agent agent = agentService.acquire();
                     succeeded.add(agent);
                 } catch (AgentNotAvailableException e) {
                     numOfFailure.incrementAndGet();
@@ -88,7 +88,7 @@ public class AgentManagerServiceTest extends TestBase {
 
     @Test
     public void enable_to_list_agent_with_status() {
-        List<Agent> agents = agentManagerService.list();
+        List<Agent> agents = agentService.list();
         Assert.assertEquals(2, agents.size());
 
         Agent first = agents.get(0);
@@ -105,10 +105,10 @@ public class AgentManagerServiceTest extends TestBase {
     @Test
     public void release_agent_with_idle_status() {
         AgentPath path = new AgentPath("default", "second");
-        Agent second = agentManagerService.find(path);
+        Agent second = agentService.find(path);
         Assert.assertEquals(AgentStatus.BUSY, second.getStatus());
 
-        agentManagerService.release(second);
-        Assert.assertEquals(AgentStatus.IDLE, agentManagerService.find(path).getStatus());
+        agentService.release(second);
+        Assert.assertEquals(AgentStatus.IDLE, agentService.find(path).getStatus());
     }
 }

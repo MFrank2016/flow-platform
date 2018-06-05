@@ -21,7 +21,7 @@ import com.flow.platform.api.domain.job.JobStatus;
 import com.flow.platform.api.domain.v1.JobKey;
 import com.flow.platform.api.domain.v1.JobV1;
 import com.flow.platform.api.envs.EnvUtil;
-import com.flow.platform.api.service.v1.AgentManagerService;
+import com.flow.platform.api.service.v1.AgentService;
 import com.flow.platform.api.service.v1.JobNodeManager;
 import com.flow.platform.api.service.v1.JobService;
 import com.flow.platform.core.exception.IllegalStatusException;
@@ -68,7 +68,7 @@ public class CmdCallbackConsumer extends ApplicationEventService {
     private JobNodeManager jobNodeManager;
 
     @Autowired
-    private AgentManagerService agentManagerService;
+    private AgentService agentService;
 
     @RabbitListener(queues = QueueConfig.CMD_CALLBACK_QUEUE_NAME)
     public void handleMessage(byte[] data) {
@@ -90,7 +90,7 @@ public class CmdCallbackConsumer extends ApplicationEventService {
 
         try {
             JobV1 job = jobServiceV1.find(jobKey);
-            Agent agent = agentManagerService.find(token);
+            Agent agent = agentService.find(token);
             log.info("Cmd is " + nodePath + ", Cmd status is " + cmd.getStatus());
 
             // update nodes and parent for finish and get next node
@@ -98,7 +98,7 @@ public class CmdCallbackConsumer extends ApplicationEventService {
 
             // No more available node
             if (Objects.isNull(next)) {
-                agentManagerService.release(agent);
+                agentService.release(agent);
                 Node root = jobNodeManager.root(job);
                 JobStatus jobStatus = toJobStatus(root);
                 jobServiceV1.setStatus(job.getKey(), jobStatus);
