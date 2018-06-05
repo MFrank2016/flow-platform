@@ -18,6 +18,7 @@ package com.flow.platform.api.service.v1;
 
 import com.flow.platform.api.config.QueueConfig;
 import com.flow.platform.api.dao.v1.AgentDao;
+import com.flow.platform.api.events.AgentStatusChangeEvent;
 import com.flow.platform.api.exception.AgentNotAvailableException;
 import com.flow.platform.api.util.ZKHelper;
 import com.flow.platform.core.exception.NotFoundException;
@@ -109,6 +110,8 @@ public class AgentManagerServiceImpl extends ApplicationEventService implements 
     @Override
     public void release(Agent agent) {
         zkClient.setData(agent.fullPath(), AgentStatus.IDLE.getBytes());
+        agent.setStatus(AgentStatus.IDLE);
+        this.dispatchEvent(new AgentStatusChangeEvent(this, agent));
     }
 
     @Override
@@ -127,6 +130,8 @@ public class AgentManagerServiceImpl extends ApplicationEventService implements 
                 zkClient.setData(selectedAgent.fullPath(), AgentStatus.BUSY.getBytes());
                 selectedAgent.setStatus(AgentStatus.BUSY);
             });
+
+            this.dispatchEvent(new AgentStatusChangeEvent(this, selectedAgent));
         } catch (Throwable e) {
             throw new AgentNotAvailableException(e.getMessage());
         }
@@ -163,10 +168,6 @@ public class AgentManagerServiceImpl extends ApplicationEventService implements 
         return agents;
     }
 
-    private void createRoot() {
-        zkClient.create(AgentPath.ROOT, null);
-    }
-
     private Agent appendAgentStatus(Agent agent) {
         Objects.requireNonNull(agent, "Agent cannot be null");
 
@@ -186,17 +187,19 @@ public class AgentManagerServiceImpl extends ApplicationEventService implements 
         return agents;
     }
 
+    /**
+     * Watch Zookeeper Children Nodes
+     *
+     */
     private class ZkNodeWatcherEvent implements PathChildrenCacheListener {
 
         @Override
         public void childEvent(CuratorFramework client, PathChildrenCacheEvent event) {
             final Type eventType = event.getType();
             final String path = event.getData().getPath();
-            final String name = ZKHelper.getNameFromPath(path);
 
-            log.debug("Receive zookeeper event {} {}", eventType, path);
-
-            AgentPath agentPath = AgentPath.parse(name);
+            AgentPath agentPath = AgentPath.parse(path);
+            log.debug("Receive zookeeper event: {} {} {}", eventType, agentPath);
 
             if (eventType == Type.CHILD_ADDED) {
                 return;

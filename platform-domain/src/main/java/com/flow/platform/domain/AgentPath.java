@@ -16,6 +16,7 @@
 
 package com.flow.platform.domain;
 
+import com.flow.platform.util.StringUtil;
 import com.google.common.base.Strings;
 import com.google.gson.annotations.Expose;
 import lombok.EqualsAndHashCode;
@@ -37,13 +38,27 @@ public class AgentPath extends Jsonable {
     private final static String SPLITTER = "===";
 
     /**
-     * Parse 'zone===agent' to agent path instance
+     * Parse 'zone===agent' or /flow-agents/zone===agent to agent path instance
      */
-    public static AgentPath parse(String content) {
-        String[] tokens = content.split(SPLITTER);
-        String zone = tokens[0];
-        String name = tokens[1];
-        return new AgentPath(zone, name);
+    public static AgentPath parse(String path) {
+        if (path.startsWith(ROOT)) {
+            path = path.replace(ROOT, StringUtil.EMPTY);
+        }
+
+        path = StringUtil.trim(path, "/");
+
+        String[] tokens = path.split(SPLITTER);
+        if (tokens.length == 1) {
+            return new AgentPath(tokens[0], tokens[0]);
+        }
+
+        if (tokens.length == 2) {
+            String zone = tokens[0];
+            String name = tokens[1];
+            return new AgentPath(zone, name);
+        }
+
+        throw new IllegalArgumentException("Illegal agent path: " + path);
     }
 
     @Setter
