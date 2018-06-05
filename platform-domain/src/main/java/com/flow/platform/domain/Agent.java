@@ -32,6 +32,8 @@ import lombok.ToString;
 @ToString(of = {"path", "status"})
 public class Agent extends Webhookable {
 
+    public final static String FLOW_AGENT_WORKSPACE = "FLOW_AGENT_WORKSPACE";
+
     /**
      * Composite key
      */

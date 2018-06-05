@@ -34,6 +34,8 @@ import lombok.ToString;
 @EqualsAndHashCode(of = {"id"}, callSuper = false)
 public final class Flow extends EnvObject {
 
+    public final static String FLOW_NAME = "FLOW_NAME";
+
     @Expose
     @Getter
     @Setter

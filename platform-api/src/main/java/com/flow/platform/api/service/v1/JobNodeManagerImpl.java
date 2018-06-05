@@ -132,7 +132,6 @@ public class JobNodeManagerImpl extends ApplicationEventService implements JobNo
         cmd.setId(getId(key, node));
         cmd.setTimeout(1800);
         cmd.setContent(node.getContent());
-        cmd.setWorkDir("/tmp");
 
         // set meta data
         cmd.getMeta().put(CmdMeta.META_JOB_KEY, key.getId());
@@ -143,6 +142,8 @@ public class JobNodeManagerImpl extends ApplicationEventService implements JobNo
         cmd.getContext().putAll(context.getContext());
         cmd.getContext().putAll(node.getContext());
 
+        // set cmd work dir from context variable
+        cmd.setWorkDir(cmd.getContext().get(Agent.FLOW_AGENT_WORKSPACE));
         return cmd;
     }
 
