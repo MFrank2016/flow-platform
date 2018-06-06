@@ -40,6 +40,7 @@ import org.apache.curator.utils.ZKPaths;
 import org.springframework.amqp.core.AmqpAdmin;
 import org.springframework.amqp.core.Queue;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 /**
@@ -55,6 +56,12 @@ public class AgentServiceImpl extends ApplicationEventService implements AgentSe
     private final static String LOCKER_PATH = ZKPaths.makePath(AgentPath.ROOT, "locker");
 
     private final static Object HOLDER = new Object();
+
+    @Value("${api.queue.uri}")
+    private String rabbitUri;
+
+    @Value("${zk.host}")
+    private String zookeeperHost;
 
     @Autowired
     private AgentDao agentDao;
@@ -159,8 +166,8 @@ public class AgentServiceImpl extends ApplicationEventService implements AgentSe
 
         AgentSettings agentSettings = new AgentSettings();
         agentSettings.setAgentPath(agent.getPath());
-        agentSettings.setMqUri("amqp://127.0.0.1:5672");
-        agentSettings.setZookeeperUrl("127.0.0.1:2181");
+        agentSettings.setMqUri(rabbitUri);
+        agentSettings.setZookeeperUrl(zookeeperHost);
         agentSettings.setCallbackQueueName(QueueConfig.CMD_CALLBACK_QUEUE_NAME);
         agentSettings.setListeningQueueName(agent.queueName());
 

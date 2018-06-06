@@ -53,8 +53,8 @@ public class QueueConfig {
         DEFAULT_QUEUE_ARGS.put("x-max-priority", 255);
     }
 
-    @Value("${api.queue.hosts}")
-    private String hosts;
+    @Value("${api.queue.uri}")
+    private String uri;
 
     @Value("${api.queue.username}")
     private String username;
@@ -64,11 +64,6 @@ public class QueueConfig {
 
     @Autowired
     private ThreadPoolTaskExecutor taskExecutor;
-
-//    @Bean
-//    public SyncService.QueueCreator syncQueueCreator() {
-//        return name -> new MemoryQueue(taskExecutor, 50, name);
-//    }
     
     @Bean
     public RabbitTemplate jobCmdTemplate() {
@@ -101,7 +96,8 @@ public class QueueConfig {
     }
 
     private CachingConnectionFactory connectionFactory() {
-        CachingConnectionFactory connectionFactory = new CachingConnectionFactory("127.0.0.1");
+        CachingConnectionFactory connectionFactory = new CachingConnectionFactory();
+        connectionFactory.setUri(uri);
         connectionFactory.setUsername(username);
         connectionFactory.setPassword(password);
         return connectionFactory;
