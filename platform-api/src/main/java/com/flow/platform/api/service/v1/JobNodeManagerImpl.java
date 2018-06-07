@@ -22,6 +22,7 @@ import com.flow.platform.api.domain.v1.JobNodeResult;
 import com.flow.platform.api.domain.v1.JobTree;
 import com.flow.platform.api.domain.v1.JobV1;
 import com.flow.platform.api.events.CmdSentEvent;
+import com.flow.platform.api.events.JobNodeEvent;
 import com.flow.platform.core.service.ApplicationEventService;
 import com.flow.platform.domain.Agent;
 import com.flow.platform.domain.v1.Cmd;
@@ -94,6 +95,7 @@ public class JobNodeManagerImpl extends ApplicationEventService implements JobNo
         this.dispatchEvent(new CmdSentEvent(this, nextCmd));
 
         jobTreeDao.update(jobTree);
+        this.dispatchEvent(new JobNodeEvent(this, job, getResultList(tree)));
     }
 
     @Override
@@ -105,14 +107,18 @@ public class JobNodeManagerImpl extends ApplicationEventService implements JobNo
         treeManager.onFinish(result);
 
         jobTreeDao.update(jobTree);
+        this.dispatchEvent(new JobNodeEvent(this, job, getResultList(jobTree.getTree())));
         return next(job, path);
     }
 
     @Override
     public List<JobNodeResult> resultList(JobV1 job) {
         JobTree jobTree = jobTreeDao.get(job.getKey());
+        return getResultList(jobTree.getTree());
+    }
 
-        List<Node> ordered = jobTree.getTree().getOrdered();
+    private List<JobNodeResult> getResultList(NodeTree tree) {
+        List<Node> ordered = tree.getOrdered();
         List<JobNodeResult> results = new ArrayList<>(ordered.size());
 
         for (Node node : ordered) {

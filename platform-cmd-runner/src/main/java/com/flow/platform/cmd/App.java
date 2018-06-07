@@ -40,12 +40,7 @@ public final class App {
         }
 
         @Override
-        public void onExecuted(int code) {
-
-        }
-
-        @Override
-        public void onLogged(Map<String, String> output) {
+        public void onExecuted(int code, Map<String, String> output) {
 
         }
 
@@ -96,7 +91,7 @@ public final class App {
             null,
             Lists.newArrayList("FLOW_"), // find env start with FLOW_ and put to cmd result output map
             null,
-            Lists.newArrayList("sleep 20", "echo $FLOW_INPUT", "echo $PWD", "export FLOW_TEST=112233", "cd ~/"));
+            Lists.newArrayList("docker ps"));
 
         executor.run();
     }

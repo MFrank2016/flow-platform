@@ -16,20 +16,22 @@
 
 package com.flow.platform.api.events;
 
-import com.flow.platform.api.domain.job.JobStatus;
+import com.flow.platform.api.domain.v1.JobV1;
 import lombok.Getter;
 import org.springframework.context.ApplicationEvent;
 
 /**
+ * Job status change event
+ *
  * @author yang
  */
 public class JobStatusEvent extends ApplicationEvent {
 
     @Getter
-    private final JobStatus status;
+    private final JobV1 job;
 
-    public JobStatusEvent(Object source, JobStatus status) {
+    public JobStatusEvent(Object source, JobV1 job) {
         super(source);
-        this.status = status;
+        this.job = job;
     }
 }

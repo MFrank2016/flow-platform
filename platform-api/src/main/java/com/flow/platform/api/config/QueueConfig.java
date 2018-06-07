@@ -42,8 +42,14 @@ public class QueueConfig {
 
     public final static long DEFAULT_CMD_CALLBACK_QUEUE_PRIORITY = 1L;
 
+    /**
+     * Queue for handle job creation
+     */
     public final static String JOB_QUEUE_NAME = "job.queue";
 
+    /**
+     * Queue to handle cmd update from agent
+     */
     public final static String CMD_CALLBACK_QUEUE_NAME = "cmd.callback.queue";
 
     public final static Map<String, Object> DEFAULT_QUEUE_ARGS = new HashMap<>(2);

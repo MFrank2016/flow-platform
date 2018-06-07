@@ -72,7 +72,7 @@ public class CmdManagerTest extends TestBase {
         AtomicInteger sizeOfOutput = new AtomicInteger(0);
         cmdManager.getExtraProcEventListeners().add(new AbstractProcListener() {
             @Override
-            public void onLogged(Map<String, String> output) {
+            public void onExecuted(int code, Map<String, String> output) {
                 sizeOfOutput.set(output.size());
             }
         });

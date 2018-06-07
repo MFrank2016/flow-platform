@@ -58,26 +58,15 @@ public class ProcEventHandler implements ProcListener {
     }
 
     @Override
-    public void onExecuted(int code) {
+    public void onExecuted(int code, Map<String, String> output) {
         result.setCode(code);
         result.setDuration(ChronoUnit.SECONDS.between(startAt, DateUtil.now()));
         result.setStatus(CmdStatus.EXECUTED);
-        pusher.send(result);
-
-        for (ProcListener listener : extra) {
-            listener.onExecuted(code);
-        }
-    }
-
-    @Override
-    public void onLogged(Map<String, String> output) {
         result.setOutput(output);
-        result.setStatus(CmdStatus.LOGGED);
-        result.setDuration(ChronoUnit.SECONDS.between(startAt, DateUtil.now()));
         pusher.send(result);
 
         for (ProcListener listener : extra) {
-            listener.onLogged(output);
+            listener.onExecuted(code, output);
         }
     }
 

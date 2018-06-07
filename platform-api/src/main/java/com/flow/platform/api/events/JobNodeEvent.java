@@ -14,27 +14,30 @@
  * limitations under the License.
  */
 
-package com.flow.platform.cmd;
+package com.flow.platform.api.events;
 
-import java.util.Map;
+import com.flow.platform.api.domain.v1.JobNodeResult;
+import com.flow.platform.api.domain.v1.JobV1;
+import java.util.List;
+import lombok.Getter;
+import org.springframework.context.ApplicationEvent;
 
 /**
+ * Job node status and result change event
+ *
  * @author yang
  */
-public abstract class AbstractProcListener implements ProcListener  {
+public class JobNodeEvent extends ApplicationEvent {
 
-    @Override
-    public void onStarted() {
+    @Getter
+    private final JobV1 job;
 
-    }
+    @Getter
+    private final List<JobNodeResult> details;
 
-    @Override
-    public void onExecuted(int code, Map<String, String> output) {
-
-    }
-
-    @Override
-    public void onException(Throwable e) {
-
+    public JobNodeEvent(Object source, JobV1 job, List<JobNodeResult> details) {
+        super(source);
+        this.job = job;
+        this.details = details;
     }
 }

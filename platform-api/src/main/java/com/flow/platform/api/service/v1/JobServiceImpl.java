@@ -161,9 +161,10 @@ public class JobServiceImpl extends CurrentUser implements JobService {
     }
 
     @Override
-    public void setStatus(JobKey key, JobStatus status) {
-        jobDaoV1.setStatus(key, status);
-        this.dispatchEvent(new JobStatusEvent(this, status));
+    public void setStatus(JobV1 job, JobStatus status) {
+        jobDaoV1.setStatus(job.getKey(), status);
+        job.setStatus(status);
+        this.dispatchEvent(new JobStatusEvent(this, job));
     }
 
     @Override

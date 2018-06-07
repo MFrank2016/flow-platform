@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 flow.ci
+ * Copyright 2018 fir.im
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,23 +14,24 @@
  * limitations under the License.
  */
 
-package com.flow.platform.api.consumer;
+package com.flow.platform.api.consumer.v1;
 
 import com.flow.platform.api.config.WebSocketConfig;
-import com.flow.platform.api.events.AgentStatusChangeEvent;
+import com.flow.platform.api.events.JobStatusEvent;
 import com.flow.platform.api.message.PushHandler;
-import com.flow.platform.domain.Agent;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.context.ApplicationListener;
 
 /**
+ * Job status change event, push job data to client
+ *
  * @author yang
  */
-public class AgentStatusEventConsumer extends PushHandler implements ApplicationListener<AgentStatusChangeEvent> {
+@Log4j2
+public final class JobStatusEventConsumer extends PushHandler implements ApplicationListener<JobStatusEvent> {
 
     @Override
-    public void onApplicationEvent(AgentStatusChangeEvent event) {
-        final Agent agent = event.getAgent();
-        final String topic = String.format("%s/%s", WebSocketConfig.TOPIC_FOR_AGENT, agent.getPath().toString());
-        super.push(topic, agent);
+    public void onApplicationEvent(JobStatusEvent event) {
+        this.push(WebSocketConfig.TOPIC_FOR_JOB, event.getJob());
     }
 }

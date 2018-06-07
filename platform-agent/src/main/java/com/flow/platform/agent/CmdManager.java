@@ -26,6 +26,7 @@ import com.flow.platform.domain.Jsonable;
 import com.flow.platform.domain.v1.Cmd;
 import com.google.common.collect.Lists;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -244,7 +245,7 @@ public final class CmdManager implements AutoCloseable {
             String errMsg = "Reject cmd " + cmd.getId() + " since over the limit proc of agent";
 
             procEventHandler.onStarted();
-            procEventHandler.onExecuted(-1);
+            procEventHandler.onExecuted(-1, Collections.emptyMap());
             procEventHandler.onException(new IllegalStateException(errMsg));
 
             log.warn(errMsg);

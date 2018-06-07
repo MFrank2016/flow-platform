@@ -19,11 +19,11 @@ package com.flow.platform.api.service.v1;
 import com.flow.platform.api.domain.job.JobCategory;
 import com.flow.platform.api.domain.job.JobStatus;
 import com.flow.platform.api.domain.v1.Flow;
+import com.flow.platform.api.domain.v1.JobKey;
 import com.flow.platform.api.domain.v1.JobNodeResult;
 import com.flow.platform.api.domain.v1.JobV1;
 import com.flow.platform.core.domain.Page;
 import com.flow.platform.core.domain.Pageable;
-import com.flow.platform.api.domain.v1.JobKey;
 import java.util.List;
 import java.util.Map;
 
@@ -70,7 +70,7 @@ public interface JobService {
     /**
      * Set job status
      */
-    void setStatus(JobKey key, JobStatus status);
+    void setStatus(JobV1 job, JobStatus status);
 
     /**
      * Delete job by flow

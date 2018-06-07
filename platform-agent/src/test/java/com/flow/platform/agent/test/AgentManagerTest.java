@@ -23,6 +23,7 @@ import com.flow.platform.agent.mq.RabbitClient;
 import com.flow.platform.cmd.AbstractProcListener;
 import com.flow.platform.domain.AgentPath;
 import com.flow.platform.domain.v1.Cmd;
+import com.flow.platform.util.ObjectUtil;
 import com.flow.platform.util.zk.ZKClient;
 import com.google.common.collect.Lists;
 import java.util.Base64;
@@ -93,14 +94,14 @@ public class AgentManagerTest extends TestBase {
 
         CmdManager.getInstance().getExtraProcEventListeners().add(new AbstractProcListener() {
             @Override
-            public void onLogged(Map<String, String> output) {
+            public void onExecuted(int code, Map<String, String> output) {
                 cmdOutput.putAll(output);
                 countDown.countDown();
             }
         });
 
         RabbitClient sender = new RabbitClient(config.getQueue().getHost(), config.getCmdQueueName(), null);
-        sender.send(cmd.toJson());
+        sender.send(cmd);
 
         // then: verify cmd been executed
         countDown.await(10, TimeUnit.SECONDS);

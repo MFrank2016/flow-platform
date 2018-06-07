@@ -75,7 +75,7 @@ public final class JobQueueConsumer {
             jobNodeManager.execute(job, next.getPath(), agent);
 
             // set job status to running
-            jobServiceV1.setStatus(key, JobStatus.RUNNING);
+            jobServiceV1.setStatus(job, JobStatus.RUNNING);
 
         } catch (NotFoundException e) {
             log.warn(e.getMessage());
@@ -89,7 +89,7 @@ public final class JobQueueConsumer {
 
         } catch (Throwable e) {
             log.error(e.getMessage());
-            jobServiceV1.setStatus(key, JobStatus.FAILURE);
+            jobServiceV1.setStatus(job, JobStatus.FAILURE);
 
             if (!Objects.isNull(agent)) {
                 agentService.release(agent);

@@ -70,12 +70,7 @@ public final class CmdExecutor {
         }
 
         @Override
-        public void onExecuted(int code) {
-
-        }
-
-        @Override
-        public void onLogged(Map<String, String> output) {
+        public void onExecuted(int code, Map<String, String> output) {
 
         }
 
@@ -265,7 +260,6 @@ public final class CmdExecutor {
                 exitCode = process.exitValue();
             }
 
-            procListener.onExecuted(exitCode);
             log.trace("====== Process executed : {} ======", exitCode);
 
             // wait for log thread with max 30 seconds to continue upload log
@@ -277,7 +271,7 @@ public final class CmdExecutor {
                 executor.shutdownNow();
             }
 
-            procListener.onLogged(output);
+            procListener.onExecuted(exitCode, output);
             log.trace("====== Logging executed ======");
 
         } catch (InterruptedException e) {

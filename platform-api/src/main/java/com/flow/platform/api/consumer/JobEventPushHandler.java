@@ -18,7 +18,7 @@ package com.flow.platform.api.consumer;
 
 import com.flow.platform.api.config.WebSocketConfig;
 import com.flow.platform.api.domain.job.Job;
-import com.flow.platform.api.push.PushHandler;
+import com.flow.platform.api.message.PushHandler;
 import com.flow.platform.api.service.job.JobService;
 import com.flow.platform.core.exception.NotFoundException;
 import java.math.BigInteger;

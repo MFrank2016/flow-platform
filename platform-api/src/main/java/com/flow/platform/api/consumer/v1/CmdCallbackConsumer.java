@@ -84,12 +84,14 @@ public class CmdCallbackConsumer extends ApplicationEventService {
             return;
         }
 
-        JobKey jobKey = JobKey.create(cmd.getMeta().get(CmdMeta.META_JOB_KEY));
-        NodePath nodePath = NodePath.create(cmd.getMeta().get(CmdMeta.META_JOB_NODE_PATH));
-        String token = cmd.getMeta().get(CmdMeta.META_AGENT_TOKEN);
+        JobV1 job = null;
 
         try {
-            JobV1 job = jobServiceV1.find(jobKey);
+            JobKey jobKey = JobKey.create(cmd.getMeta().get(CmdMeta.META_JOB_KEY));
+            NodePath nodePath = NodePath.create(cmd.getMeta().get(CmdMeta.META_JOB_NODE_PATH));
+            String token = cmd.getMeta().get(CmdMeta.META_AGENT_TOKEN);
+            job = jobServiceV1.find(jobKey);
+
             Agent agent = agentService.find(token);
             log.info("Cmd is " + nodePath + ", Cmd status is " + cmd.getStatus());
 
@@ -100,8 +102,8 @@ public class CmdCallbackConsumer extends ApplicationEventService {
             if (Objects.isNull(next)) {
                 agentService.release(agent);
                 Node root = jobNodeManager.root(job);
-                JobStatus jobStatus = toJobStatus(root);
-                jobServiceV1.setStatus(job.getKey(), jobStatus);
+                JobStatus newStatus = toJobStatus(root);
+                jobServiceV1.setStatus(job, newStatus);
                 return;
             }
 
@@ -111,7 +113,10 @@ public class CmdCallbackConsumer extends ApplicationEventService {
 
         } catch (Throwable throwable) {
             log.error("Handle message exception: " + throwable.getMessage());
-            jobServiceV1.setStatus(jobKey, JobStatus.FAILURE);
+
+            if (!Objects.isNull(job)) {
+                jobServiceV1.setStatus(job, JobStatus.FAILURE);
+            }
         }
     }
 

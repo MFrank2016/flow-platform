@@ -49,6 +49,7 @@ public enum CmdStatus {
      * Log uploaded, cmd completely finished, should agent reported
      * is_current_cmd = false
      */
+    @Deprecated // executed instead this
     LOGGED("LOGGED", 3),
 
     /**

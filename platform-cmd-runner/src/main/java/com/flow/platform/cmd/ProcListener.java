@@ -31,12 +31,7 @@ public interface ProcListener {
     /**
      * Proc executed without exception
      */
-    void onExecuted(int code);
-
-    /**
-     * Log stream been read
-     */
-    void onLogged(Map<String, String> output);
+    void onExecuted(int code, Map<String, String> output);
 
     /**
      * Proc got exception while executing (option)

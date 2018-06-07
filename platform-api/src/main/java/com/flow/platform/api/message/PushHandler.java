@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.flow.platform.api.push;
+package com.flow.platform.api.message;
 
 import com.flow.platform.core.http.converter.RawGsonMessageConverter;
 import com.flow.platform.domain.Jsonable;
