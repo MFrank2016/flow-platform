@@ -17,6 +17,7 @@
 package com.flow.platform.api.consumer.v1;
 
 import com.flow.platform.api.config.WebSocketConfig;
+import com.flow.platform.api.domain.v1.JobV1;
 import com.flow.platform.api.events.JobStatusEvent;
 import com.flow.platform.api.message.PushHandler;
 import lombok.extern.log4j.Log4j2;
@@ -32,6 +33,9 @@ public final class JobStatusEventConsumer extends PushHandler implements Applica
 
     @Override
     public void onApplicationEvent(JobStatusEvent event) {
-        this.push(WebSocketConfig.TOPIC_FOR_JOB, event.getJob());
+        JobV1 job = event.getJob();
+        String jobTopic = String.format("%s/%s", WebSocketConfig.TOPIC_FOR_JOB, job.getName());
+        this.push(jobTopic, job);
+        log.debug(jobTopic + " : " + job);
     }
 }
